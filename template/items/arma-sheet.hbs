@@ -1,0 +1,50 @@
+<form class="flexcol" autocomplete="off">
+  <header class="sheet-header">
+    <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}" height="64" width="64"/>
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Nome da Arma"/></h1>
+    </div>
+  </header>
+
+  <section class="sheet-body">
+    <div class="form-group">
+      <label>Tipo:</label>
+      <input type="text" name="system.tipo" value="{{system.tipo}}" placeholder="Ex: Pistola, Fuzil, etc." />
+    </div>
+
+    <div class="form-group">
+      <label>Dano:</label>
+      <input type="number" name="system.dano" value="{{system.dano}}" min="0" />
+    </div>
+
+    <div class="form-group">
+      <label>Alcance:</label>
+      <select name="system.alcance">
+        <option value="Corpo a corpo" {{#if (eq system.alcance "Corpo a corpo")}}selected{{/if}}>Corpo a corpo</option>
+        <option value="Perto" {{#if (eq system.alcance "Perto")}}selected{{/if}}>Perto</option>
+        <option value="Longe" {{#if (eq system.alcance "Longe")}}selected{{/if}}>Longe</option>
+        <option value="Muito Longe" {{#if (eq system.alcance "Muito Longe")}}selected{{/if}}>Muito Longe</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Peso (kg):</label>
+      <input type="number" name="system.peso" value="{{system.peso}}" min="0" step="0.1" />
+    </div>
+
+    <div class="form-group">
+      <label>Bônus:</label>
+      <input type="number" name="system.bonus" value="{{system.bonus}}" />
+    </div>
+
+    <div class="form-group">
+      <label>Especial:</label>
+      <textarea name="system.especial" rows="3">{{system.especial}}</textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Descrição:</label>
+      <textarea name="system.descricao" rows="4">{{system.descricao}}</textarea>
+    </div>
+  </section>
+</form>

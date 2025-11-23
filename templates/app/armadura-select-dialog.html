@@ -1,0 +1,45 @@
+<div class="rising-steel-armadura-dialog">
+  {{#if armaduras}}
+    {{#if armaduras.length}}
+    <div class="armaduras-select-list">
+    <table class="armaduras-select-table">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Tipo</th>
+          <th>Proteção</th>
+          <th>Peso</th>
+          <th>Especial</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each armaduras}}
+        <tr class="{{#if (eq ../armaduraEquipada this.id)}}equipada{{/if}}">
+          <td><strong>{{this.name}}</strong></td>
+          <td>{{this.system.tipo}}</td>
+          <td>{{this.system.protecao}}</td>
+          <td>{{this.system.peso}} kg</td>
+          <td><small>{{this.system.especial}}</small></td>
+          <td>
+            <button type="button" class="select-armadura-btn" data-armadura-id="{{this.id}}" data-armadura-nome="{{this.name}}" data-armadura-protecao="{{this.system.protecao}}">
+              {{#if (eq ../armaduraEquipada this.id)}}✓ Equipada{{else}}Equipar{{/if}}
+            </button>
+          </td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+    </div>
+    {{else}}
+    <p style="text-align: center; padding: 20px; color: #666;">
+      Nenhuma armadura disponível. Verifique se o compendium de armaduras está carregado.
+    </p>
+    {{/if}}
+  {{else}}
+  <p style="text-align: center; padding: 20px; color: #666;">
+    Nenhuma armadura disponível. Verifique se o compendium de armaduras está carregado.
+  </p>
+  {{/if}}
+</div>
+

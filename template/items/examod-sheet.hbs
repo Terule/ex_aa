@@ -1,0 +1,46 @@
+<form class="flexcol" autocomplete="off">
+  <header class="sheet-header">
+    <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}" height="64" width="64"/>
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Nome do EXAMod"/></h1>
+    </div>
+  </header>
+
+  <section class="sheet-body">
+    <div class="form-group">
+      <label>Tipo:</label>
+      <select name="system.tipo">
+        <option value="Suporte" {{#if (eq system.tipo "Suporte")}}selected{{/if}}>Suporte</option>
+        <option value="Ofensivo" {{#if (eq system.tipo "Ofensivo")}}selected{{/if}}>Ofensivo</option>
+        <option value="Defensivo" {{#if (eq system.tipo "Defensivo")}}selected{{/if}}>Defensivo</option>
+        <option value="Sensorial" {{#if (eq system.tipo "Sensorial")}}selected{{/if}}>Sensorial</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Peso (ton):</label>
+      <input type="number" name="system.peso" value="{{system.peso}}" min="0" step="0.1" />
+    </div>
+
+    <div class="form-group">
+      <label>Tempo de Ativação:</label>
+      <input type="text" name="system.tempoAtivacao" value="{{system.tempoAtivacao}}" placeholder="Ex: 1 Ação, 1 Manobra" />
+    </div>
+
+    <div class="form-group">
+      <label>Custo de Ativação:</label>
+      <input type="text" name="system.custoAtivacao" value="{{system.custoAtivacao}}" placeholder="Ex: 1 EP" />
+    </div>
+
+    <div class="form-group">
+      <label>Efeito:</label>
+      <textarea name="system.efeito" rows="4">{{system.efeito}}</textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Descrição:</label>
+      <textarea name="system.descricao" rows="4">{{system.descricao}}</textarea>
+    </div>
+  </section>
+</form>
+

@@ -1,0 +1,79 @@
+{
+	"identificacao": {
+		"nome": "",
+		"codinome": "",
+		"patente": "",
+		"escala": "Médio",
+		"exacom": "",
+		"admissao": ""
+	},
+	"atributos": {
+		"fisicos": {
+			"forca": 1,
+			"destreza": 1,
+			"vigor": 1
+		},
+		"mentais": {
+			"conhecimento": 1,
+			"perspicacia": 1,
+			"resiliencia": 1
+		},
+		"sociais": {
+			"eloquencia": 1,
+			"dissimulacao": 1,
+			"presenca": 1
+		}
+	},
+	"exapoints": {
+		"maximo": 0,
+		"gastos": 0,
+		"atual": 0,
+		"overdrive": 1
+	},
+	"pontosAtributo": {
+		"total": 5,
+		"distribuidos": 0,
+		"restantes": 5
+	},
+	"combate": {
+		"iniciativa": 0,
+		"mobilidade": 0,
+		"esquiva": 0
+	},
+	"limiarDano": {
+		"leve": {
+			"limiar": 0,
+			"marcacoes": 0
+		},
+		"moderado": {
+			"limiar": 0,
+			"marcacoes": 0
+		},
+		"grave": {
+			"limiar": 0,
+			"marcacoes": 0
+		},
+		"penalidades": 0
+	},
+	"armadura": {
+		"total": 0,
+		"dano": 0,
+		"atual": 0,
+		"equipada": ""
+	},
+	"inventario": {
+		"equipamentos": [
+			{"nome": "", "id": ""},
+			{"nome": "", "id": ""},
+			{"nome": "", "id": ""},
+			{"nome": "", "id": ""},
+			{"nome": "", "id": ""}
+		],
+		"armas": [
+			{"nome": "", "id": "", "dano": 0, "alcance": "", "bonus": 0},
+			{"nome": "", "id": "", "dano": 0, "alcance": "", "bonus": 0},
+			{"nome": "", "id": "", "dano": 0, "alcance": "", "bonus": 0}
+		]
+	}
+}
+
