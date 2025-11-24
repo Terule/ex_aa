@@ -1,0 +1,131 @@
+<form class="{{cssClass}} flexcol" autocomplete="off">
+  <header class="sheet-header">
+    <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" height="100" width="100"/>
+    <div class="header-fields">
+      <h1 class="charname">
+        <input name="name" type="text" value="{{actor.name}}" placeholder="Nome do Personagem"/>
+      </h1>
+      <div class="resource">
+        <label>Codinome:</label>
+        <input type="text" name="system.identificacao.codinome" value="{{system.identificacao.codinome}}"/>
+      </div>
+      <div class="resource">
+        <label>Patente:</label>
+        <input type="text" name="system.identificacao.patente" value="{{system.identificacao.patente}}"/>
+      </div>
+    </div>
+  </header>
+
+  <nav class="sheet-tabs tabs" data-group="primary">
+    <a class="item" data-tab="piloto">Piloto</a>
+    <a class="item" data-tab="exacom">EXACOM</a>
+  </nav>
+
+  <section class="sheet-body">
+    <div class="tab" data-group="primary" data-tab="piloto">
+      <div class="grid grid-2col">
+        <div class="col">
+          <h3>Atributos Físicos</h3>
+          <div class="form-group">
+            <label>Força:</label>
+            <input type="number" name="system.atributos.fisicos.forca" value="{{system.atributos.fisicos.forca}}" min="0" max="3"/>
+            <button type="button" class="roll-attribute" data-attribute="fisicos.forca">Rolar</button>
+          </div>
+          <div class="form-group">
+            <label>Destreza:</label>
+            <input type="number" name="system.atributos.fisicos.destreza" value="{{system.atributos.fisicos.destreza}}" min="0" max="3"/>
+            <button type="button" class="roll-attribute" data-attribute="fisicos.destreza">Rolar</button>
+          </div>
+          <div class="form-group">
+            <label>Vigor:</label>
+            <input type="number" name="system.atributos.fisicos.vigor" value="{{system.atributos.fisicos.vigor}}" min="0" max="3"/>
+            <button type="button" class="roll-attribute" data-attribute="fisicos.vigor">Rolar</button>
+          </div>
+
+          <h3>Atributos Mentais</h3>
+          <div class="form-group">
+            <label>Conhecimento:</label>
+            <input type="number" name="system.atributos.mentais.conhecimento" value="{{system.atributos.mentais.conhecimento}}" min="0" max="3"/>
+            <button type="button" class="roll-attribute" data-attribute="mentais.conhecimento">Rolar</button>
+          </div>
+          <div class="form-group">
+            <label>Perspicácia:</label>
+            <input type="number" name="system.atributos.mentais.perspicacia" value="{{system.atributos.mentais.perspicacia}}" min="0" max="3"/>
+            <button type="button" class="roll-attribute" data-attribute="mentais.perspicacia">Rolar</button>
+          </div>
+          <div class="form-group">
+            <label>Resiliência:</label>
+            <input type="number" name="system.atributos.mentais.resiliencia" value="{{system.atributos.mentais.resiliencia}}" min="0" max="3"/>
+            <button type="button" class="roll-attribute" data-attribute="mentais.resiliencia">Rolar</button>
+          </div>
+
+          <h3>Atributos Sociais</h3>
+          <div class="form-group">
+            <label>Eloquência:</label>
+            <input type="number" name="system.atributos.sociais.eloquencia" value="{{system.atributos.sociais.eloquencia}}" min="0" max="3"/>
+            <button type="button" class="roll-attribute" data-attribute="sociais.eloquencia">Rolar</button>
+          </div>
+          <div class="form-group">
+            <label>Dissimulação:</label>
+            <input type="number" name="system.atributos.sociais.dissimulacao" value="{{system.atributos.sociais.dissimulacao}}" min="0" max="3"/>
+            <button type="button" class="roll-attribute" data-attribute="sociais.dissimulacao">Rolar</button>
+          </div>
+          <div class="form-group">
+            <label>Presença:</label>
+            <input type="number" name="system.atributos.sociais.presenca" value="{{system.atributos.sociais.presenca}}" min="0" max="3"/>
+            <button type="button" class="roll-attribute" data-attribute="sociais.presenca">Rolar</button>
+          </div>
+        </div>
+
+        <div class="col">
+          <h3>EXApoints</h3>
+          <div class="form-group">
+            <label>Máximo:</label>
+            <input type="number" name="system.exapoints.maximo" value="{{system.exapoints.maximo}}" readonly/>
+          </div>
+          <div class="form-group">
+            <label>Gastos:</label>
+            <input type="number" name="system.exapoints.gastos" value="{{system.exapoints.gastos}}"/>
+          </div>
+          <div class="form-group">
+            <label>Atual:</label>
+            <input type="number" name="system.exapoints.atual" value="{{system.exapoints.atual}}" readonly/>
+          </div>
+
+          <h3>Pontos de Atributo</h3>
+          <div class="form-group">
+            <label>Total:</label>
+            <input type="number" name="system.pontosAtributo.total" value="{{system.pontosAtributo.total}}" readonly/>
+          </div>
+          <div class="form-group">
+            <label>Distribuídos:</label>
+            <input type="number" name="system.pontosAtributo.distribuidos" value="{{system.pontosAtributo.distribuidos}}" readonly/>
+          </div>
+          <div class="form-group">
+            <label>Restantes:</label>
+            <input type="number" name="system.pontosAtributo.restantes" value="{{system.pontosAtributo.restantes}}" readonly/>
+          </div>
+
+          <h3>Combate</h3>
+          <div class="form-group">
+            <label>Iniciativa:</label>
+            <input type="number" name="system.combate.iniciativa" value="{{system.combate.iniciativa}}" readonly/>
+          </div>
+          <div class="form-group">
+            <label>Mobilidade:</label>
+            <input type="number" name="system.combate.mobilidade" value="{{system.combate.mobilidade}}" readonly/>
+          </div>
+          <div class="form-group">
+            <label>Esquiva:</label>
+            <input type="number" name="system.combate.esquiva" value="{{system.combate.esquiva}}" readonly/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab" data-group="primary" data-tab="exacom">
+      <h3>EXACOM</h3>
+      <p>Seção do EXACOM será implementada em breve.</p>
+    </div>
+  </section>
+</form>

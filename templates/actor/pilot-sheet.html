@@ -1,0 +1,429 @@
+<form class="sheet actor pilot-sheet" autocomplete="off">
+  <header class="sheet-header">
+    <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" height="100" width="100" />
+    <div class="header-fields">
+      <h1><input name="name" type="text" value="{{actor.name}}" placeholder="Nome do Piloto" /></h1>
+      <div class="flexrow">
+        <label>Codinome:</label>
+        <input type="text" name="system.identificacao.codinome" value="{{system.identificacao.codinome}}" />
+        <label>Patente:</label>
+        <select name="system.identificacao.patente" data-dtype="String">
+          <option value="">-- Selecione --</option>
+          {{#each patentes}}
+          <option value="{{this}}" {{#if (eq ../system.identificacao.patente this)}}selected{{/if}}>{{this}}</option>
+          {{/each}}
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <div class="combat-stats-section">
+    <div class="limiar-dano-section">
+      <h3>Limiar de Dano</h3>
+      <div class="limiar-dano-container">
+        <!-- Quadro 1: Limiar (Valor de Referência) -->
+        <div class="limiar-box">
+          <h4>Limiar</h4>
+          <table class="limiar-dano-table">
+            <tbody>
+              <tr>
+                <td>Leve</td>
+                <td>
+                  <input type="number" name="system.limiarDano.leve.limiar" value="{{number system.limiarDano.leve.limiar}}" readonly />
+                </td>
+              </tr>
+              <tr>
+                <td>Moderado</td>
+                <td>
+                  <input type="number" name="system.limiarDano.moderado.limiar" value="{{number system.limiarDano.moderado.limiar}}" readonly />
+                </td>
+              </tr>
+              <tr>
+                <td>Grave</td>
+                <td>
+                  <input type="number" name="system.limiarDano.grave.limiar" value="{{number system.limiarDano.grave.limiar}}" readonly />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Quadro 2: Marcações (Dano Aplicado) -->
+        <div class="marcacoes-box">
+          <h4>Marcacões</h4>
+          <table class="limiar-dano-table">
+            <tbody>
+              <tr>
+                <td>Leve</td>
+                <td>
+                  <input type="number" name="system.limiarDano.leve.marcacoes" value="{{number system.limiarDano.leve.marcacoes}}" min="0" step="1" data-dtype="Number" />
+                </td>
+              </tr>
+              <tr>
+                <td>Moderado</td>
+                <td>
+                  <input type="number" name="system.limiarDano.moderado.marcacoes" value="{{number system.limiarDano.moderado.marcacoes}}" min="0" step="1" data-dtype="Number" />
+                </td>
+              </tr>
+              <tr>
+                <td>Grave</td>
+                <td>
+                  <input type="number" name="system.limiarDano.grave.marcacoes" value="{{number system.limiarDano.grave.marcacoes}}" min="0" step="1" data-dtype="Number" />
+                </td>
+              </tr>
+              <tr>
+                <td>Penalidades</td>
+                <td>
+                  <input type="number" name="system.limiarDano.penalidades" value="{{number system.limiarDano.penalidades}}" min="0" step="1" data-dtype="Number" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="armadura-section">
+      <h3>
+        Armadura
+        <button type="button" class="roll-armadura" data-label="Armadura">🎲</button>
+      </h3>
+      <table class="armadura-table">
+        <tbody>
+          <tr>
+            <td>Armadura Equipada:</td>
+            <td>
+              <select name="system.armadura.equipada" data-dtype="String" class="item-select-armadura">
+                <option value="">-- Nenhuma --</option>
+                {{#each armaduras}}
+                <option value="{{this.id}}" {{#if (eq ../system.armadura.equipada this.id)}}selected{{/if}}>
+                  {{this.name}} (Proteção: {{this.system.protecao}})
+                </option>
+                {{/each}}
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>Total</td>
+            <td>
+              <input type="number" name="system.armadura.total" value="{{number system.armadura.total}}" min="0" step="1" data-dtype="Number" />
+            </td>
+          </tr>
+          <tr>
+            <td>Dano</td>
+            <td>
+              <input type="number" name="system.armadura.dano" value="{{number system.armadura.dano}}" min="0" step="1" data-dtype="Number" />
+            </td>
+          </tr>
+          <tr>
+            <td>Atual</td>
+            <td>
+              <input type="number" name="system.armadura.atual" value="{{number system.armadura.atual}}" readonly />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <nav class="sheet-tabs tabs" data-group="primary">
+    <a class="item" data-tab="identificacao">Identificação</a>
+    <a class="item" data-tab="atributos">Atributos</a>
+    <a class="item" data-tab="especializacao">Especialização</a>
+    <a class="item" data-tab="exacom">EXACOM</a>
+    <a class="item" data-tab="inventario">Inventário</a>
+  </nav>
+
+  <section class="sheet-body">
+    <div class="tab" data-tab="identificacao">
+      <div class="form-group">
+        <label>Data de Admissão:</label>
+        <input type="text" name="system.identificacao.admissao" value="{{system.identificacao.admissao}}" />
+      </div>
+      <div class="form-group">
+        <label>Escala:</label>
+        <input type="text" name="system.identificacao.escala" value="{{system.identificacao.escala}}" />
+      </div>
+      <div class="form-group">
+        <label>EXACOM:</label>
+        <input type="text" name="system.identificacao.exacom" value="{{system.identificacao.exacom}}" />
+      </div>
+    </div>
+
+    <div class="tab" data-tab="atributos">
+      <h3>Físicos</h3>
+      <div class="form-group">
+        <label>Força:</label>
+        <input type="number" name="system.atributos.fisicos.forca" value="{{number system.atributos.fisicos.forca}}" min="1" max="5" step="1" data-dtype="Number" />
+        <button type="button" class="roll-atributo" data-atributo="atributos.fisicos.forca" data-label="Força">🎲</button>
+      </div>
+      <div class="form-group">
+        <label>Destreza:</label>
+        <input type="number" name="system.atributos.fisicos.destreza" value="{{number system.atributos.fisicos.destreza}}" min="1" max="5" step="1" data-dtype="Number" />
+        <button type="button" class="roll-atributo" data-atributo="atributos.fisicos.destreza" data-label="Destreza">🎲</button>
+      </div>
+      <div class="form-group">
+        <label>Vigor:</label>
+        <input type="number" name="system.atributos.fisicos.vigor" value="{{number system.atributos.fisicos.vigor}}" min="1" max="5" step="1" data-dtype="Number" />
+        <button type="button" class="roll-atributo" data-atributo="atributos.fisicos.vigor" data-label="Vigor">🎲</button>
+      </div>
+
+      <h3>Mentais</h3>
+      <div class="form-group">
+        <label>Conhecimento:</label>
+        <input type="number" name="system.atributos.mentais.conhecimento" value="{{number system.atributos.mentais.conhecimento}}" min="1" max="5" step="1" data-dtype="Number" />
+        <button type="button" class="roll-atributo" data-atributo="atributos.mentais.conhecimento" data-label="Conhecimento">🎲</button>
+      </div>
+      <div class="form-group">
+        <label>Perspicácia:</label>
+        <input type="number" name="system.atributos.mentais.perspicacia" value="{{number system.atributos.mentais.perspicacia}}" min="1" max="5" step="1" data-dtype="Number" />
+        <button type="button" class="roll-atributo" data-atributo="atributos.mentais.perspicacia" data-label="Perspicácia">🎲</button>
+      </div>
+      <div class="form-group">
+        <label>Resiliência:</label>
+        <input type="number" name="system.atributos.mentais.resiliencia" value="{{number system.atributos.mentais.resiliencia}}" min="1" max="5" step="1" data-dtype="Number" />
+        <button type="button" class="roll-atributo" data-atributo="atributos.mentais.resiliencia" data-label="Resiliência">🎲</button>
+      </div>
+
+      <h3>Sociais</h3>
+      <div class="form-group">
+        <label>Eloquência:</label>
+        <input type="number" name="system.atributos.sociais.eloquencia" value="{{number system.atributos.sociais.eloquencia}}" min="1" max="5" step="1" data-dtype="Number" />
+        <button type="button" class="roll-atributo" data-atributo="atributos.sociais.eloquencia" data-label="Eloquência">🎲</button>
+      </div>
+      <div class="form-group">
+        <label>Dissimulação:</label>
+        <input type="number" name="system.atributos.sociais.dissimulacao" value="{{number system.atributos.sociais.dissimulacao}}" min="1" max="5" step="1" data-dtype="Number" />
+        <button type="button" class="roll-atributo" data-atributo="atributos.sociais.dissimulacao" data-label="Dissimulação">🎲</button>
+      </div>
+      <div class="form-group">
+        <label>Presença:</label>
+        <input type="number" name="system.atributos.sociais.presenca" value="{{number system.atributos.sociais.presenca}}" min="1" max="5" step="1" data-dtype="Number" />
+        <button type="button" class="roll-atributo" data-atributo="atributos.sociais.presenca" data-label="Presença">🎲</button>
+      </div>
+
+      <h3>Pontos de Atributo</h3>
+      <div class="form-group">
+        <label>Total:</label>
+        <input type="number" name="system.pontosAtributo.total" value="{{number system.pontosAtributo.total}}" readonly />
+      </div>
+      <div class="form-group">
+        <label>Distribuídos:</label>
+        <input type="number" name="system.pontosAtributo.distribuidos" value="{{number system.pontosAtributo.distribuidos}}" readonly />
+      </div>
+      <div class="form-group">
+        <label>Restantes:</label>
+        <input type="number" name="system.pontosAtributo.restantes" value="{{number system.pontosAtributo.restantes}}" readonly />
+      </div>
+
+      <h3>Combate</h3>
+      <div class="form-group">
+        <label>Iniciativa:</label>
+        <input type="number" name="system.combate.iniciativa" value="{{number system.combate.iniciativa}}" readonly />
+        <button type="button" class="roll-iniciativa" title="Rolar Iniciativa">🎲</button>
+      </div>
+      <div class="form-group">
+        <label>Mobilidade:</label>
+        <input type="number" name="system.combate.mobilidade" value="{{number system.combate.mobilidade}}" readonly />
+      </div>
+      <div class="form-group">
+        <label>Esquiva:</label>
+        <input type="number" name="system.combate.esquiva" value="{{number system.combate.esquiva}}" readonly />
+      </div>
+
+      <h3>EXApoints</h3>
+      <div class="form-group">
+        <label>EXApoints Máximo:</label>
+        <input type="number" name="system.exapoints.maximo" value="{{number system.exapoints.maximo}}" readonly />
+        <small>Baseado na Resiliência (Atributos Mentais)</small>
+      </div>
+      <div class="form-group">
+        <label>EXApoints Gastos:</label>
+        <input type="number" name="system.exapoints.gastos" value="{{number system.exapoints.gastos}}" min="0" step="1" data-dtype="Number" />
+      </div>
+      <div class="form-group">
+        <label>EXApoints Atual:</label>
+        <input type="number" name="system.exapoints.atual" value="{{number system.exapoints.atual}}" readonly />
+      </div>
+      <div class="form-group">
+        <label>Overdrive:</label>
+        <input type="number" name="system.exapoints.overdrive" value="{{#if system.exapoints.overdrive}}{{number system.exapoints.overdrive}}{{else}}1{{/if}}" min="0" step="1" data-dtype="Number" />
+      </div>
+    </div>
+
+    <div class="tab" data-tab="especializacao">
+      <h3>Especializações Físicas</h3>
+      <div class="especializacoes-section" data-tipo="fisicos">
+        <button type="button" class="especializacao-create" data-tipo="fisicos">+ Adicionar Especialização</button>
+        <table class="especializacoes-table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Atributo</th>
+              <th>Dado Base</th>
+              <th>Bônus</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each especializacoes.fisicos}}
+            <tr data-index="{{@index}}" data-tipo="fisicos">
+              <td>{{this.nome}}</td>
+              <td>{{this.atributo}}</td>
+              <td>{{this.dadoBase}}d6</td>
+              <td>{{this.dadoBonus}}</td>
+              <td>
+                <button type="button" class="roll-especializacao" data-tipo="fisicos" data-index="{{@index}}">🎲</button>
+                <button type="button" class="edit-especializacao" data-tipo="fisicos" data-index="{{@index}}">✏️</button>
+                <button type="button" class="delete-especializacao" data-tipo="fisicos" data-index="{{@index}}">🗑️</button>
+              </td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Especializações Mentais</h3>
+      <div class="especializacoes-section" data-tipo="mentais">
+        <button type="button" class="especializacao-create" data-tipo="mentais">+ Adicionar Especialização</button>
+        <table class="especializacoes-table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Atributo</th>
+              <th>Dado Base</th>
+              <th>Bônus</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each especializacoes.mentais}}
+            <tr data-index="{{@index}}" data-tipo="mentais">
+              <td>{{this.nome}}</td>
+              <td>{{this.atributo}}</td>
+              <td>{{this.dadoBase}}d6</td>
+              <td>{{this.dadoBonus}}</td>
+              <td>
+                <button type="button" class="roll-especializacao" data-tipo="mentais" data-index="{{@index}}">🎲</button>
+                <button type="button" class="edit-especializacao" data-tipo="mentais" data-index="{{@index}}">✏️</button>
+                <button type="button" class="delete-especializacao" data-tipo="mentais" data-index="{{@index}}">🗑️</button>
+              </td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Especializações Sociais</h3>
+      <div class="especializacoes-section" data-tipo="sociais">
+        <button type="button" class="especializacao-create" data-tipo="sociais">+ Adicionar Especialização</button>
+        <table class="especializacoes-table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Atributo</th>
+              <th>Dado Base</th>
+              <th>Bônus</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each especializacoes.sociais}}
+            <tr data-index="{{@index}}" data-tipo="sociais">
+              <td>{{this.nome}}</td>
+              <td>{{this.atributo}}</td>
+              <td>{{this.dadoBase}}d6</td>
+              <td>{{this.dadoBonus}}</td>
+              <td>
+                <button type="button" class="roll-especializacao" data-tipo="sociais" data-index="{{@index}}">🎲</button>
+                <button type="button" class="edit-especializacao" data-tipo="sociais" data-index="{{@index}}">✏️</button>
+                <button type="button" class="delete-especializacao" data-tipo="sociais" data-index="{{@index}}">🗑️</button>
+              </td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="tab" data-tab="exacom">
+      <h3>EXACOM</h3>
+      <p>EXACOM será implementado em breve.</p>
+    </div>
+
+    <div class="tab" data-tab="inventario">
+      <h3>Equipamentos</h3>
+      <table class="inventario-table">
+        <thead>
+          <tr>
+            <th>Slot</th>
+            <th>Ação</th>
+            <th>Equipamento</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each system.inventario.equipamentos}}
+          <tr>
+            <td>Equipamento {{math @index "+" 1}}</td>
+            <td>
+              <button type="button" class="roll-equipamento" data-index="{{@index}}" data-nome="{{nome}}" {{#unless id}}disabled{{/unless}}>🎲</button>
+            </td>
+            <td>
+              <select name="system.inventario.equipamentos.{{@index}}.id" data-dtype="String" class="item-select-equipamento">
+                <option value="">-- Nenhum --</option>
+                {{#each ../equipamentos}}
+                <option value="{{this.id}}" {{#if (eq ../id this.id)}}selected{{/if}}>{{this.name}}</option>
+                {{/each}}
+              </select>
+              <input type="hidden" name="system.inventario.equipamentos.{{@index}}.nome" value="{{nome}}" />
+            </td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+
+      <h3>Armas</h3>
+      <table class="inventario-table">
+        <thead>
+          <tr>
+            <th>Slot</th>
+            <th>Ação</th>
+            <th>Arma</th>
+            <th>Dano</th>
+            <th>Alcance</th>
+            <th>Bônus</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each system.inventario.armas}}
+          <tr>
+            <td>Arma {{math @index "+" 1}}</td>
+            <td>
+              <button type="button" class="roll-arma" data-index="{{@index}}" data-nome="{{nome}}" {{#unless id}}disabled{{/unless}}>🎲</button>
+            </td>
+            <td>
+              <select name="system.inventario.armas.{{@index}}.id" data-dtype="String" class="item-select-arma">
+                <option value="">-- Nenhuma --</option>
+                {{#each ../armas}}
+                <option value="{{this.id}}" {{#if (eq ../id this.id)}}selected{{/if}}>{{this.name}}</option>
+                {{/each}}
+              </select>
+              <input type="hidden" name="system.inventario.armas.{{@index}}.nome" value="{{nome}}" />
+            </td>
+            <td>
+              <input type="number" name="system.inventario.armas.{{@index}}.dano" value="{{dano}}" min="0" data-dtype="Number" />
+            </td>
+            <td>
+              <input type="text" name="system.inventario.armas.{{@index}}.alcance" value="{{alcance}}" />
+            </td>
+            <td>
+              <input type="number" name="system.inventario.armas.{{@index}}.bonus" value="{{bonus}}" data-dtype="Number" />
+            </td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</form>
+
