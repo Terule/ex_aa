@@ -127,7 +127,7 @@
     }
   },
   "Item": {
-    "types": ["item", "feature", "spell"],
+    "types": ["item", "feature", "spell", "armadura", "arma", "equipamento"],
     "templates": {
       "base": {
         "description": ""
@@ -145,6 +145,29 @@
     "spell": {
       "templates": ["base"],
       "spellLevel": 1
+    },
+    "armadura": {
+      "templates": ["base"],
+      "tipo": "",
+      "protecao": 0,
+      "peso": 0,
+      "descricao": "",
+      "especial": ""
+    },
+    "arma": {
+      "templates": ["base"],
+      "tipo": "",
+      "dano": 0,
+      "alcance": "",
+      "bonus": 0,
+      "descricao": ""
+    },
+    "equipamento": {
+      "templates": ["base"],
+      "tipo": "",
+      "efeito": "",
+      "peso": 0,
+      "descricao": ""
     }
   }
 }
