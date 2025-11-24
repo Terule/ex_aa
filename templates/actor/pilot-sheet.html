@@ -18,76 +18,52 @@
   </header>
 
   <div class="combat-stats-section">
-    <div class="limiar-dano-section">
+    <div class="limiar-dano-section card">
       <h3>Limiar de Dano</h3>
-      <div class="limiar-dano-container">
-        <!-- Quadro 1: Limiar (Valor de Referência) -->
-        <div class="limiar-box">
-          <h4>Limiar</h4>
-          <table class="limiar-dano-table">
-            <tbody>
-              <tr>
-                <td>Leve</td>
-                <td>
-                  <input type="number" name="system.limiarDano.leve.limiar" value="{{number system.limiarDano.leve.limiar}}" readonly />
-                </td>
-              </tr>
-              <tr>
-                <td>Moderado</td>
-                <td>
-                  <input type="number" name="system.limiarDano.moderado.limiar" value="{{number system.limiarDano.moderado.limiar}}" readonly />
-                </td>
-              </tr>
-              <tr>
-                <td>Grave</td>
-                <td>
-                  <input type="number" name="system.limiarDano.grave.limiar" value="{{number system.limiarDano.grave.limiar}}" readonly />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        
-        <!-- Quadro 2: Marcações (Dano Aplicado) -->
-        <div class="marcacoes-box">
-          <h4>Marcacões</h4>
-          <table class="limiar-dano-table">
-            <tbody>
-              <tr>
-                <td>Leve</td>
-                <td>
-                  <input type="number" name="system.limiarDano.leve.marcacoes" value="{{number system.limiarDano.leve.marcacoes}}" min="0" step="1" data-dtype="Number" />
-                </td>
-              </tr>
-              <tr>
-                <td>Moderado</td>
-                <td>
-                  <input type="number" name="system.limiarDano.moderado.marcacoes" value="{{number system.limiarDano.moderado.marcacoes}}" min="0" step="1" data-dtype="Number" />
-                </td>
-              </tr>
-              <tr>
-                <td>Grave</td>
-                <td>
-                  <input type="number" name="system.limiarDano.grave.marcacoes" value="{{number system.limiarDano.grave.marcacoes}}" min="0" step="1" data-dtype="Number" />
-                </td>
-              </tr>
-              <tr>
-                <td>Penalidades</td>
-                <td>
-                  <input type="number" name="system.limiarDano.penalidades" value="{{number system.limiarDano.penalidades}}" min="0" step="1" data-dtype="Number" />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+      <table class="limiar-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Leve</th>
+            <th>Médio</th>
+            <th>Grave</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>Limiar</th>
+            <td>
+              <input type="number" name="system.limiarDano.leve.limiar" value="{{number system.limiarDano.leve.limiar}}" readonly />
+            </td>
+            <td>
+              <input type="number" name="system.limiarDano.moderado.limiar" value="{{number system.limiarDano.moderado.limiar}}" readonly />
+            </td>
+            <td>
+              <input type="number" name="system.limiarDano.grave.limiar" value="{{number system.limiarDano.grave.limiar}}" readonly />
+            </td>
+          </tr>
+          <tr>
+            <th>Marcações</th>
+            <td>
+              <input type="number" name="system.limiarDano.leve.marcacoes" value="{{number system.limiarDano.leve.marcacoes}}" min="0" max="3" step="1" data-dtype="Number" />
+            </td>
+            <td>
+              <input type="number" name="system.limiarDano.moderado.marcacoes" value="{{number system.limiarDano.moderado.marcacoes}}" min="0" max="3" step="1" data-dtype="Number" />
+            </td>
+            <td>
+              <input type="number" name="system.limiarDano.grave.marcacoes" value="{{number system.limiarDano.grave.marcacoes}}" min="0" max="1" step="1" data-dtype="Number" />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="penalidades">
+        <label>Penalidades</label>
+        <input type="number" name="system.limiarDano.penalidades" value="{{number system.limiarDano.penalidades}}" min="0" step="1" data-dtype="Number" />
       </div>
     </div>
 
-    <div class="armadura-section">
-      <h3>
-        Armadura
-        <button type="button" class="roll-armadura" data-label="Armadura">🎲</button>
-      </h3>
+    <div class="armadura-section card">
+      <h3>Armadura</h3>
       <table class="armadura-table">
         <tbody>
           <tr>
@@ -123,6 +99,7 @@
           </tr>
         </tbody>
       </table>
+      <button type="button" class="roll-armadura" data-label="Armadura">🎲 Rolar Armadura</button>
     </div>
   </div>
 
@@ -135,7 +112,7 @@
   </nav>
 
   <section class="sheet-body">
-    <div class="tab" data-tab="identificacao">
+    <div class="tab identificacao-tab" data-tab="identificacao">
       <div class="form-group">
         <label>Data de Admissão:</label>
         <input type="text" name="system.identificacao.admissao" value="{{system.identificacao.admissao}}" />
@@ -150,7 +127,7 @@
       </div>
     </div>
 
-    <div class="tab" data-tab="atributos">
+    <div class="tab atributos-tab" data-tab="atributos">
       <h3>Físicos</h3>
       <div class="form-group">
         <label>Força:</label>
@@ -251,7 +228,7 @@
       </div>
     </div>
 
-    <div class="tab" data-tab="especializacao">
+    <div class="tab especializacao-tab" data-tab="especializacao">
       <h3>Especializações Físicas</h3>
       <div class="especializacoes-section" data-tipo="fisicos">
         <button type="button" class="especializacao-create" data-tipo="fisicos">+ Adicionar Especialização</button>
@@ -262,7 +239,7 @@
               <th>Atributo</th>
               <th>Dado Base</th>
               <th>Bônus</th>
-              <th>Ações</th>
+            <th class="acoes">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -293,7 +270,7 @@
               <th>Atributo</th>
               <th>Dado Base</th>
               <th>Bônus</th>
-              <th>Ações</th>
+              <th class="acoes">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -346,17 +323,16 @@
       </div>
     </div>
 
-    <div class="tab" data-tab="exacom">
+    <div class="tab exacom-tab" data-tab="exacom">
       <h3>EXACOM</h3>
       <p>EXACOM será implementado em breve.</p>
     </div>
 
-    <div class="tab" data-tab="inventario">
+    <div class="tab inventario-tab" data-tab="inventario">
       <h3>Equipamentos</h3>
       <table class="inventario-table">
         <thead>
           <tr>
-            <th>Slot</th>
             <th>Ação</th>
             <th>Equipamento</th>
           </tr>
@@ -364,7 +340,6 @@
         <tbody>
           {{#each system.inventario.equipamentos}}
           <tr>
-            <td>Equipamento {{math @index "+" 1}}</td>
             <td>
               <button type="button" class="roll-equipamento" data-index="{{@index}}" data-nome="{{nome}}" {{#unless id}}disabled{{/unless}}>🎲</button>
             </td>
@@ -386,7 +361,6 @@
       <table class="inventario-table">
         <thead>
           <tr>
-            <th>Slot</th>
             <th>Ação</th>
             <th>Arma</th>
             <th>Dano</th>
@@ -397,7 +371,6 @@
         <tbody>
           {{#each system.inventario.armas}}
           <tr>
-            <td>Arma {{math @index "+" 1}}</td>
             <td>
               <button type="button" class="roll-arma" data-index="{{@index}}" data-nome="{{nome}}" {{#unless id}}disabled{{/unless}}>🎲</button>
             </td>

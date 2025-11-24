@@ -33,3 +33,5 @@
 3. Otimizar padding/margin da seção de combate
 4. Garantir consistência no espaçamento
 
+
+

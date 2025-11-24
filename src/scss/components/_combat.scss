@@ -1,0 +1,13 @@
+.combat-stats-section {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  .limiar-dano-section,
+  .armadura-section {
+    flex: 1 1 0;
+    min-width: 320px;
+  }
+}
+
+
