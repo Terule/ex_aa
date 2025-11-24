@@ -29,7 +29,7 @@ export class RisingSteelActor extends Actor {
             return isNaN(num) ? min : Math.max(min, num);
         };
 
-        const isCriatura = this.type === "criatura";
+        const isCriatura = ["criatura", "companion"].includes(this.type);
         const clampAttribute = (value) => {
             const normalized = normalizeValue(value, 1);
             if (isCriatura) {
@@ -78,8 +78,13 @@ export class RisingSteelActor extends Actor {
     prepareBaseData(){
         if (this.type === "piloto") {
             this._preparePilotoData();
-        } else if (this.type === "criatura") {
+        } else if (this.type === "criatura" || this.type === "companion") {
             this._prepareCriaturaData();
+            if (!this.system.vinculo) {
+                this.system.vinculo = { pilotoId: "" };
+            } else if (this.system.vinculo.pilotoId === undefined || this.system.vinculo.pilotoId === null) {
+                this.system.vinculo.pilotoId = "";
+            }
         }
     }
 

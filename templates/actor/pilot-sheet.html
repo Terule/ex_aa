@@ -109,6 +109,7 @@
     <a class="item" data-tab="especializacao">Especialização</a>
     <a class="item" data-tab="exacom">EXACOM</a>
     <a class="item" data-tab="inventario">Inventário</a>
+    <a class="item" data-tab="vinculo">Vínculo</a>
   </nav>
 
   <section class="sheet-body">
@@ -396,6 +397,253 @@
           {{/each}}
         </tbody>
       </table>
+    </div>
+
+    <div class="tab vinculo-tab" data-tab="vinculo">
+      <div class="companion-section card">
+        <div class="form-group companion-select">
+          <label>Companion Vinculado:</label>
+          <select name="system.companionId" data-dtype="String">
+            <option value="">-- Nenhum --</option>
+            {{#each availableCompanions}}
+            <option value="{{this.id}}" {{#if (eq ../system.companionId this.id)}}selected{{/if}}>{{this.name}}</option>
+            {{/each}}
+          </select>
+        </div>
+        {{#if currentCompanion}}
+        <div class="companion-card">
+          <div class="companion-card-header">
+            <img src="{{currentCompanion.img}}" alt="{{currentCompanion.name}}" />
+            <div class="details">
+              <h4>{{currentCompanion.name}}</h4>
+              <p>{{currentCompanion.informacoes.tipo}}</p>
+              <div class="meta">
+                <span><strong>Categoria:</strong> {{currentCompanion.informacoes.categoria}}</span>
+                <span><strong>Escala:</strong> {{currentCompanion.informacoes.escala}}</span>
+              </div>
+              <button type="button" class="open-companion-sheet">Abrir ficha</button>
+            </div>
+          </div>
+        </div>
+        {{else}}
+        <p class="companion-empty">
+          Vincule um companion para habilitar atalhos e visualização rápida.
+        </p>
+        {{/if}}
+      </div>
+
+      {{#if currentCompanion}}
+      <div class="linked-companion-view">
+        <div class="card info-gerais-card">
+          <h3>Informações Gerais</h3>
+          <table class="info-gerais">
+            <tbody>
+              <tr>
+                <th>Tipo</th>
+                <td>{{currentCompanion.system.informacoes.tipo}}</td>
+                <th>Categoria</th>
+                <td>{{currentCompanion.system.informacoes.categoria}}</td>
+              </tr>
+              <tr>
+                <th>Escala</th>
+                <td>{{currentCompanion.system.informacoes.escala}}</td>
+                <th>Pontos Restantes</th>
+                <td>{{number currentCompanion.system.pontosAtributo.restantes}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="armadura-limiar-row">
+          <div class="card limiar-section">
+            <h3>Limiar de Dano</h3>
+            <table class="limiar-table">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Leve</th>
+                  <th>Médio</th>
+                  <th>Grave</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th>Limiar</th>
+                  <td><input type="number" value="{{number currentCompanion.system.limiarDano.leve.limiar}}" readonly /></td>
+                  <td><input type="number" value="{{number currentCompanion.system.limiarDano.moderado.limiar}}" readonly /></td>
+                  <td><input type="number" value="{{number currentCompanion.system.limiarDano.grave.limiar}}" readonly /></td>
+                </tr>
+                <tr>
+                  <th>Marcações</th>
+                  <td><input type="number" value="{{number currentCompanion.system.limiarDano.leve.marcacoes}}" readonly /></td>
+                  <td><input type="number" value="{{number currentCompanion.system.limiarDano.moderado.marcacoes}}" readonly /></td>
+                  <td><input type="number" value="{{number currentCompanion.system.limiarDano.grave.marcacoes}}" readonly /></td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="penalidades">
+              <label>Penalidades</label>
+              <input type="number" value="{{number currentCompanion.system.limiarDano.penalidades}}" readonly />
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Armadura</h3>
+            <table>
+              <tbody>
+                <tr>
+                  <th>Total</th>
+                  <td><input type="number" value="{{number currentCompanion.system.armadura.total}}" readonly /></td>
+                </tr>
+                <tr>
+                  <th>Dano</th>
+                  <td><input type="number" value="{{number currentCompanion.system.armadura.dano}}" readonly /></td>
+                </tr>
+                <tr>
+                  <th>Atual</th>
+                  <td><input type="number" value="{{number currentCompanion.system.armadura.atual}}" readonly /></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card primary-attributes">
+          <h3>Atributos Primários</h3>
+          <table>
+            <tbody>
+              <tr>
+                <th>FOR</th>
+                <td><input type="number" value="{{number currentCompanion.system.atributos.fisicos.forca}}" readonly /></td>
+                <th>CON</th>
+                <td><input type="number" value="{{number currentCompanion.system.atributos.mentais.conhecimento}}" readonly /></td>
+                <th>ELO</th>
+                <td><input type="number" value="{{number currentCompanion.system.atributos.sociais.eloquencia}}" readonly /></td>
+              </tr>
+              <tr>
+                <th>DES</th>
+                <td><input type="number" value="{{number currentCompanion.system.atributos.fisicos.destreza}}" readonly /></td>
+                <th>PER</th>
+                <td><input type="number" value="{{number currentCompanion.system.atributos.mentais.perspicacia}}" readonly /></td>
+                <th>DIS</th>
+                <td><input type="number" value="{{number currentCompanion.system.atributos.sociais.dissimulacao}}" readonly /></td>
+              </tr>
+              <tr>
+                <th>VIG</th>
+                <td><input type="number" value="{{number currentCompanion.system.atributos.fisicos.vigor}}" readonly /></td>
+                <th>RES</th>
+                <td><input type="number" value="{{number currentCompanion.system.atributos.mentais.resiliencia}}" readonly /></td>
+                <th>PRE</th>
+                <td><input type="number" value="{{number currentCompanion.system.atributos.sociais.presenca}}" readonly /></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card secondary-attributes">
+          <h3>Atributos Secundários</h3>
+          <table>
+            <tbody>
+              <tr>
+                <th>Esquiva</th>
+                <td><input type="number" value="{{number currentCompanion.system.combate.esquiva}}" readonly /></td>
+                <th>Mobilidade</th>
+                <td><input type="number" value="{{number currentCompanion.system.combate.mobilidade}}" readonly /></td>
+                <th>Iniciativa</th>
+                <td><input type="number" value="{{number currentCompanion.system.combate.iniciativa}}" readonly /></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card pontos-section">
+          <div>
+            <strong>Pontos Utilizados:</strong>
+            <span>{{number currentCompanion.system.pontosAtributo.distribuidos}}</span>
+          </div>
+          <div>
+            <strong>Pontos Restantes:</strong>
+            <span>{{number currentCompanion.system.pontosAtributo.restantes}}</span>
+          </div>
+        </div>
+
+        <div class="card descricao-section">
+          <h3>Descrição</h3>
+          <textarea readonly rows="4">{{currentCompanion.system.descricao}}</textarea>
+          {{#if currentCompanion.descriptionHTML}}
+          <div class="descricao-preview">
+            {{{currentCompanion.descriptionHTML}}}
+          </div>
+          {{/if}}
+        </div>
+
+        <div class="card attack-section readonly">
+          <h3>Ataques</h3>
+          <table class="attack-table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Atributo</th>
+                <th>Dado Base</th>
+                <th>Dado Bônus</th>
+                <th>Condição</th>
+                <th>Alcance</th>
+                <th>Dano</th>
+                <th>Efeito</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#if currentCompanion.ataquesList.length}}
+              {{#each currentCompanion.ataquesList}}
+              <tr>
+                <td>{{this.nome}}</td>
+                <td>{{this.atributoLabel}}</td>
+                <td>{{this.atributoLabel}} ({{this.atributoValor}}d6)</td>
+                <td>{{this.dadoBonus}}</td>
+                <td>{{this.condicao}}</td>
+                <td>{{this.alcance}}</td>
+                <td>{{this.dano}}</td>
+                <td>{{this.efeito}}</td>
+              </tr>
+              {{/each}}
+              {{else}}
+              <tr>
+                <td colspan="8" class="empty-row">Nenhum ataque registrado.</td>
+              </tr>
+              {{/if}}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card habilidades-section readonly">
+          <h3>Habilidades Especiais</h3>
+          <table class="abilities-table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Descrição</th>
+                <th>Usos (Atual / Total)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#if currentCompanion.habilidadesList.length}}
+              {{#each currentCompanion.habilidadesList}}
+              <tr>
+                <td>{{this.nome}}</td>
+                <td>{{this.descricao}}</td>
+                <td>{{this.usos.atual}} / {{this.usos.total}}</td>
+              </tr>
+              {{/each}}
+              {{else}}
+              <tr>
+                <td colspan="3" class="empty-row">Nenhuma habilidade especial cadastrada.</td>
+              </tr>
+              {{/if}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {{/if}}
     </div>
   </section>
 </form>

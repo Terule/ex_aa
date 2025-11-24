@@ -4,6 +4,7 @@ import { FoundryCompatibility } from "./utils/compatibility.js";
 import { RisingSteelActor } from "./actor/actor.js";
 import { RisingSteelPilotSheet } from "./actor/pilot-sheet.js";
 import { RisingSteelCreatureSheet } from "./actor/creature-sheet.js";
+import { RisingSteelCompanionSheet } from "./actor/companion-sheet.js";
 import { RisingSteelItem } from "./item/item.js";
 import { RisingSteelItemSheet } from "./item/item-sheet.js";
 import { RisingSteelRollDialog } from "./app/roll-dialog.js";
@@ -71,6 +72,7 @@ Hooks.once("init", async function () {
     CONFIG.Actor.typeLabels = CONFIG.Actor.typeLabels || {};
     CONFIG.Actor.typeLabels.piloto = "Piloto";
     CONFIG.Actor.typeLabels.criatura = "Criatura";
+    CONFIG.Actor.typeLabels.companion = "Companion";
     CONFIG.Actor.defaultType = "piloto";
     
     // Log packs disponíveis para debug
@@ -101,6 +103,10 @@ Hooks.once("init", async function () {
     });
     FoundryCompatibility.registerActorSheet("rising-steel", RisingSteelCreatureSheet, {
         types: ["criatura"],
+        makeDefault: true
+    });
+    FoundryCompatibility.registerActorSheet("rising-steel", RisingSteelCompanionSheet, {
+        types: ["companion"],
         makeDefault: true
     });
     FoundryCompatibility.unregisterItemSheet("core", FoundryCompatibility.getDefaultItemSheet());
