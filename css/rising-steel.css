@@ -442,18 +442,21 @@
 }
 
 /* --- Ficha de Criatura --- */
-.creature-sheet {
+.creature-sheet,
+.companion-sheet {
   padding: 0.5rem;
 }
 
-.creature-sheet .creature-header {
+.creature-sheet .creature-header,
+.companion-sheet .creature-header {
   display: flex;
   gap: 12px;
   align-items: flex-start;
   margin-bottom: 1rem;
 }
 
-.creature-sheet .creature-header .profile-img {
+.creature-sheet .creature-header .profile-img,
+.companion-sheet .creature-header .profile-img {
   flex: 0 0 120px;
   width: 120px;
   height: 120px;
@@ -462,60 +465,71 @@
   object-fit: cover;
 }
 
-.creature-sheet .creature-header .info-gerais {
+.creature-sheet .creature-header .info-gerais,
+.companion-sheet .creature-header .info-gerais {
   flex: 1;
   margin: 0;
 }
 
-.creature-sheet .creature-header .header-fields {
+.creature-sheet .creature-header .header-fields,
+.companion-sheet .creature-header .header-fields {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.creature-sheet .creature-header .header-fields h1 {
+.creature-sheet .creature-header .header-fields h1,
+.companion-sheet .creature-header .header-fields h1 {
   margin: 0;
   font-size: 1.4rem;
 }
 
-.creature-sheet .creature-header .header-fields h1 input {
+.creature-sheet .creature-header .header-fields h1 input,
+.companion-sheet .creature-header .header-fields h1 input {
   width: 100%;
   font-size: 1.2rem;
 }
 
-.creature-sheet .info-gerais {
+.creature-sheet .info-gerais,
+.companion-sheet .info-gerais {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 1rem;
 }
 
 .creature-sheet .info-gerais th,
-.creature-sheet .info-gerais td {
+.creature-sheet .info-gerais td,
+.companion-sheet .info-gerais th,
+.companion-sheet .info-gerais td {
   border: 1px solid #c4bdd6;
   padding: 0.4rem;
 }
 
-.creature-sheet .info-gerais thead th {
+.creature-sheet .info-gerais thead th,
+.companion-sheet .info-gerais thead th {
   background: #5a2b91;
   color: #fff;
   text-align: center;
   font-size: 1.1rem;
 }
 
-.creature-sheet .info-gerais th {
+.creature-sheet .info-gerais th,
+.companion-sheet .info-gerais th {
   background: #efe6ff;
   text-align: left;
   width: 140px;
 }
 
-.creature-sheet .creature-body {
+.creature-sheet .creature-body,
+.companion-sheet .creature-body {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.creature-sheet .card {
+.creature-sheet .card,
+.companion-sheet .card {
   background: #fff;
   border: 1px solid #d9d0ec;
   border-radius: 6px;
@@ -523,38 +537,47 @@
 }
 
 .creature-sheet .card h3,
-.creature-sheet .card h4 {
+.creature-sheet .card h4,
+.companion-sheet .card h3,
+.companion-sheet .card h4 {
   margin: 0 0 0.5rem 0;
   color: #5a2b91;
 }
 
-.creature-sheet .creature-columns {
+.creature-sheet .creature-columns,
+.companion-sheet .creature-columns {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
 }
 
-.creature-sheet .primary-attributes {
+.creature-sheet .primary-attributes,
+.companion-sheet .primary-attributes {
   flex: 2;
 }
 
-.creature-sheet .primary-attributes table {
+.creature-sheet .primary-attributes table,
+.companion-sheet .primary-attributes table {
   width: 100%;
   border-collapse: collapse;
 }
 
 .creature-sheet .primary-attributes th,
-.creature-sheet .primary-attributes td {
+.creature-sheet .primary-attributes td,
+.companion-sheet .primary-attributes th,
+.companion-sheet .primary-attributes td {
   border: 1px solid #e2d9f8;
   padding: 0.35rem;
 }
 
-.creature-sheet .primary-attributes th {
+.creature-sheet .primary-attributes th,
+.companion-sheet .primary-attributes th {
   background: #f4eefe;
   text-align: center;
 }
 
-.creature-sheet .primary-attributes button.roll-atributo {
+.creature-sheet .primary-attributes button.roll-atributo,
+.companion-sheet .primary-attributes button.roll-atributo {
   width: 100%;
   border: none;
   background: #f4eefe;
@@ -564,37 +587,45 @@
   padding: 0.2rem 0;
 }
 
-.creature-sheet .primary-attributes button.roll-atributo:hover {
+.creature-sheet .primary-attributes button.roll-atributo:hover,
+.companion-sheet .primary-attributes button.roll-atributo:hover {
   background: #e3d5f9;
 }
 
-.creature-sheet .secondary-attributes {
+.creature-sheet .secondary-attributes,
+.companion-sheet .secondary-attributes {
   flex: 1;
 }
 
-.creature-sheet .secondary-attributes table {
+.creature-sheet .secondary-attributes table,
+.companion-sheet .secondary-attributes table {
   width: 100%;
   border-collapse: collapse;
 }
 
 .creature-sheet .secondary-attributes th,
-.creature-sheet .secondary-attributes td {
+.creature-sheet .secondary-attributes td,
+.companion-sheet .secondary-attributes th,
+.companion-sheet .secondary-attributes td {
   border: 1px solid #e2d9f8;
   padding: 0.35rem;
 }
 
-.creature-sheet .secondary-attributes th {
+.creature-sheet .secondary-attributes th,
+.companion-sheet .secondary-attributes th {
   background: #f4eefe;
   text-align: center;
 }
 
-.creature-sheet .secondary-attributes .action-row {
+.creature-sheet .secondary-attributes .action-row,
+.companion-sheet .secondary-attributes .action-row {
   margin-top: 0.5rem;
   display: flex;
   justify-content: flex-end;
 }
 
-.creature-sheet .secondary-attributes .roll-iniciativa {
+.creature-sheet .secondary-attributes .roll-iniciativa,
+.companion-sheet .secondary-attributes .roll-iniciativa {
   background: #5a2b91;
   color: #fff;
   border: none;
@@ -604,30 +635,37 @@
   font-weight: 600;
 }
 
-.creature-sheet .secondary-attributes .roll-iniciativa:hover {
+.creature-sheet .secondary-attributes .roll-iniciativa:hover,
+.companion-sheet .secondary-attributes .roll-iniciativa:hover {
   background: #7a45bf;
 }
 
-.creature-sheet .secondary-info {
+.creature-sheet .secondary-info,
+.companion-sheet .secondary-info {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.creature-sheet .armadura-limiar-row {
+.creature-sheet .armadura-limiar-row,
+.companion-sheet .armadura-limiar-row {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
 }
 
-.creature-sheet .armadura-limiar-row .card {
+.creature-sheet .armadura-limiar-row .card,
+.companion-sheet .armadura-limiar-row .card {
   flex: 1 1 0;
 }
 
 .creature-sheet table input,
 .creature-sheet select,
-.creature-sheet textarea {
+.creature-sheet textarea,
+.companion-sheet table input,
+.companion-sheet select,
+.companion-sheet textarea {
   width: 100%;
   box-sizing: border-box;
 }
@@ -666,23 +704,185 @@
   color: #5a2b91;
 }
 
-.creature-sheet .pontos-section {
+.pilot-sheet .companion-section {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pilot-sheet .companion-section .companion-select select {
+  width: 100%;
+}
+
+.pilot-sheet .companion-card {
+  border: 1px solid #c4bdd6;
+  border-radius: 6px;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pilot-sheet .companion-card-header {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.pilot-sheet .companion-card-header img {
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 2px solid #7a3cc2;
+}
+
+.pilot-sheet .companion-card-header .details h4 {
+  margin: 0;
+  color: #5a2b91;
+}
+
+.pilot-sheet .companion-card-header .details .meta {
+  font-size: 0.9rem;
+  display: flex;
+  gap: 1rem;
+  color: #5a2b91;
+}
+
+.pilot-sheet .companion-card-header button {
+  margin-top: 0.5rem;
+  border: 1px solid #7a3cc2;
+  background: #faf3ff;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #5a2b91;
+}
+
+.pilot-sheet .companion-stats,
+.pilot-sheet .companion-limiar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.5rem;
+}
+
+.pilot-sheet .companion-stats div,
+.pilot-sheet .companion-limiar div {
+  background: rgba(90, 43, 145, 0.05);
+  border: 1px solid rgba(90, 43, 145, 0.2);
+  border-radius: 4px;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.pilot-sheet .companion-stats span,
+.pilot-sheet .companion-limiar span {
+  display: block;
+  font-size: 0.85rem;
+  color: #5a2b91;
+}
+
+.pilot-sheet .companion-stats strong,
+.pilot-sheet .companion-limiar strong {
+  font-size: 1rem;
+  color: #2d1b44;
+}
+
+.pilot-sheet .companion-empty {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #5a2b91;
+}
+
+.companion-sheet .companion-link {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.companion-sheet .companion-link .pilot-card {
+  border: 1px solid #c4bdd6;
+  border-radius: 6px;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.companion-sheet .pilot-card-header {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.companion-sheet .pilot-card-header img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 2px solid #5a2b91;
+}
+
+.companion-sheet .pilot-card-header h4 {
+  margin: 0;
+  color: #5a2b91;
+}
+
+.companion-sheet .pilot-card-header button {
+  margin-top: 0.25rem;
+  border: 1px solid #5a2b91;
+  border-radius: 4px;
+  padding: 0.25rem 0.75rem;
+  background: #f7f0ff;
+  cursor: pointer;
+  color: #5a2b91;
+}
+
+.companion-sheet .pilot-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.5rem;
+}
+
+.companion-sheet .pilot-stats div {
+  background: rgba(90, 43, 145, 0.05);
+  border: 1px solid rgba(90, 43, 145, 0.2);
+  border-radius: 4px;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.companion-sheet .pilot-empty {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #5a2b91;
+}
+
+.creature-sheet .pontos-section,
+.companion-sheet .pontos-section {
   display: flex;
   gap: 1rem;
   justify-content: space-around;
   font-size: 1.1rem;
 }
 
-.creature-sheet .pontos-section span {
+.creature-sheet .pontos-section span,
+.companion-sheet .pontos-section span {
   font-weight: bold;
   color: #5a2b91;
 }
 
-.creature-sheet .descricao-section textarea {
+.creature-sheet .descricao-section textarea,
+.companion-sheet .descricao-section textarea {
   min-height: 100px;
 }
 
-.creature-sheet .descricao-preview {
+.creature-sheet .descricao-preview,
+.companion-sheet .descricao-preview {
   margin-top: 0.5rem;
   padding: 0.5rem;
   border: 1px dashed #c5b3e8;
@@ -691,28 +891,34 @@
   overflow-y: auto;
 }
 
-.creature-sheet .referencia-categorias table {
+.creature-sheet .referencia-categorias table,
+.companion-sheet .referencia-categorias table {
   width: 100%;
   border-collapse: collapse;
 }
 
 .creature-sheet .referencia-categorias th,
-.creature-sheet .referencia-categorias td {
+.creature-sheet .referencia-categorias td,
+.companion-sheet .referencia-categorias th,
+.companion-sheet .referencia-categorias td {
   border: 1px solid #e2d9f8;
   padding: 0.3rem;
   text-align: left;
 }
 
-.creature-tabs {
+.creature-tabs,
+.companion-tabs {
   margin-bottom: 0.75rem;
 }
 
-.creature-tabs .item {
+.creature-tabs .item,
+.companion-tabs .item {
   padding: 0.4rem 0.8rem;
   text-transform: uppercase;
 }
 
-.creature-tabs .item.active {
+.creature-tabs .item.active,
+.companion-tabs .item.active {
   background: #5a2b91;
   color: #fff;
 }
@@ -817,6 +1023,57 @@
 .abilities-table .ability-actions button:hover {
   background: #f0e6ff;
   border-color: #7a3cc2;
+}
+
+.pilot-sheet .vinculo-tab .linked-companion-view,
+.companion-sheet .vinculo-tab .linked-pilot-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.pilot-sheet .vinculo-tab .linked-companion-view .card,
+.companion-sheet .vinculo-tab .linked-pilot-view .card {
+  margin: 0;
+}
+
+.pilot-sheet .vinculo-tab input[readonly],
+.companion-sheet .vinculo-tab input[readonly],
+.vinculo-tab textarea[readonly] {
+  background: rgba(255, 255, 255, 0.6);
+  color: inherit;
+}
+
+.pilot-sheet .vinculo-tab textarea[readonly],
+.companion-sheet .vinculo-tab textarea[readonly] {
+  width: 100%;
+  resize: vertical;
+}
+
+.linked-companion-view .attack-section.readonly button,
+.linked-companion-view .habilidades-section.readonly button {
+  display: none;
+}
+
+.linked-companion-view .attack-table td,
+.linked-companion-view .attack-table th {
+  text-align: left;
+}
+
+.companion-sheet .vinculo-tab .exapoints-card .exapoints-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
+}
+
+.companion-sheet .vinculo-tab .exapoints-grid span {
+  font-size: 0.85rem;
+  color: #333;
+}
+
+.companion-sheet .vinculo-tab .exapoints-grid strong {
+  font-size: 1.1rem;
 }
 
 

@@ -271,11 +271,12 @@ export class RisingSteelCreatureSheet extends FoundryCompatibility.getActorSheet
             }
 
             const roll = await new Roll(`${iniciativaBase}d6`).roll();
+            const rollTotal = Number(roll.total ?? roll._total ?? 0);
 
             if (FoundryCompatibility.isV13()) {
                 await combatant.rollInitiative({ formula: `${iniciativaBase}d6` });
             } else {
-                await combatant.update({ initiative: roll.total });
+                await combatant.update({ initiative: rollTotal });
             }
 
             await roll.toMessage({
@@ -283,7 +284,7 @@ export class RisingSteelCreatureSheet extends FoundryCompatibility.getActorSheet
                 flavor: `Rolagem de Iniciativa da criatura (${destreza} + ${perspicacia})`
             });
 
-            ui.notifications.info(`Iniciativa rolada: ${roll.total}`);
+            ui.notifications.info(`Iniciativa rolada: ${rollTotal}`);
         } catch (error) {
             console.error("[Rising Steel] Erro ao rolar iniciativa da criatura:", error);
             ui.notifications.error("Erro ao rolar iniciativa. Verifique o console.");
@@ -492,12 +493,22 @@ export class RisingSteelCreatureSheet extends FoundryCompatibility.getActorSheet
         const dadoBonus = Math.max(0, this._normalizeNumber(ataque.dadoBonus) || 0);
         const totalDados = atributoValor + dadoBonus;
 
+        // Verificar se é um companion com piloto vinculado
+        let linkedPilot = null;
+        if (this.actor.type === "companion") {
+            const pilotId = this.actor.system?.vinculo?.pilotoId;
+            if (pilotId && game?.actors) {
+                linkedPilot = game.actors.get(pilotId);
+            }
+        }
+
         const { RisingSteelRollDialog } = await import("../app/roll-dialog.js");
         await RisingSteelRollDialog.prepareRollDialog({
             rollName: ataque.nome || `Ataque ${index + 1}`,
             baseDice: totalDados,
             actor: this.actor,
-            label: ataque.nome || `Ataque ${index + 1}`
+            label: ataque.nome || `Ataque ${index + 1}`,
+            linkedPilot: linkedPilot
         });
     }
 
@@ -643,10 +654,11 @@ export class RisingSteelCreatureSheet extends FoundryCompatibility.getActorSheet
 
                         const novaLista = [...habilidades];
                         novaLista[index] = {
-                            ...habilidade,
+                            nome: String(habilidade.nome || ""),
+                            descricao: String(habilidade.descricao || ""),
                             usos: {
-                                atual: Math.max(0, usos.atual - 1),
-                                total: usos.total
+                                atual: Math.max(0, Number(usos.atual || 0) - 1),
+                                total: Math.max(0, Number(usos.total || 0))
                             }
                         };
                         await this.actor.update({ "system.habilidadesEspeciais": novaLista });

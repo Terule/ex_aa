@@ -47,6 +47,47 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         
         // Adicionar lista de patentes para o template
         context.patentes = CONFIG.RisingSteel?.getPatentesList() || [];
+        context.availableCompanions = [];
+        context.currentCompanion = null;
+        try {
+            const actorsCollection = game?.actors ? (game.actors.contents ?? Array.from(game.actors)) : [];
+            if (actorsCollection?.length) {
+                const allowedTypes = new Set(["companion"]);
+                context.availableCompanions = actorsCollection
+                    .filter(actor => allowedTypes.has(actor.type) && actor.id !== this.actor.id)
+                    .map(actor => ({ id: actor.id, name: actor.name }))
+                    .sort((a, b) => a.name.localeCompare(b.name, game.i18n?.lang || "pt-BR"));
+
+                if (context.system?.companionId) {
+                    const companionActor = game.actors.get(context.system.companionId);
+                    if (companionActor) {
+                        const companionData = companionActor.toObject(false);
+                        const companionSystem = foundry.utils.duplicate(companionData.system || {});
+                        const { ataquesList, habilidadesList } = this._buildLinkedCompanionLists(companionSystem);
+                        const companionDescriptionHTML = await FoundryCompatibility.enrichHTML(companionSystem.descricao || "", {
+                            secrets: this.actor.isOwner,
+                            async: true
+                        });
+                        context.currentCompanion = {
+                            id: companionActor.id,
+                            name: companionActor.name,
+                            img: companionActor.img,
+                            type: companionActor.type,
+                            system: companionSystem,
+                            informacoes: foundry.utils.duplicate(companionSystem?.informacoes || {}),
+                            atributos: foundry.utils.duplicate(companionSystem?.atributos || {}),
+                            combate: foundry.utils.duplicate(companionSystem?.combate || {}),
+                            limiarDano: foundry.utils.duplicate(companionSystem?.limiarDano || {}),
+                            ataquesList: ataquesList ?? [],
+                            habilidadesList: habilidadesList ?? [],
+                            descriptionHTML: companionDescriptionHTML
+                        };
+                    }
+                }
+            }
+        } catch (error) {
+            console.warn("[Rising Steel] Falha ao carregar companions disponíveis:", error);
+        }
         
         // Organizar especializações por tipo
         if (!context.system.especializacoes) {
@@ -446,6 +487,9 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         // Botão de rolagem de iniciativa
         html.find(".roll-iniciativa").click(this._onRollIniciativa.bind(this));
 
+        // Companion
+        html.find(".open-companion-sheet").click(this._onOpenCompanionSheet.bind(this));
+
         // Especializações
         html.find(".especializacao-create").click(this._onCreateEspecializacao.bind(this));
         html.find(".edit-especializacao").click(this._onEditEspecializacao.bind(this));
@@ -468,6 +512,64 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
             this._deleteOwnedItemById(li.data("item-id"));
             li.slideUp(200, () => this.render(false));
         });
+    }
+
+    async _updateObject(event, formData) {
+        // Limpar valores undefined do formData
+        const cleanFormData = {};
+        for (const [key, value] of Object.entries(formData)) {
+            if (value !== undefined && value !== null) {
+                cleanFormData[key] = value;
+            }
+        }
+
+        const previousCompanionId = this.actor.system?.companionId || "";
+        const result = await super._updateObject(event, cleanFormData);
+        const expanded = foundry.utils.expandObject(cleanFormData);
+        const newCompanionId = (foundry.utils.getProperty(expanded, "system.companionId") ?? this.actor.system?.companionId) ?? "";
+        await this._syncCompanionLink(previousCompanionId, newCompanionId);
+        return result;
+    }
+
+    async _syncCompanionLink(oldCompanionId, newCompanionId) {
+        if (oldCompanionId === newCompanionId) return;
+
+        if (!game?.actors) {
+            console.warn("[Rising Steel] game.actors indisponível para sincronizar companion.");
+            return;
+        }
+
+        if (oldCompanionId) {
+            const oldCompanion = game.actors.get(oldCompanionId);
+            if (oldCompanion && oldCompanion.system?.vinculo?.pilotoId === this.actor.id) {
+                await oldCompanion.update({ "system.vinculo.pilotoId": "" });
+            }
+        }
+
+        if (newCompanionId) {
+            const newCompanion = game.actors.get(newCompanionId);
+            if (!newCompanion) {
+                ui.notifications?.warn("Companion selecionado não foi encontrado.");
+                await this.actor.update({ "system.companionId": "" });
+                return;
+            }
+
+            if (newCompanion.type !== "companion") {
+                ui.notifications?.warn("Somente atores do tipo Companion podem ser vinculados.");
+                await this.actor.update({ "system.companionId": "" });
+                return;
+            }
+
+            const previousPilotId = newCompanion.system?.vinculo?.pilotoId;
+            if (previousPilotId && previousPilotId !== this.actor.id) {
+                const previousPilot = game.actors.get(previousPilotId);
+                if (previousPilot && previousPilot.system?.companionId === newCompanion.id) {
+                    await previousPilot.update({ "system.companionId": "" });
+                }
+            }
+
+            await newCompanion.update({ "system.vinculo.pilotoId": this.actor.id });
+        }
     }
 
     /**
@@ -1145,12 +1247,13 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
             await roll.roll();
             
             // Atualizar a iniciativa do combatant
+            const rollTotal = Number(roll.total ?? roll._total ?? 0);
             if (FoundryCompatibility.isV13()) {
                 // v13: usar rollInitiative do combatant
                 await combatant.rollInitiative({ formula: `${iniciativaBase}d6` });
             } else {
                 // v12: atualizar diretamente
-                await combatant.update({ initiative: roll.total });
+                await combatant.update({ initiative: rollTotal });
             }
             
             // Exibir a rolagem no chat
@@ -1159,12 +1262,369 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                 flavor: `Rolagem de Iniciativa: ${destreza} (Destreza) + ${perspicacia} (Perspicácia) = ${iniciativaBase}d6`
             });
             
-            ui.notifications.info(`Iniciativa rolada: ${roll.total}`);
+            ui.notifications.info(`Iniciativa rolada: ${rollTotal}`);
             
         } catch (error) {
             console.error("[Rising Steel] Erro ao rolar iniciativa:", error);
             ui.notifications.error("Erro ao rolar iniciativa. Verifique o console.");
         }
+    }
+
+    /**
+     * Open the companion sheet if linked
+     * @param {Event} event
+     * @private
+     */
+    async _onOpenCompanionSheet(event) {
+        event.preventDefault();
+        const companionId = this.actor.system?.companionId;
+        if (!companionId) {
+            ui.notifications?.warn("Nenhum companion vinculado a este piloto.");
+            return;
+        }
+
+        if (!game?.actors) {
+            ui.notifications?.error("Coleção de atores indisponível.");
+            return;
+        }
+
+        const companion = game.actors.get(companionId);
+        if (!companion) {
+            ui.notifications?.warn("Companion não encontrado. Verifique se ele ainda existe.");
+            return;
+        }
+
+        companion.sheet?.render(true, { focus: true });
+    }
+
+    /**
+     * Get the linked companion actor
+     * @returns {Actor|null}
+     * @private
+     */
+    _getLinkedCompanion() {
+        const companionId = this.actor.system?.companionId;
+        if (!companionId || !game?.actors) return null;
+        const companion = game.actors.get(companionId);
+        return companion || null;
+    }
+
+    /**
+     * Roll companion attribute
+     * @param {Event} event
+     * @private
+     */
+    async _onRollCompanionAttribute(event) {
+        event.preventDefault();
+        const companion = this._getLinkedCompanion();
+        if (!companion) {
+            ui.notifications?.warn("Nenhum companion vinculado.");
+            return;
+        }
+
+        const path = event.currentTarget.dataset.atributo;
+        if (!path) return;
+
+        // Tentar ler do DOM primeiro (input readonly na aba de vínculo)
+        const formElement = this.element?.get(0);
+        let domValue = null;
+        if (formElement) {
+            const button = event.currentTarget;
+            const row = button.closest("tr");
+            if (row) {
+                const input = row.querySelector("input[type='number']");
+                if (input && input.value !== undefined && input.value !== "") {
+                    const parsed = Number(String(input.value).replace(/,/g, "."));
+                    if (!Number.isNaN(parsed)) domValue = parsed;
+                }
+            }
+        }
+
+        // Se não encontrou no DOM, ler do sistema do companion
+        const cleanPath = path.replace("companion.", "");
+        const systemValue = foundry.utils.getProperty(companion.system, cleanPath);
+        const systemNumValue = Number(String(systemValue ?? 0).replace(/,/g, "."));
+        
+        // Usar o valor do DOM se disponível, senão usar o do sistema
+        const numValue = (!Number.isNaN(domValue) && domValue !== null) ? domValue : 
+            (!Number.isNaN(systemNumValue) ? systemNumValue : 0);
+
+        if (numValue <= 0 || Number.isNaN(numValue)) {
+            ui.notifications.warn("Este atributo precisa ser maior que zero para rolar.");
+            return;
+        }
+
+        const labelMap = {
+            "atributos.fisicos.forca": "FOR",
+            "atributos.fisicos.destreza": "DES",
+            "atributos.fisicos.vigor": "VIG",
+            "atributos.mentais.conhecimento": "CON",
+            "atributos.mentais.perspicacia": "PER",
+            "atributos.mentais.resiliencia": "RES",
+            "atributos.sociais.eloquencia": "ELO",
+            "atributos.sociais.dissimulacao": "DIS",
+            "atributos.sociais.presenca": "PRE"
+        };
+
+        const label = labelMap[cleanPath] || "Atributo";
+        const roll = await new Roll(`${numValue}d6`).roll();
+        const dice = roll.dice?.[0];
+        let successes = 0;
+        if (dice?.results) {
+            successes = dice.results.filter(r => (r.result ?? r.total) === 6).length;
+        }
+
+        await roll.toMessage({
+            speaker: ChatMessage.getSpeaker({ actor: companion }),
+            flavor: `Rolagem de ${label} do Companion (${numValue}d6)`,
+            flags: {
+                "rising-steel": {
+                    rollType: "success-pool",
+                    totalDice: numValue,
+                    successes
+                }
+            }
+        });
+    }
+
+    /**
+     * Roll companion initiative
+     * @param {Event} event
+     * @private
+     */
+    async _onRollCompanionIniciativa(event) {
+        event.preventDefault();
+        const companion = this._getLinkedCompanion();
+        if (!companion) {
+            ui.notifications?.warn("Nenhum companion vinculado.");
+            return;
+        }
+
+        try {
+            const { FoundryCompatibility } = await import("../utils/compatibility.js");
+            let combat = game.combat;
+            if (!combat) {
+                if (FoundryCompatibility.isV13()) {
+                    combat = await foundry.documents.BaseCombat.create({
+                        scene: canvas.scene?.id || null,
+                        combatants: []
+                    }, { temporary: false });
+                } else {
+                    combat = await Combat.create({
+                        scene: canvas.scene?.id || null,
+                        combatants: []
+                    });
+                }
+                if (!combat) {
+                    ui.notifications.warn("Não foi possível criar um combate. Certifique-se de estar em uma cena.");
+                    return;
+                }
+            }
+
+            let combatant = combat.combatants.find(c => c.actor?.id === companion.id);
+            if (!combatant) {
+                const tokens = companion.getActiveTokens(true);
+                if (tokens.length === 0) {
+                    ui.notifications.warn("Nenhum token ativo encontrado para este companion. Coloque o token na cena primeiro.");
+                    return;
+                }
+                const token = tokens[0];
+                const combatantData = {
+                    tokenId: token.id,
+                    actorId: companion.id
+                };
+                if (FoundryCompatibility.isV13()) {
+                    combatantData.sceneId = canvas.scene?.id;
+                }
+                await combat.createEmbeddedDocuments("Combatant", [combatantData]);
+                combat = game.combat;
+                combatant = combat.combatants.find(c => c.actor?.id === companion.id);
+            }
+
+            if (!combatant) {
+                ui.notifications.error("Não foi possível encontrar o combatente no combate.");
+                return;
+            }
+
+            const destreza = Number(companion.system?.atributos?.fisicos?.destreza || 0);
+            const perspicacia = Number(companion.system?.atributos?.mentais?.perspicacia || 0);
+            const iniciativaBase = destreza + perspicacia;
+
+            if (iniciativaBase <= 0) {
+                ui.notifications.warn("Valor de iniciativa inválido para este companion.");
+                return;
+            }
+
+            const roll = await new Roll(`${iniciativaBase}d6`).roll();
+
+            if (FoundryCompatibility.isV13()) {
+                await combatant.rollInitiative({ formula: `${iniciativaBase}d6` });
+            } else {
+                const rollTotal = roll.total ?? 0;
+                await combatant.update({ initiative: rollTotal });
+            }
+
+            await roll.toMessage({
+                speaker: ChatMessage.getSpeaker({ actor: companion, token: combatant.token }),
+                flavor: `Rolagem de Iniciativa do Companion (${destreza} + ${perspicacia})`
+            });
+
+            ui.notifications.info(`Iniciativa rolada: ${roll.total ?? 0}`);
+        } catch (error) {
+            console.error("[Rising Steel] Erro ao rolar iniciativa do companion:", error);
+            ui.notifications.error("Erro ao rolar iniciativa. Verifique o console.");
+        }
+    }
+
+    /**
+     * Roll companion attack
+     * @param {Event} event
+     * @private
+     */
+    async _onRollCompanionAttack(event) {
+        event.preventDefault();
+        const companion = this._getLinkedCompanion();
+        if (!companion) {
+            ui.notifications?.warn("Nenhum companion vinculado.");
+            return;
+        }
+
+        const index = parseInt(event.currentTarget.dataset.index);
+        if (Number.isNaN(index)) return;
+
+        const ataques = companion.system?.ataques || [];
+        const ataque = ataques[index];
+        if (!ataque) {
+            ui.notifications?.warn("Ataque não encontrado.");
+            return;
+        }
+
+        if (!ataque.atributo) {
+            ui.notifications.warn("Defina o atributo do ataque antes de rolar.");
+            return;
+        }
+
+        const normalizeNumber = (value) => {
+            if (value === null || value === undefined || value === "") return 0;
+            const normalized = String(value).replace(/,/g, '.');
+            const num = Number(normalized);
+            return isNaN(num) ? 0 : num;
+        };
+
+        const getAttributeValue = (path) => {
+            if (!path) return 0;
+            const value = foundry.utils.getProperty(companion.system, path);
+            return normalizeNumber(value);
+        };
+
+        const atributoValor = getAttributeValue(ataque.atributo);
+        if (atributoValor <= 0) {
+            ui.notifications.warn("O atributo selecionado não possui valor.");
+            return;
+        }
+
+        const dadoBonus = Math.max(0, normalizeNumber(ataque.dadoBonus) || 0);
+        const totalDados = atributoValor + dadoBonus;
+
+        const { RisingSteelRollDialog } = await import("../app/roll-dialog.js");
+        await RisingSteelRollDialog.prepareRollDialog({
+            rollName: ataque.nome || `Ataque do Companion ${index + 1}`,
+            baseDice: totalDados,
+            actor: companion,
+            label: ataque.nome || `Ataque do Companion ${index + 1}`
+        });
+    }
+
+    /**
+     * Roll companion habilidade
+     * @param {Event} event
+     * @private
+     */
+    async _onRollCompanionHabilidade(event) {
+        event.preventDefault();
+        const companion = this._getLinkedCompanion();
+        if (!companion) {
+            ui.notifications?.warn("Nenhum companion vinculado.");
+            return;
+        }
+
+        const index = parseInt(event.currentTarget.dataset.index);
+        if (Number.isNaN(index)) return;
+
+        const habilidades = Array.isArray(companion.system?.habilidadesEspeciais) 
+            ? companion.system.habilidadesEspeciais 
+            : [];
+        const habilidade = habilidades[index];
+        if (!habilidade) {
+            ui.notifications?.warn("Habilidade não encontrada.");
+            return;
+        }
+
+        const usos = habilidade.usos || { atual: 0, total: 0 };
+
+        new Dialog({
+            title: habilidade.nome || "Habilidade do Companion",
+            content: `
+                <p><strong>${habilidade.nome}</strong></p>
+                <p>Usos restantes: ${usos.atual} / ${usos.total}</p>
+                <p>Deseja consumir uma carga?</p>
+            `,
+            buttons: {
+                consume: {
+                    icon: '<i class="fas fa-bolt"></i>',
+                    label: "Consumir",
+                    callback: async () => {
+                        if (usos.atual <= 0) {
+                            ui.notifications.warn("Sem cargas disponíveis.");
+                            return;
+                        }
+
+                        const novaLista = [...habilidades];
+                        novaLista[index] = {
+                            nome: String(habilidade.nome || ""),
+                            descricao: String(habilidade.descricao || ""),
+                            usos: {
+                                atual: Math.max(0, Number(usos.atual || 0) - 1),
+                                total: Math.max(0, Number(usos.total || 0))
+                            }
+                        };
+                        await companion.update({ "system.habilidadesEspeciais": novaLista });
+                        this._enviarCompanionHabilidadeChat(companion, habilidade, true);
+                    }
+                },
+                justRoll: {
+                    icon: '<i class="fas fa-comment"></i>',
+                    label: "Só mostrar no chat",
+                    callback: () => this._enviarCompanionHabilidadeChat(companion, habilidade, false)
+                },
+                cancel: {
+                    icon: '<i class="fas fa-times"></i>',
+                    label: "Cancelar"
+                }
+            },
+            default: "consume"
+        }).render(true);
+    }
+
+    /**
+     * Send companion habilidade to chat
+     * @param {Actor} companion
+     * @param {Object} habilidade
+     * @param {boolean} consumiuCarga
+     * @private
+     */
+    _enviarCompanionHabilidadeChat(companion, habilidade, consumiuCarga) {
+        const content = `
+            <h3>${habilidade.nome}</h3>
+            <p>${habilidade.descricao || "Sem descrição"}</p>
+            ${consumiuCarga ? "<p><em>Uma carga foi consumida.</em></p>" : ""}
+        `;
+
+        ChatMessage.create({
+            user: game.user.id,
+            speaker: ChatMessage.getSpeaker({ actor: companion }),
+            content
+        });
     }
 
     /**
@@ -1390,5 +1850,63 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         });
     }
 
+    _buildLinkedCompanionLists(system) {
+        const attributeLabels = this._getLinkedAttributeLabelMap();
+        const ataquesRaw = this._coerceToArray(system?.ataques);
+        const ataquesList = ataquesRaw.map((ataque, index) => {
+            const atributoPath = ataque?.atributo || "";
+            const atributoLabel = attributeLabels[atributoPath] || atributoPath || "—";
+            const atributoValor = this._getLinkedAttributeValue(system, atributoPath);
+            return {
+                ...ataque,
+                index,
+                atributoLabel,
+                atributoValor
+            };
+        });
+
+        const habilidadesRaw = this._coerceToArray(system?.habilidadesEspeciais);
+        const habilidadesList = habilidadesRaw.map((hab, index) => ({
+            ...hab,
+            index,
+            usos: {
+                atual: hab?.usos?.atual ?? 0,
+                total: hab?.usos?.total ?? 0
+            }
+        }));
+
+        return { ataquesList, habilidadesList };
+    }
+
+    _coerceToArray(value) {
+        if (Array.isArray(value)) return value;
+        if (value && typeof value === "object") {
+            return Object.keys(value)
+                .sort((a, b) => Number(a) - Number(b))
+                .map(key => value[key]);
+        }
+        return [];
+    }
+
+    _getLinkedAttributeLabelMap() {
+        return {
+            "system.atributos.fisicos.forca": "FOR",
+            "system.atributos.fisicos.destreza": "DES",
+            "system.atributos.fisicos.vigor": "VIG",
+            "system.atributos.mentais.conhecimento": "CON",
+            "system.atributos.mentais.perspicacia": "PER",
+            "system.atributos.mentais.resiliencia": "RES",
+            "system.atributos.sociais.eloquencia": "ELO",
+            "system.atributos.sociais.dissimulacao": "DIS",
+            "system.atributos.sociais.presenca": "PRE"
+        };
+    }
+
+    _getLinkedAttributeValue(system, path) {
+        if (!system || !path) return 0;
+        const value = foundry.utils.getProperty(system, path);
+        const num = Number(value ?? 0);
+        return Number.isFinite(num) ? num : 0;
+    }
 }
 

@@ -1,6 +1,6 @@
 {
   "Actor": {
-    "types": ["piloto", "criatura"],
+    "types": ["piloto", "criatura", "companion"],
     "templates": {
       "base": {
         "descricao": "",
@@ -88,7 +88,8 @@
           { "nome": "", "id": "", "dano": 0, "alcance": "", "bonus": 0 },
           { "nome": "", "id": "", "dano": 0, "alcance": "", "bonus": 0 }
         ]
-      }
+      },
+    "companionId": ""
     },
     "criatura": {
       "templates": ["base"],
@@ -102,7 +103,27 @@
         {"nome": "", "descricao": ""},
         {"nome": "", "descricao": ""},
         {"nome": "", "descricao": ""}
-      ]
+      ],
+      "vinculo": {
+        "pilotoId": ""
+      }
+    },
+    "companion": {
+      "templates": ["base"],
+      "informacoes": {
+        "tipo": "",
+        "categoria": "Delta",
+        "escala": "Médio"
+      },
+      "ataques": [],
+      "habilidadesEspeciais": [
+        {"nome": "", "descricao": ""},
+        {"nome": "", "descricao": ""},
+        {"nome": "", "descricao": ""}
+      ],
+      "vinculo": {
+        "pilotoId": ""
+      }
     }
   },
   "Item": {
