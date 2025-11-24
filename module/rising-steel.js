@@ -3,6 +3,7 @@ import { RisingSteel } from "./config.js";
 import { FoundryCompatibility } from "./utils/compatibility.js";
 import { RisingSteelActor } from "./actor/actor.js";
 import { RisingSteelPilotSheet } from "./actor/pilot-sheet.js";
+import { RisingSteelCreatureSheet } from "./actor/creature-sheet.js";
 import { RisingSteelItem } from "./item/item.js";
 import { RisingSteelItemSheet } from "./item/item-sheet.js";
 import { RisingSteelRollDialog } from "./app/roll-dialog.js";
@@ -64,10 +65,13 @@ Hooks.once("init", async function () {
         };
     });
 
-    // Define custom Entity classes
     CONFIG.RisingSteel = RisingSteel;
     CONFIG.Actor.documentClass = RisingSteelActor;
     CONFIG.Item.documentClass = RisingSteelItem;
+    CONFIG.Actor.typeLabels = CONFIG.Actor.typeLabels || {};
+    CONFIG.Actor.typeLabels.piloto = "Piloto";
+    CONFIG.Actor.typeLabels.criatura = "Criatura";
+    CONFIG.Actor.defaultType = "piloto";
     
     // Log packs disponíveis para debug
     Hooks.once("ready", async () => {
@@ -78,16 +82,14 @@ Hooks.once("init", async function () {
         })));
         
         // Verificar e importar armaduras se o pack estiver vazio
-        try {
-            const armadurasPack = game.packs.get("rising-steel.armaduras");
-            if (armadurasPack) {
-                await armadurasPack.getIndex();
-                if (armadurasPack.index.size === 0) {
-                    console.log("[Rising Steel] Pack de armaduras está vazio. Use o comando: RisingSteel.importArmaduras() no console para importar.");
-                }
+        if (game.user.isGM) {
+            try {
+                await ensurePackFilled("rising-steel.armaduras", window.RisingSteel.importArmaduras, "armaduras");
+                await ensurePackFilled("rising-steel.armas", window.RisingSteel.importArmas, "armas");
+                await ensurePackFilled("rising-steel.equipamentos", window.RisingSteel.importEquipamentos, "equipamentos");
+            } catch (error) {
+                console.warn("[Rising Steel] Erro ao verificar/importar packs:", error);
             }
-        } catch (error) {
-            console.warn("[Rising Steel] Erro ao verificar pack de armaduras:", error);
         }
     });
 
@@ -96,6 +98,10 @@ Hooks.once("init", async function () {
     FoundryCompatibility.registerActorSheet("rising-steel", RisingSteelPilotSheet, {
         types: ["piloto"],
         makeDefault: true,
+    });
+    FoundryCompatibility.registerActorSheet("rising-steel", RisingSteelCreatureSheet, {
+        types: ["criatura"],
+        makeDefault: true
     });
     FoundryCompatibility.unregisterItemSheet("core", FoundryCompatibility.getDefaultItemSheet());
     FoundryCompatibility.registerItemSheet("rising-steel", RisingSteelItemSheet, { makeDefault: true });
@@ -135,10 +141,37 @@ Hooks.once("init", async function () {
         const num = Number(value);
         return isNaN(num) ? 0 : num;
     });
+
+});
+
+Hooks.on("renderChatMessage", (message, html) => {
+    const rsFlags = message.flags?.["rising-steel"];
+    if (!rsFlags || rsFlags.rollType !== "success-pool") return;
+
+    const successes = Number(rsFlags.successes ?? 0);
+    const label = successes === 1 ? "1 Sucesso" : `${successes} Sucessos`;
+    const totalEl = html.find("h4.dice-total");
+    if (totalEl.length) {
+        totalEl.text(label);
+    }
 });
 
 // Funções para importar itens dos arquivos para os packs
 window.RisingSteel = window.RisingSteel || {};
+
+async function ensurePackFilled(packId, importFn, label) {
+    const pack = game.packs.get(packId);
+    if (!pack) {
+        console.warn(`[Rising Steel] Pack ${label} (${packId}) não encontrado.`);
+        return;
+    }
+
+    await pack.getIndex();
+    if (pack.index.size === 0) {
+        console.log(`[Rising Steel] Pack de ${label} vazio. Importando automaticamente...`);
+        await importFn();
+    }
+}
 
 window.RisingSteel.importArmaduras = async function() {
     const armadurasData = [

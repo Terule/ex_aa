@@ -29,23 +29,32 @@ export class RisingSteelActor extends Actor {
             return isNaN(num) ? min : Math.max(min, num);
         };
 
+        const isCriatura = this.type === "criatura";
+        const clampAttribute = (value) => {
+            const normalized = normalizeValue(value, 1);
+            if (isCriatura) {
+                return Math.max(1, normalized);
+            }
+            return Math.min(5, Math.max(1, normalized));
+        };
+
         // Normalizar atributos se presentes (mínimo 1, máximo 5)
         if (systemData.atributos) {
             const attr = systemData.atributos;
             if (attr.fisicos) {
-                if (attr.fisicos.forca !== undefined) attr.fisicos.forca = Math.min(5, Math.max(1, normalizeValue(attr.fisicos.forca, 1)));
-                if (attr.fisicos.destreza !== undefined) attr.fisicos.destreza = Math.min(5, Math.max(1, normalizeValue(attr.fisicos.destreza, 1)));
-                if (attr.fisicos.vigor !== undefined) attr.fisicos.vigor = Math.min(5, Math.max(1, normalizeValue(attr.fisicos.vigor, 1)));
+                if (attr.fisicos.forca !== undefined) attr.fisicos.forca = clampAttribute(attr.fisicos.forca);
+                if (attr.fisicos.destreza !== undefined) attr.fisicos.destreza = clampAttribute(attr.fisicos.destreza);
+                if (attr.fisicos.vigor !== undefined) attr.fisicos.vigor = clampAttribute(attr.fisicos.vigor);
             }
             if (attr.mentais) {
-                if (attr.mentais.conhecimento !== undefined) attr.mentais.conhecimento = Math.min(5, Math.max(1, normalizeValue(attr.mentais.conhecimento, 1)));
-                if (attr.mentais.perspicacia !== undefined) attr.mentais.perspicacia = Math.min(5, Math.max(1, normalizeValue(attr.mentais.perspicacia, 1)));
-                if (attr.mentais.resiliencia !== undefined) attr.mentais.resiliencia = Math.min(5, Math.max(1, normalizeValue(attr.mentais.resiliencia, 1)));
+                if (attr.mentais.conhecimento !== undefined) attr.mentais.conhecimento = clampAttribute(attr.mentais.conhecimento);
+                if (attr.mentais.perspicacia !== undefined) attr.mentais.perspicacia = clampAttribute(attr.mentais.perspicacia);
+                if (attr.mentais.resiliencia !== undefined) attr.mentais.resiliencia = clampAttribute(attr.mentais.resiliencia);
             }
             if (attr.sociais) {
-                if (attr.sociais.eloquencia !== undefined) attr.sociais.eloquencia = Math.min(5, Math.max(1, normalizeValue(attr.sociais.eloquencia, 1)));
-                if (attr.sociais.dissimulacao !== undefined) attr.sociais.dissimulacao = Math.min(5, Math.max(1, normalizeValue(attr.sociais.dissimulacao, 1)));
-                if (attr.sociais.presenca !== undefined) attr.sociais.presenca = Math.min(5, Math.max(1, normalizeValue(attr.sociais.presenca, 1)));
+                if (attr.sociais.eloquencia !== undefined) attr.sociais.eloquencia = clampAttribute(attr.sociais.eloquencia);
+                if (attr.sociais.dissimulacao !== undefined) attr.sociais.dissimulacao = clampAttribute(attr.sociais.dissimulacao);
+                if (attr.sociais.presenca !== undefined) attr.sociais.presenca = clampAttribute(attr.sociais.presenca);
             }
         }
 
@@ -67,9 +76,11 @@ export class RisingSteelActor extends Actor {
 
     // @override
     prepareBaseData(){
-        if (this.type == "piloto") {
+        if (this.type === "piloto") {
             this._preparePilotoData();
-        }       
+        } else if (this.type === "criatura") {
+            this._prepareCriaturaData();
+        }
     }
 
     /**
@@ -199,34 +210,43 @@ export class RisingSteelActor extends Actor {
         if (!this.system.limiarDano.leve) {
             this.system.limiarDano.leve = {};
         }
-        const limiarLeve = vigor;
-        this.system.limiarDano.leve.limiar = limiarLeve;
+        const limiarLeveBase = vigor;
         
         // Limiar de Dano Moderado = 2x o Leve (2x Vigor)
         if (!this.system.limiarDano.moderado) {
             this.system.limiarDano.moderado = { limiar: 0, marcacoes: 0 };
         }
-        this.system.limiarDano.moderado.limiar = limiarLeve * 2;
+        this.system.limiarDano.moderado.limiar = limiarLeveBase * 2;
         
         // Limiar de Dano Grave = 4x o Leve (4x Vigor)
         if (!this.system.limiarDano.grave) {
             this.system.limiarDano.grave = { limiar: 0, marcacoes: 0 };
         }
-        this.system.limiarDano.grave.limiar = limiarLeve * 4;
+        this.system.limiarDano.grave.limiar = limiarLeveBase * 4;
         
         // Garantir que marcações existam
+        const clampMarcacao = (value, max) => {
+            const num = safeNumber(value, 0);
+            return Math.min(max, Math.max(0, num));
+        };
         if (this.system.limiarDano.leve.marcacoes === undefined) {
             this.system.limiarDano.leve.marcacoes = 0;
         }
+        this.system.limiarDano.leve.marcacoes = clampMarcacao(this.system.limiarDano.leve.marcacoes, 3);
         if (this.system.limiarDano.moderado.marcacoes === undefined) {
             this.system.limiarDano.moderado.marcacoes = 0;
         }
+        this.system.limiarDano.moderado.marcacoes = clampMarcacao(this.system.limiarDano.moderado.marcacoes, 3);
         if (this.system.limiarDano.grave.marcacoes === undefined) {
             this.system.limiarDano.grave.marcacoes = 0;
         }
+        this.system.limiarDano.grave.marcacoes = clampMarcacao(this.system.limiarDano.grave.marcacoes, 1);
         if (this.system.limiarDano.penalidades === undefined) {
             this.system.limiarDano.penalidades = 0;
         }
+        const penalidadeLimiar = safeNumber(this.system.limiarDano.penalidades, 0);
+        this.system.limiarDano.penalidades = penalidadeLimiar;
+        this.system.limiarDano.leve.limiar = Math.max(0, limiarLeveBase - penalidadeLimiar);
         
         // Calcular Armadura atual (total - dano)
         if (this.system.armadura) {
@@ -358,6 +378,183 @@ export class RisingSteelActor extends Actor {
             if (arma.alcance === undefined || arma.alcance === null) arma.alcance = "";
             if (arma.bonus === undefined || arma.bonus === null) arma.bonus = 0;
         }
+    }
+
+    /**
+     * Prepare Criatura type specific data
+     */
+    _prepareCriaturaData() {
+        const safeNumber = (value, min = 0) => {
+            const num = Number(value);
+            if (isNaN(num)) return min;
+            return Math.max(min, num);
+        };
+
+        if (!this.system.informacoes) {
+            this.system.informacoes = {
+                tipo: "",
+                categoria: "Delta",
+                escala: "Médio",
+                descricao: ""
+            };
+        }
+
+        const attr = this.system.atributos = this.system.atributos || {};
+        attr.fisicos = attr.fisicos || {};
+        attr.mentais = attr.mentais || {};
+        attr.sociais = attr.sociais || {};
+
+        const clampAttr = (value) => Math.max(1, safeNumber(value, 1));
+        // Físicos
+        attr.fisicos.forca = clampAttr(attr.fisicos.forca);
+        attr.fisicos.destreza = clampAttr(attr.fisicos.destreza);
+        attr.fisicos.vigor = clampAttr(attr.fisicos.vigor);
+
+        // Mentais
+        attr.mentais.conhecimento = clampAttr(attr.mentais.conhecimento);
+        attr.mentais.perspicacia = clampAttr(attr.mentais.perspicacia);
+        attr.mentais.resiliencia = clampAttr(attr.mentais.resiliencia);
+
+        // Sociais
+        attr.sociais.eloquencia = clampAttr(attr.sociais.eloquencia);
+        attr.sociais.dissimulacao = clampAttr(attr.sociais.dissimulacao);
+        attr.sociais.presenca = clampAttr(attr.sociais.presenca);
+
+        const categoriaAtual = this.system.informacoes.categoria || "Delta";
+        const pontosCategoria = CONFIG.RisingSteel?.getCategoriaPontos(categoriaAtual) ?? 5;
+        this.system.informacoes.categoria = categoriaAtual;
+        if (!this.system.informacoes.escala) {
+            this.system.informacoes.escala = "Médio";
+        }
+
+        if (!this.system.pontosAtributo) {
+            this.system.pontosAtributo = {
+                total: pontosCategoria,
+                distribuidos: 0,
+                restantes: pontosCategoria
+            };
+        }
+
+        this.system.pontosAtributo.total = pontosCategoria;
+        const pontosDistribuidos =
+            Math.max(0, attr.fisicos.forca - 1) +
+            Math.max(0, attr.fisicos.destreza - 1) +
+            Math.max(0, attr.fisicos.vigor - 1) +
+            Math.max(0, attr.mentais.conhecimento - 1) +
+            Math.max(0, attr.mentais.perspicacia - 1) +
+            Math.max(0, attr.mentais.resiliencia - 1) +
+            Math.max(0, attr.sociais.eloquencia - 1) +
+            Math.max(0, attr.sociais.dissimulacao - 1) +
+            Math.max(0, attr.sociais.presenca - 1);
+
+        this.system.pontosAtributo.distribuidos = pontosDistribuidos;
+        this.system.pontosAtributo.restantes = Math.max(0, pontosCategoria - pontosDistribuidos);
+
+        if (!this.system.combate) {
+            this.system.combate = {};
+        }
+
+        const destreza = attr.fisicos.destreza;
+        const perspicacia = attr.mentais.perspicacia;
+        const vigor = attr.fisicos.vigor;
+
+        this.system.combate.iniciativa = destreza + perspicacia;
+        this.system.combate.mobilidade = 2 + destreza;
+
+        if (!this.system.armadura) {
+            this.system.armadura = {
+                total: 0,
+                dano: 0,
+                atual: 0
+            };
+        }
+
+        const armaduraTotal = safeNumber(this.system.armadura.total);
+        const armaduraDano = safeNumber(this.system.armadura.dano);
+        this.system.armadura.total = armaduraTotal;
+        this.system.armadura.dano = armaduraDano;
+        this.system.armadura.atual = Math.max(0, armaduraTotal - armaduraDano);
+
+        const esquivaCalculada = Math.floor(destreza / 2) - armaduraTotal;
+        this.system.combate.esquiva = Math.max(1, esquivaCalculada);
+
+        if (!this.system.limiarDano) {
+            this.system.limiarDano = {};
+        }
+
+        const limiarLeveBase = vigor;
+        if (!this.system.limiarDano.leve) this.system.limiarDano.leve = {};
+        if (!this.system.limiarDano.moderado) this.system.limiarDano.moderado = {};
+        if (!this.system.limiarDano.grave) this.system.limiarDano.grave = {};
+
+        this.system.limiarDano.moderado.limiar = limiarLeveBase * 2;
+        this.system.limiarDano.grave.limiar = limiarLeveBase * 4;
+
+        const clampMarcacao = (value, max) => Math.min(max, Math.max(0, safeNumber(value, 0)));
+        if (this.system.limiarDano.leve.marcacoes === undefined) this.system.limiarDano.leve.marcacoes = 0;
+        this.system.limiarDano.leve.marcacoes = clampMarcacao(this.system.limiarDano.leve.marcacoes, 3);
+        if (this.system.limiarDano.moderado.marcacoes === undefined) this.system.limiarDano.moderado.marcacoes = 0;
+        this.system.limiarDano.moderado.marcacoes = clampMarcacao(this.system.limiarDano.moderado.marcacoes, 3);
+        if (this.system.limiarDano.grave.marcacoes === undefined) this.system.limiarDano.grave.marcacoes = 0;
+        this.system.limiarDano.grave.marcacoes = clampMarcacao(this.system.limiarDano.grave.marcacoes, 1);
+        if (this.system.limiarDano.penalidades === undefined) this.system.limiarDano.penalidades = 0;
+        const penalidadeLimiar = safeNumber(this.system.limiarDano.penalidades, 0);
+        this.system.limiarDano.penalidades = penalidadeLimiar;
+        this.system.limiarDano.leve.limiar = Math.max(0, limiarLeveBase - penalidadeLimiar);
+
+        if (!Array.isArray(this.system.ataques)) {
+            this.system.ataques = [];
+        }
+        this.system.ataques = this.system.ataques.map(ataque => {
+            const ataqueNormalizado = {
+                nome: ataque?.nome ?? "",
+                atributo: ataque?.atributo ?? "",
+                dadoBase: safeNumber(ataque?.dadoBase, 1) || 1,
+                dadoBonus: safeNumber(ataque?.dadoBonus, 0),
+                condicao: ataque?.condicao ?? "",
+                alcance: ataque?.alcance ?? "",
+                dano: ataque?.dano ?? "",
+                efeito: ataque?.efeito ?? ""
+            };
+            // Compatibilidade com estrutura antiga (campo "bonus")
+            if (!ataqueNormalizado.dadoBonus && ataque?.bonus) {
+                ataqueNormalizado.dadoBonus = safeNumber(ataque.bonus, 0);
+            }
+            return ataqueNormalizado;
+        });
+
+        const ensureArraySize = (arr, size, factory) => {
+            const result = Array.isArray(arr) ? arr.slice(0, size) : [];
+            while (result.length < size) {
+                result.push(factory());
+            }
+            return result;
+        };
+
+        const habilidadesSource = this._source?.system?.habilidadesEspeciais;
+        let habilidadesList = this.system.habilidadesEspeciais;
+
+        if (!Array.isArray(habilidadesList)) {
+            if (Array.isArray(habilidadesSource)) {
+                habilidadesList = habilidadesSource;
+            } else if (habilidadesSource && typeof habilidadesSource === "object") {
+                habilidadesList = Object.keys(habilidadesSource)
+                    .filter(key => !isNaN(Number(key)))
+                    .sort((a, b) => Number(a) - Number(b))
+                    .map(key => foundry.utils.duplicate(habilidadesSource[key]));
+            } else {
+                habilidadesList = [];
+            }
+        }
+
+        this.system.habilidadesEspeciais = habilidadesList.map(hab => ({
+            nome: hab?.nome ?? "",
+            descricao: hab?.descricao ?? "",
+            usos: {
+                atual: safeNumber(hab?.usos?.atual, 0),
+                total: safeNumber(hab?.usos?.total, 0)
+            }
+        }));
     }
 }
 

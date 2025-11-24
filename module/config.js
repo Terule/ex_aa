@@ -21,5 +21,27 @@ export class RisingSteel {
     static getPatentesList() {
         return Object.keys(this.PATENTES);
     }
+
+    static CATEGORIAS = {
+        "Delta": 5,
+        "Gama": 10,
+        "Beta": 20,
+        "Alfa": 30,
+        "Ômega": 40
+    };
+
+    static ESCALAS = ["Pequeno", "Médio", "Grande", "Colossal"];
+
+    static getCategoriaPontos(categoria) {
+        return this.CATEGORIAS[categoria] ?? this.CATEGORIAS["Delta"];
+    }
+
+    static getCategoriasList() {
+        return Object.keys(this.CATEGORIAS);
+    }
+
+    static getEscalasList() {
+        return [...this.ESCALAS];
+    }
 }
 

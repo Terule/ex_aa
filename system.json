@@ -29,7 +29,7 @@
     "minimum": 11,
     "verified": "11.315"
   },
-  "esmodules": ["module/rising-steel.mjs"],
+  "esmodules": ["module/rising-steel.js"],
   "styles": ["css/rising-steel.css"],
   "languages": [
     {
@@ -38,7 +38,32 @@
       "path": "lang/en.json"
     }
   ],
-  "packs": [],
+  "packs": [
+    {
+      "type": "Item",
+      "label": "Armaduras",
+      "name": "armaduras",
+      "path": "packs/armaduras.db",
+      "entity": "Item",
+      "system": "rising-steel"
+    },
+    {
+      "type": "Item",
+      "label": "Armas",
+      "name": "armas",
+      "path": "packs/armas.db",
+      "entity": "Item",
+      "system": "rising-steel"
+    },
+    {
+      "type": "Item",
+      "label": "Equipamentos",
+      "name": "equipamentos",
+      "path": "packs/equipamentos.db",
+      "entity": "Item",
+      "system": "rising-steel"
+    }
+  ],
   "packFolders": [],
   "socket": false,
   "manifest": "Replace this with a link to the /latest release system.json so people can receive updates after they've installed the system",

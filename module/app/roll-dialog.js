@@ -251,7 +251,14 @@ export class RisingSteelRollDialog {
                             
                             await roll.toMessage({
                                 speaker: ChatMessage.getSpeaker({ actor: actor }),
-                                flavor: flavor
+                                flavor: flavor,
+                                flags: {
+                                    "rising-steel": {
+                                        rollType: "success-pool",
+                                        totalDice: totalDice,
+                                        successes: sucessos
+                                    }
+                                }
                             });
                             
                             resolve({ roll, sucessos, unsNormais, unsExapoints, exapointsGastos });

@@ -97,3 +97,5 @@ Baseado na versão detectada, as funções helper usam as APIs apropriadas.
 
 
 
+
+
