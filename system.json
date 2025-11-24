@@ -12,10 +12,10 @@
       "discord": ".pizzaWizard"
     }
   ],
-  "url": "Replace this with a link to your public repository",
+  "url": "https://github.com/Terule/ex_aa",
   "license": "LICENSE.txt",
   "readme": "README.md",
-  "bugs": "Replace this with a link to file issues or tickets",
+  "bugs": "https://github.com/Terule/ex_aa/issues",
   "changelog": "CHANGELOG.md",
   "media": [
     {
@@ -26,7 +26,7 @@
   ],
   "version": "2.0.0",
   "compatibility": {
-    "minimum": 11,
+    "minimum": "11",
     "verified": "11.315"
   },
   "esmodules": ["module/rising-steel.js"],
@@ -40,37 +40,36 @@
   ],
   "packs": [
     {
-      "type": "Item",
-      "label": "Armaduras",
       "name": "armaduras",
+      "label": "Armaduras",
       "path": "packs/armaduras.db",
-      "entity": "Item",
+      "type": "Item",
       "system": "rising-steel"
     },
     {
-      "type": "Item",
-      "label": "Armas",
       "name": "armas",
+      "label": "Armas",
       "path": "packs/armas.db",
-      "entity": "Item",
+      "type": "Item",
       "system": "rising-steel"
     },
     {
-      "type": "Item",
-      "label": "Equipamentos",
       "name": "equipamentos",
+      "label": "Equipamentos",
       "path": "packs/equipamentos.db",
-      "entity": "Item",
+      "type": "Item",
       "system": "rising-steel"
     }
   ],
   "packFolders": [],
   "socket": false,
-  "manifest": "Replace this with a link to the /latest release system.json so people can receive updates after they've installed the system",
-  "download": "This must link to a .zip file of the current version",
+  "manifest": "https://raw.githubusercontent.com/Terule/ex_aa/main/system.json",
+  "download": "https://github.com/Terule/ex_aa/archive/refs/heads/main.zip",
   "background": "systems/rising-steel/assets/anvil-impact.png",
-  "grid.distance": 5,
-  "grid.units": "ft",
+  "grid": {
+    "distance": 5,
+    "units": "ft"
+  },
   "primaryTokenAttribute": "health",
   "secondaryTokenAttribute": "power"
 }
