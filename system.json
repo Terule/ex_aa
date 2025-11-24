@@ -4,17 +4,25 @@
   "description": "The Rising Steel system for FoundryVTT!",
   "version": "2.0.0",
   "compatibility": {
-    "minimum": "11",
-    "verified": "11.315"
+    "minimum": "12",
+    "verified": "12.331"
+  },
+  "grid": {
+    "distance": 10,
+    "units": "ft"
   },
   "authors": [
     {
-      "name": "Asacolips",
-      "discord": "asacolips"
+      "name": "Danilo",
+      "discord": "sloth_pb"
     },
     {
-      "name": "Lee Talman",
-      "discord": ".pizzaWizard"
+      "name": "Terule",
+      "discord": "terule"
+    },
+    {
+      "name": "Hebert",
+      "discord": "totha"
     }
   ],
   "url": "https://github.com/Terule/ex_aa",
