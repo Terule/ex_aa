@@ -379,11 +379,13 @@ Hooks.on("preRenderDialog", (app, data, options) => {
 });
 
 // Interceptar quando qualquer diálogo é renderizado para garantir filtro
+console.log("[Rising Steel] Registrando hook renderDialog");
 Hooks.on("renderDialog", (app, html, data) => {
     console.log("[Rising Steel] renderDialog chamado", {
         title: app.options?.title || app.title || "",
         pack: app.options?.pack || app.data?.pack || "",
-        hasTypeSelect: html.find('select[name="type"]').length > 0
+        hasTypeSelect: html.find('select[name="type"]').length > 0,
+        appClass: app.constructor?.name || "unknown"
     });
     
     // Verificar se é um diálogo de criação de item
