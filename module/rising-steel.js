@@ -559,6 +559,45 @@ async function ensurePackFilled(packId, importFn, label) {
     }
 }
 
+/**
+ * Gera um ID único baseado no nome do item
+ * Usa uma função hash simples para garantir IDs consistentes
+ * @param {string} name - Nome do item
+ * @returns {string} - ID único gerado
+ */
+function generateItemId(name) {
+    // Normalizar o nome: remover acentos, espaços, caracteres especiais
+    let normalized = name.toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+        .replace(/[^a-z0-9]/g, '') // Remove caracteres não alfanuméricos
+        .substring(0, 20); // Limita a 20 caracteres
+    
+    // Criar um hash simples do nome completo para garantir unicidade
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        const char = name.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    
+    // Combinar nome normalizado com hash para garantir unicidade
+    const hashStr = Math.abs(hash).toString(36).substring(0, 8);
+    return `${normalized}-${hashStr}`;
+}
+
+/**
+ * Adiciona IDs explícitos a um array de dados de itens
+ * @param {Array} itemsData - Array de dados de itens
+ * @returns {Array} - Array com IDs adicionados
+ */
+function addIdsToItems(itemsData) {
+    return itemsData.map(item => ({
+        ...item,
+        _id: generateItemId(item.name)
+    }));
+}
+
 window.RisingSteel.importArmaduras = async function() {
     const armadurasData = [
         {"name":"Colete Balístico","type":"armadura","img":"icons/svg/item-bag.svg","system":{"tipo":"Armadura Leve","protecao":1,"peso":3,"descricao":"Colete com camadas de proteção contra balas e fragmentos. Ideal para operações táticas e combate urbano.","especial":""},"flags":{},"effects":[]},
@@ -582,8 +621,28 @@ window.RisingSteel.importArmaduras = async function() {
             await pack.configure({locked: false});
         }
         
+        // Deletar todos os itens existentes primeiro
+        try {
+            const existingItems = await pack.getDocuments();
+            if (existingItems && existingItems.length > 0) {
+                const validItemIds = existingItems
+                    .filter(item => item && (item.id || item._id))
+                    .map(item => item.id || item._id);
+                
+                if (validItemIds.length > 0) {
+                    await Item.deleteDocuments(validItemIds, {pack: pack.collection});
+                    console.log(`[Rising Steel] Removidos ${validItemIds.length} armaduras antigas`);
+                }
+            }
+        } catch (error) {
+            console.warn(`[Rising Steel] Erro ao remover armaduras antigas (continuando mesmo assim):`, error);
+        }
+        
+        // Adicionar IDs explícitos aos itens
+        const armadurasDataWithIds = addIdsToItems(armadurasData);
+        
         // Criar os itens usando a API correta do Foundry VTT v13
-        const created = await Item.createDocuments(armadurasData, {
+        const created = await Item.createDocuments(armadurasDataWithIds, {
             pack: pack.collection
         });
         
@@ -635,24 +694,24 @@ window.RisingSteel.importEquipamentos = async function() {
         try {
             const existingItems = await pack.getDocuments();
             if (existingItems && existingItems.length > 0) {
-                // Filtrar apenas itens com IDs válidos
                 const validItemIds = existingItems
-                    .filter(item => item && item.id && item._id)
-                    .map(item => item.id);
+                    .filter(item => item && (item.id || item._id))
+                    .map(item => item.id || item._id);
                 
                 if (validItemIds.length > 0) {
                     await Item.deleteDocuments(validItemIds, {pack: pack.collection});
                     console.log(`[Rising Steel] Removidos ${validItemIds.length} equipamentos antigos`);
-                } else {
-                    console.log(`[Rising Steel] Nenhum equipamento válido encontrado para remover`);
                 }
             }
         } catch (error) {
             console.warn(`[Rising Steel] Erro ao remover equipamentos antigos (continuando mesmo assim):`, error);
         }
         
+        // Adicionar IDs explícitos aos itens
+        const equipamentosDataWithIds = addIdsToItems(equipamentosData);
+        
         // Criar os itens usando a API correta do Foundry VTT v13
-        const created = await Item.createDocuments(equipamentosData, {
+        const created = await Item.createDocuments(equipamentosDataWithIds, {
             pack: pack.collection
         });
         
@@ -701,8 +760,28 @@ window.RisingSteel.importArmas = async function() {
             await pack.configure({locked: false});
         }
         
+        // Deletar todos os itens existentes primeiro
+        try {
+            const existingItems = await pack.getDocuments();
+            if (existingItems && existingItems.length > 0) {
+                const validItemIds = existingItems
+                    .filter(item => item && (item.id || item._id))
+                    .map(item => item.id || item._id);
+                
+                if (validItemIds.length > 0) {
+                    await Item.deleteDocuments(validItemIds, {pack: pack.collection});
+                    console.log(`[Rising Steel] Removidas ${validItemIds.length} armas antigas`);
+                }
+            }
+        } catch (error) {
+            console.warn(`[Rising Steel] Erro ao remover armas antigas (continuando mesmo assim):`, error);
+        }
+        
+        // Adicionar IDs explícitos aos itens
+        const armasDataWithIds = addIdsToItems(armasData);
+        
         // Criar os itens usando a API correta do Foundry VTT v13
-        const created = await Item.createDocuments(armasData, {
+        const created = await Item.createDocuments(armasDataWithIds, {
             pack: pack.collection
         });
         
@@ -717,6 +796,37 @@ window.RisingSteel.importArmas = async function() {
     } catch (error) {
         console.error("[Rising Steel] Erro ao importar armas:", error);
         ui.notifications.error("Erro ao importar armas. Verifique o console.");
+    }
+};
+
+/**
+ * Recria todos os compendiums (armaduras, equipamentos e armas) com IDs explícitos
+ * Esta função limpa e recria todos os packs do zero
+ */
+window.RisingSteel.recriarTodosPacks = async function() {
+    if (!game.user.isGM) {
+        ui.notifications.error("Apenas o GM pode recriar os packs!");
+        return;
+    }
+    
+    try {
+        ui.notifications.info("Iniciando recriação de todos os packs...");
+        console.log("[Rising Steel] Recriando todos os packs com IDs explícitos...");
+        
+        // Recriar armaduras
+        await window.RisingSteel.importArmaduras();
+        
+        // Recriar equipamentos
+        await window.RisingSteel.importEquipamentos();
+        
+        // Recriar armas
+        await window.RisingSteel.importArmas();
+        
+        ui.notifications.info("Todos os packs foram recriados com sucesso! Recarregue a página para aplicar as mudanças.");
+        console.log("[Rising Steel] Todos os packs foram recriados com IDs explícitos!");
+    } catch (error) {
+        console.error("[Rising Steel] Erro ao recriar packs:", error);
+        ui.notifications.error("Erro ao recriar packs. Verifique o console.");
     }
 };
 
