@@ -169,117 +169,26 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                 return [];
             }
             
-            // Forçar reload do índice do pack
+            // Garantir que o índice está carregado
             try {
-                // Limpar cache e forçar reload
-                if (pack.indexed) {
-                    pack.index.clear();
-                }
                 await pack.getIndex({force: true});
             } catch (error) {
-                console.warn(`[Rising Steel] Erro ao recarregar índice do pack "${packName}":`, error);
+                console.warn(`[Rising Steel] Erro ao carregar índice do pack "${packName}":`, error);
             }
             
             // Verificar o índice
             let index = pack.index;
             console.log(`[Rising Steel] Pack "${packName}" - Índice tem ${index ? index.size : 0} entradas`);
             
-            // Se o índice estiver vazio, tentar construir manualmente
-            if (!index || index.size === 0) {
-                console.log(`[Rising Steel] Índice vazio para "${packName}". Tentando construir índice manualmente...`);
-                try {
-                    // Tentar obter todos os documentos primeiro
-                    const allDocs = await pack.getDocuments();
-                    if (allDocs && allDocs.length > 0) {
-                        // Construir um mapa manual de nome -> id
-                        const manualIndex = new Map();
-                        for (const doc of allDocs) {
-                            if (doc.name && (doc.id || doc._id)) {
-                                const docId = String(doc.id || doc._id);
-                                manualIndex.set(doc.name, docId);
-                            }
-                        }
-                        console.log(`[Rising Steel] Índice manual construído com ${manualIndex.size} entradas para "${packName}"`);
-                        // Usar o índice manual
-                        index = manualIndex;
-                    }
-                } catch (error) {
-                    console.warn(`[Rising Steel] Erro ao construir índice manual para "${packName}":`, error);
-                }
-            }
+            // Construir mapa de nome -> ID do índice
+            const nameToIdFromIndex = new Map();
             
-            // Tentar buscar documentos
-            let items = [];
-            try {
-                items = await pack.getDocuments();
-            } catch (error) {
-                console.error(`[Rising Steel] Erro ao buscar documentos do pack "${packName}":`, error);
-            }
-            
-            // Se não encontrou itens mas o índice existe, tentar buscar pelo índice
-            if (items.length === 0 && index && index.size > 0) {
-                console.log(`[Rising Steel] Tentando buscar ${index.size} itens pelo índice...`);
-                try {
-                    const itemIds = Array.from(index.keys());
-                    items = await Promise.all(itemIds.map(id => pack.getDocument(id).catch(() => null)));
-                    items = items.filter(item => item !== null);
-                } catch (error) {
-                    console.error(`[Rising Steel] Erro ao buscar pelo índice:`, error);
-                }
-            }
-            
-            // Se ainda não encontrou e o índice está vazio, tentar ler diretamente do arquivo
-            if (items.length === 0 && (!index || index.size === 0)) {
-                console.warn(`[Rising Steel] Índice vazio para "${packName}". Tentando ler diretamente do arquivo...`);
-                try {
-                    // Tentar buscar todos os documentos sem usar o índice
-                    const allItems = await pack.getDocuments({});
-                    if (allItems && allItems.length > 0) {
-                        items = allItems;
-                        console.log(`[Rising Steel] Encontrados ${items.length} itens lendo diretamente do pack "${packName}"`);
-                    } else {
-                        // Última tentativa: buscar pelo tipo diretamente
-                        const packItems = pack.contents || pack.index;
-                        if (packItems && packItems.size > 0) {
-                            const itemIds = Array.from(packItems.keys());
-                            items = await Promise.all(
-                                itemIds.map(id => pack.getDocument(id).catch(() => null))
-                            );
-                            items = items.filter(item => item !== null);
-                            console.log(`[Rising Steel] Encontrados ${items.length} itens usando método alternativo para "${packName}"`);
-                        }
-                    }
-                } catch (error) {
-                    console.error(`[Rising Steel] Erro ao tentar métodos alternativos para "${packName}":`, error);
-                }
-            }
-            
-            const filtered = items.filter(item => item && item.type === itemType);
-            
-            console.log(`[Rising Steel] Pack "${packName}": ${items.length} itens totais, ${filtered.length} do tipo "${itemType}"`);
-            
-            if (filtered.length === 0 && items.length > 0) {
-                console.warn(`[Rising Steel] Pack "${packName}" tem ${items.length} itens mas nenhum do tipo "${itemType}". Tipos encontrados:`, [...new Set(items.map(i => i.type))]);
-            }
-            
-            // Construir mapa de nome -> ID
-            const nameToIdMap = new Map();
-            
-            // Tentar obter IDs do índice
             if (index && index.size > 0) {
                 try {
-                    if (index instanceof Map) {
-                        // Se é um Map direto (índice manual)
-                        for (const [name, id] of index.entries()) {
-                            nameToIdMap.set(name, String(id));
-                        }
-                    } else {
-                        // Se é o índice do Foundry (Map com entries)
-                        const indexEntries = Array.from(index.entries());
-                        for (const [id, indexEntry] of indexEntries) {
-                            if (indexEntry && indexEntry.name) {
-                                nameToIdMap.set(indexEntry.name, String(id));
-                            }
+                    const indexEntries = Array.from(index.entries());
+                    for (const [id, indexEntry] of indexEntries) {
+                        if (indexEntry && indexEntry.name) {
+                            nameToIdFromIndex.set(indexEntry.name, String(id));
                         }
                     }
                 } catch (e) {
@@ -287,40 +196,100 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                 }
             }
             
-            // Também tentar obter IDs diretamente dos documentos
-            for (const item of filtered) {
-                if (item.name && !nameToIdMap.has(item.name)) {
-                    if (item.id) {
-                        nameToIdMap.set(item.name, String(item.id));
-                    } else if (item._id) {
-                        nameToIdMap.set(item.name, String(item._id));
-                    } else if (item.uuid) {
-                        const uuidParts = item.uuid.split(".");
-                        if (uuidParts.length >= 3) {
-                            nameToIdMap.set(item.name, String(uuidParts[uuidParts.length - 1]));
+            // Tentar buscar documentos
+            let items = [];
+            let filtered = [];
+            
+            // Estratégia 1: Buscar todos os documentos
+            try {
+                items = await pack.getDocuments();
+                filtered = items.filter(item => item && item.type === itemType);
+            } catch (error) {
+                console.warn(`[Rising Steel] Erro ao buscar documentos do pack "${packName}":`, error);
+            }
+            
+            // Estratégia 2: Se não encontrou ou encontrou sem IDs, buscar pelo índice
+            if (filtered.length === 0 || filtered.some(item => !item.id && !item._id)) {
+                if (index && index.size > 0) {
+                    try {
+                        const indexEntries = Array.from(index.entries());
+                        // Filtrar pelo tipo se disponível no índice
+                        const filteredIds = indexEntries
+                            .filter(([id, entry]) => {
+                                if (!entry || !entry.name) return false;
+                                // Se o índice não tem informação de tipo, buscar todos
+                                if (!entry.type) return true;
+                                return entry.type === itemType;
+                            })
+                            .map(([id]) => String(id));
+                        
+                        if (filteredIds.length > 0) {
+                            const itemsFromIndex = await Promise.all(
+                                filteredIds.map(id => pack.getDocument(id).catch(() => null))
+                            );
+                            const validItems = itemsFromIndex.filter(item => item !== null && item.type === itemType);
+                            if (validItems.length > 0) {
+                                filtered = validItems;
+                            }
                         }
+                    } catch (error) {
+                        console.warn(`[Rising Steel] Erro ao buscar pelo índice do pack "${packName}":`, error);
                     }
                 }
             }
             
-            const mapped = filtered.map((item, idx) => {
+            console.log(`[Rising Steel] Pack "${packName}": ${filtered.length} itens do tipo "${itemType}"`);
+            
+            if (filtered.length === 0 && index && index.size > 0) {
+                console.warn(`[Rising Steel] Pack "${packName}" tem ${index.size} entradas no índice mas nenhum item do tipo "${itemType}" foi encontrado.`);
+            }
+            
+            // Mapear os itens filtrados usando múltiplas estratégias para obter o ID
+            const mapped = filtered.map((item) => {
                 let itemId = "";
                 
-                // Prioridade 1: Buscar no mapa pelo nome
-                if (item.name && nameToIdMap.has(item.name)) {
-                    itemId = nameToIdMap.get(item.name);
-                }
-                // Prioridade 2: ID direto do documento
-                else if (item.id) {
+                // Prioridade 1: ID direto do documento (propriedade padrão do Foundry)
+                if (item.id) {
                     itemId = String(item.id);
-                } else if (item._id) {
+                }
+                // Prioridade 2: _id do documento (alternativa)
+                else if (item._id) {
                     itemId = String(item._id);
                 }
-                // Prioridade 3: UUID
+                // Prioridade 3: Buscar no mapa do índice pelo nome (mais confiável)
+                else if (item.name && nameToIdFromIndex.has(item.name)) {
+                    itemId = nameToIdFromIndex.get(item.name);
+                }
+                // Prioridade 4: Tentar extrair do UUID
                 else if (item.uuid) {
-                    const uuidParts = item.uuid.split(".");
-                    if (uuidParts.length >= 3) {
-                        itemId = String(uuidParts[uuidParts.length - 1]);
+                    // UUID formato: "Compendium.rising-steel.armaduras.Item.{id}"
+                    const uuidMatch = item.uuid.match(/Item\.([^\.]+)/);
+                    if (uuidMatch && uuidMatch[1] && uuidMatch[1].trim()) {
+                        itemId = String(uuidMatch[1].trim());
+                    } else {
+                        // Tentar dividir por pontos
+                        const parts = item.uuid.split(".");
+                        const itemIndex = parts.findIndex(p => p === "Item");
+                        if (itemIndex >= 0 && itemIndex < parts.length - 1) {
+                            const potentialId = parts[itemIndex + 1];
+                            if (potentialId && potentialId.trim()) {
+                                itemId = String(potentialId.trim());
+                            }
+                        }
+                    }
+                }
+                // Prioridade 5: Buscar diretamente no índice se ainda não encontrou
+                else if (item.name && index && index.size > 0) {
+                    try {
+                        const indexEntries = Array.from(index.entries());
+                        for (const [id, indexEntry] of indexEntries) {
+                            if (indexEntry && indexEntry.name === item.name) {
+                                itemId = String(id);
+                                break;
+                            }
+                        }
+                    } catch (e) {
+                        // Continuar sem ID se houver erro
                     }
                 }
                 
@@ -330,20 +299,19 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                     system: item.system || {}
                 };
                 
-                if (!mappedItem.id) {
+                // Log apenas se realmente não conseguiu encontrar ID
+                if (!mappedItem.id && mappedItem.name) {
                     console.warn(`[Rising Steel] Item "${mappedItem.name}" do pack "${packName}" não tem ID.`, {
-                        item: item,
-                        itemKeys: Object.keys(item),
+                        hasId: !!item.id,
+                        has_id: !!item._id,
+                        hasUuid: !!item.uuid,
                         uuid: item.uuid,
-                        _id: item._id,
-                        id: item.id
+                        nameInIndex: nameToIdFromIndex.has(item.name)
                     });
-                    // Não usar fallback - deixar vazio para forçar recriação
-                    mappedItem.id = "";
                 }
                 
                 return mappedItem;
-            });
+            }).filter(item => item.name); // Manter apenas itens com nome
             
             console.log(`[Rising Steel] Mapeando ${mapped.length} itens do pack "${packName}":`, mapped.map(i => ({id: i.id, name: i.name})));
             
