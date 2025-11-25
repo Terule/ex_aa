@@ -73,6 +73,9 @@ Hooks.once("init", async function () {
     CONFIG.RisingSteel = RisingSteel;
     CONFIG.Actor.documentClass = RisingSteelActor;
     CONFIG.Item.documentClass = RisingSteelItem;
+    
+    // Configurar tipos de Actor
+    CONFIG.Actor.types = ["piloto", "criatura", "companion"];
     CONFIG.Actor.typeLabels = CONFIG.Actor.typeLabels || {};
     CONFIG.Actor.typeLabels.piloto = "Piloto";
     CONFIG.Actor.typeLabels.criatura = "Criatura";
@@ -347,9 +350,15 @@ Hooks.on("renderCompendium", (app, html, data) => {
 // Isso é crítico porque o template do Foundry lê CONFIG.Item.types quando prepara os dados
 console.log("[Rising Steel] Registrando hook preRenderDialog no nível do módulo");
 Hooks.on("preRenderDialog", (app, data, options) => {
-    // Verificar se é um diálogo de criação de item
+    // Verificar se é um diálogo de criação de item ou actor
     const dialogTitle = app.options?.title || app.title || options?.title || "";
+    const isCreateActorDialog = dialogTitle.includes("Create") && dialogTitle.includes("Actor");
     const isCreateItemDialog = dialogTitle.includes("Create") && dialogTitle.includes("Item");
+    
+    // Se for um diálogo de criação de Actor, não aplicar filtros de Item
+    if (isCreateActorDialog) {
+        return;
+    }
     
     // Verificar se o diálogo tem um pack associado
     let packId = app.options?.pack || options?.pack || "";
@@ -373,7 +382,7 @@ Hooks.on("preRenderDialog", (app, data, options) => {
         }
     }
     
-    // Aplicar filtro se for um diálogo de criação de item OU se for um compendium do Rising Steel
+    // Aplicar filtro APENAS se for um diálogo de criação de item OU se for um compendium do Rising Steel de itens
     if (isCreateItemDialog || (isRisingSteel && isTargetPack)) {
         // Garantir que CONFIG.Item.types está correto ANTES do template ser renderizado
         CONFIG.Item.types = ["armadura", "arma", "equipamento"];
@@ -390,16 +399,24 @@ Hooks.on("preRenderDialog", (app, data, options) => {
 // Este hook é registrado no nível do módulo para garantir que seja executado
 console.log("[Rising Steel] Registrando hook renderDialog no nível do módulo");
 Hooks.on("renderDialog", (app, html, data) => {
-    // Verificar se é um diálogo de criação de item
+    // Verificar se é um diálogo de criação de item ou actor
     const dialogTitle = app.options?.title || app.title || "";
-    const isCreateItemDialog = dialogTitle.includes("Create") && (dialogTitle.includes("Item") || dialogTitle.includes("New"));
+    const isCreateActorDialog = dialogTitle.includes("Create") && dialogTitle.includes("Actor");
+    const isCreateItemDialog = dialogTitle.includes("Create") && dialogTitle.includes("Item");
+    
+    // Se for um diálogo de criação de Actor, não aplicar filtros de Item
+    if (isCreateActorDialog) {
+        console.log("[Rising Steel] renderDialog - Diálogo de criação de Actor detectado, ignorando filtros de Item");
+        return;
+    }
     
     console.log("[Rising Steel] renderDialog chamado", {
         title: dialogTitle,
         pack: app.options?.pack || app.data?.pack || "",
         hasTypeSelect: html.find('select[name="type"]').length > 0,
         appClass: app.constructor?.name || "unknown",
-        isCreateItemDialog: isCreateItemDialog
+        isCreateItemDialog: isCreateItemDialog,
+        isCreateActorDialog: isCreateActorDialog
     });
     
     const typeSelect = html.find('select[name="type"]');
@@ -438,7 +455,7 @@ Hooks.on("renderDialog", (app, html, data) => {
         }
     }
     
-    // Aplicar filtro se for um diálogo de criação de item OU se for um compendium do Rising Steel
+    // Aplicar filtro APENAS se for um diálogo de criação de item OU se for um compendium do Rising Steel de itens
     if (isCreateItemDialog || (isRisingSteel && isTargetPack)) {
         // Garantir que CONFIG.Item.types está correto
         CONFIG.Item.types = ["armadura", "arma", "equipamento"];
