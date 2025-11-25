@@ -1135,8 +1135,20 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
 
     async _onArmaduraSelect(event) {
         event.preventDefault();
+        event.stopPropagation();
         const select = event.currentTarget;
-        const armaduraId = select.value;
+        
+        // Ler o valor do selectedIndex diretamente (mesmo padrão de equipamentos e armas)
+        let armaduraId = "";
+        const selectedOption = select.selectedIndex >= 0 ? select.options[select.selectedIndex] : null;
+        if (selectedOption) {
+            armaduraId = selectedOption.value || "";
+        }
+        
+        // Fallback
+        if (!armaduraId) {
+            armaduraId = select.value || $(select).val() || "";
+        }
         
         if (!armaduraId) {
             // Se nenhuma armadura foi selecionada, limpar os valores
