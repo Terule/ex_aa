@@ -571,9 +571,39 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                 }
                 
                 return mappedItem;
-            }).filter(item => item && item.name && item.id && item.id !== "null" && item.id !== null); // Manter apenas itens com nome E ID válido
+            });
             
-            console.log(`[Rising Steel] Mapeando ${mapped.length} itens do pack "${packName}"`);
+            // Filtrar itens inválidos - remover nulls e itens sem ID válido
+            const mappedValid = mapped.filter(item => {
+                if (!item) return false;
+                if (!item.name || !item.name.trim()) return false;
+                
+                // Verificar se o ID é válido
+                const itemId = item.id;
+                if (!itemId || itemId === null || itemId === "null" || itemId === undefined) {
+                    console.warn(`[Rising Steel] Item "${item.name}" do pack "${packName}" será filtrado - ID inválido:`, itemId);
+                    return false;
+                }
+                
+                const itemIdStr = String(itemId).trim();
+                if (itemIdStr === "" || itemIdStr === "null") {
+                    console.warn(`[Rising Steel] Item "${item.name}" do pack "${packName}" será filtrado - ID vazio ou "null":`, itemIdStr);
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            const filteredCount = mapped.length - mappedValid.length;
+            if (filteredCount > 0) {
+                console.warn(`[Rising Steel] ${filteredCount} itens do pack "${packName}" foram filtrados por terem IDs inválidos. Total antes: ${mapped.length}, Total depois: ${mappedValid.length}`);
+            }
+            
+            console.log(`[Rising Steel] Mapeando ${mappedValid.length} itens válidos do pack "${packName}"`);
+            
+            // Substituir o array mapeado pelos itens válidos
+            mapped.length = 0;
+            mapped.push(...mappedValid);
             
             return mapped;
         } catch (error) {
@@ -1449,6 +1479,16 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
             alcance: a?.alcance || "",
             bonus: a?.bonus || 0
         })));
+        
+        // DEBUG: Verificar se o array está correto
+        console.log(`[Rising Steel] DEBUG - Verificando array armasNovas:`);
+        armasNovas.forEach((arma, idx) => {
+            console.log(`  Slot ${idx}:`, {
+                id: arma.id,
+                nome: arma.nome,
+                isSameObject: idx === index ? 'ATUALIZADO' : 'PRESERVADO'
+            });
+        });
         
         // Preservar equipamentos durante a atualização (usar deep clone também)
         const equipamentosAtuais = JSON.parse(JSON.stringify(this.actor.system.inventario?.equipamentos || []));
