@@ -227,9 +227,31 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                             return arma;
                         } else {
                             // ID existe mas não foi encontrado no compendium
-                            // Pode ser que o item foi removido ou o pack ainda não carregou
-                            // Manter valores atuais sem alterar
-                            console.warn(`[Rising Steel] Arma ${idx} com ID "${arma.id}" não encontrada no compendium, mantendo valores atuais sem alteração`);
+                            // Tentar encontrar pelo nome para atualizar o ID inválido
+                            if (arma.nome && arma.nome.trim() !== "") {
+                                const foundByName = context.armas.find(a => {
+                                    const nomeSalvo = (arma.nome || "").trim().toLowerCase();
+                                    const nomeItem = (a.name || "").trim().toLowerCase();
+                                    return nomeSalvo === nomeItem && nomeSalvo !== "";
+                                });
+                                
+                                if (foundByName) {
+                                    armasAtualizadas = true;
+                                    console.log(`[Rising Steel] Arma ${idx} com ID inválido "${arma.id}" não encontrada. Encontrada pelo nome "${arma.nome}" - atualizando ID para "${foundByName.id}"`);
+                                    // Atualizar o ID inválido e sincronizar valores do item encontrado
+                                    return {
+                                        id: foundByName.id,
+                                        nome: foundByName.name,
+                                        dano: Number(foundByName.system?.dano || arma.dano || 0),
+                                        alcance: foundByName.system?.alcance || arma.alcance || "",
+                                        bonus: Number(foundByName.system?.bonus || arma.bonus || 0)
+                                    };
+                                }
+                            }
+                            
+                            // ID inválido e não encontrou pelo nome
+                            // Manter valores atuais mas avisar
+                            console.warn(`[Rising Steel] Arma ${idx} com ID "${arma.id}" não encontrada no compendium e não foi possível encontrar pelo nome "${arma.nome}". Mantendo valores atuais.`);
                             return arma;
                         }
                     }
@@ -237,24 +259,26 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                     // SÓ sincronizar se NÃO tem ID e tem nome
                     // Isso ajuda quando uma arma foi salva apenas com nome (sem ID)
                     if (!arma.id || arma.id.trim() === "") {
-                        const foundByName = context.armas.find(a => {
-                            const nomeSalvo = (arma.nome || "").trim().toLowerCase();
-                            const nomeItem = (a.name || "").trim().toLowerCase();
-                            return nomeSalvo === nomeItem && nomeSalvo !== "";
-                        });
-                        
-                        if (foundByName) {
-                            armasAtualizadas = true;
-                            console.log(`[Rising Steel] Sincronizando arma ${idx}: "${arma.nome}" - adicionando ID "${foundByName.id}" e atualizando valores do item`);
-                            // Quando sincroniza pelo nome, usar TODOS os valores do item encontrado
-                            // Isso garante consistência entre nome, dano, alcance, bonus
-                            return {
-                                id: foundByName.id,
-                                nome: foundByName.name,
-                                dano: Number(foundByName.system?.dano || arma.dano || 0),
-                                alcance: foundByName.system?.alcance || arma.alcance || "",
-                                bonus: Number(foundByName.system?.bonus || arma.bonus || 0)
-                            };
+                        if (arma.nome && arma.nome.trim() !== "") {
+                            const foundByName = context.armas.find(a => {
+                                const nomeSalvo = (arma.nome || "").trim().toLowerCase();
+                                const nomeItem = (a.name || "").trim().toLowerCase();
+                                return nomeSalvo === nomeItem && nomeSalvo !== "";
+                            });
+                            
+                            if (foundByName) {
+                                armasAtualizadas = true;
+                                console.log(`[Rising Steel] Sincronizando arma ${idx}: "${arma.nome}" - adicionando ID "${foundByName.id}" e atualizando valores do item`);
+                                // Quando sincroniza pelo nome, usar TODOS os valores do item encontrado
+                                // Isso garante consistência entre nome, dano, alcance, bonus
+                                return {
+                                    id: foundByName.id,
+                                    nome: foundByName.name,
+                                    dano: Number(foundByName.system?.dano || arma.dano || 0),
+                                    alcance: foundByName.system?.alcance || arma.alcance || "",
+                                    bonus: Number(foundByName.system?.bonus || arma.bonus || 0)
+                                };
+                            }
                         }
                     }
                     
