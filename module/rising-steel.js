@@ -341,6 +341,7 @@ Hooks.on("renderCompendium", (app, html, data) => {
 
 // Interceptar ANTES do diálogo ser renderizado para garantir que CONFIG.Item.types está correto
 // Isso é crítico porque o template do Foundry lê CONFIG.Item.types quando prepara os dados
+console.log("[Rising Steel] Registrando hook preRenderDialog no nível do módulo");
 Hooks.on("preRenderDialog", (app, data, options) => {
     // Verificar se é um diálogo de criação de item
     const dialogTitle = app.options?.title || app.title || options?.title || "";
@@ -383,6 +384,7 @@ Hooks.on("preRenderDialog", (app, data, options) => {
 
 // Interceptar quando qualquer diálogo é renderizado para garantir filtro
 // Este hook é registrado no nível do módulo para garantir que seja executado
+console.log("[Rising Steel] Registrando hook renderDialog no nível do módulo");
 Hooks.on("renderDialog", (app, html, data) => {
     // Verificar se é um diálogo de criação de item
     const dialogTitle = app.options?.title || app.title || "";
