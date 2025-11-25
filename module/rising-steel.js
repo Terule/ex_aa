@@ -120,6 +120,9 @@ Hooks.once("init", async function () {
         
         // Garantir que CONFIG.Item.types está correto
         CONFIG.Item.types = ["armadura", "arma", "equipamento"];
+        
+        // Registrar hook renderDialog aqui para garantir que seja executado
+        console.log("[Rising Steel] Registrando hook renderDialog no ready");
     });
 
     // Register sheet application classes (multi-version compatible)
@@ -379,7 +382,7 @@ Hooks.on("preRenderDialog", (app, data, options) => {
 });
 
 // Interceptar quando qualquer diálogo é renderizado para garantir filtro
-console.log("[Rising Steel] Registrando hook renderDialog");
+// Este hook é registrado no nível do módulo para garantir que seja executado
 Hooks.on("renderDialog", (app, html, data) => {
     // Verificar se é um diálogo de criação de item
     const dialogTitle = app.options?.title || app.title || "";
