@@ -84,11 +84,14 @@ Hooks.once("init", async function () {
     // Modificar CONFIG.Item.types para ter apenas os tipos relevantes
     // Isso afeta todos os lugares onde os tipos são listados, incluindo compendiums
     // IMPORTANTE: Isso deve ser feito ANTES de qualquer outro sistema carregar
-    Object.defineProperty(CONFIG.Item, 'types', {
-        value: ["armadura", "arma", "equipamento"],
-        writable: true,
-        configurable: true
-    });
+    CONFIG.Item.types = ["armadura", "arma", "equipamento"];
+    
+    // Sobrescrever o getter se existir para garantir que sempre retorne os tipos corretos
+    if (CONFIG.Item.types && Array.isArray(CONFIG.Item.types)) {
+        // Forçar a atualização imediata
+        Object.freeze(CONFIG.Item.types);
+        CONFIG.Item.types = ["armadura", "arma", "equipamento"];
+    }
     
     // Salvar tipos originais de itens (caso precise restaurar)
     const originalItemTypes = ["item", "feature", "spell", "armadura", "arma", "equipamento"];
