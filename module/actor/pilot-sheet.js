@@ -1201,6 +1201,8 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         
         // Buscar dados da armadura do pack
         let protecao = 0;
+        let idFinal = armaduraId; // ID final a ser salvo
+        
         if (game.packs && game.packs.size > 0) {
             try {
                 let pack = game.packs.get("rising-steel.armaduras");
@@ -1215,8 +1217,15 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                 if (pack) {
                     const item = await pack.getDocument(armaduraId);
                     if (item) {
+                        // Usar o ID real do item do compendium para garantir correspondência
+                        idFinal = item.id;
                         protecao = Number(item.system?.protecao || 0);
-                        console.log(`[Rising Steel] Armadura encontrada no pack - Nome: "${item.name}", Proteção: ${protecao}, ID: "${item.id}"`);
+                        console.log(`[Rising Steel] Armadura encontrada no pack - Nome: "${item.name}", Proteção: ${protecao}, ID do dropdown: "${armaduraId}", ID do item: "${item.id}"`);
+                        
+                        // Se o ID do item for diferente do ID do dropdown, corrigir
+                        if (idFinal !== armaduraId) {
+                            console.log(`[Rising Steel] Corrigindo ID da armadura - ID do dropdown: "${armaduraId}", ID correto do item: "${idFinal}"`);
+                        }
                     } else {
                         console.warn(`[Rising Steel] Armadura com ID "${armaduraId}" não encontrada no pack!`);
                         // Tentar listar todos os IDs disponíveis para debug
@@ -1239,10 +1248,12 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         const atual = Math.max(0, protecao - danoAtual);
         
         await this.actor.update({
-            "system.armadura.equipada": armaduraId,
+            "system.armadura.equipada": idFinal,
             "system.armadura.total": protecao,
             "system.armadura.atual": atual
         });
+        
+        console.log(`[Rising Steel] Armadura salva com sucesso - ID: "${idFinal}", Proteção: ${protecao}`);
     }
 
     async _onRollEquipamento(event) {
