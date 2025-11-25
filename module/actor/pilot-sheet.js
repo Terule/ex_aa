@@ -1216,7 +1216,8 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                     const item = await pack.getDocument(armaduraId);
                     if (item) {
                         protecao = Number(item.system?.protecao || 0);
-                        console.log(`[Rising Steel] Armadura encontrada no pack - Nome: "${item.name}", Proteção: ${protecao}, ID: "${item.id}"`);
+                        // O ID usado é o armaduraId (do dropdown), não item.id que pode ser null
+                        console.log(`[Rising Steel] Armadura encontrada no pack - Nome: "${item.name}", Proteção: ${protecao}, ID salvo: "${armaduraId}"`);
                     } else {
                         console.warn(`[Rising Steel] Armadura com ID "${armaduraId}" não encontrada no pack!`);
                         // Tentar listar todos os IDs disponíveis para debug
@@ -1238,8 +1239,18 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         const danoAtual = Number(this.actor.system.armadura?.dano || 0);
         const atual = Math.max(0, protecao - danoAtual);
         
+        // Garantir que armaduraId é uma string válida, não null ou undefined
+        const idParaSalvar = String(armaduraId || "").trim();
+        
+        if (!idParaSalvar) {
+            console.warn(`[Rising Steel] Tentando salvar armadura sem ID válido!`);
+            return;
+        }
+        
+        console.log(`[Rising Steel] Salvando armadura - ID: "${idParaSalvar}", Proteção: ${protecao}`);
+        
         await this.actor.update({
-            "system.armadura.equipada": armaduraId,
+            "system.armadura.equipada": idParaSalvar,
             "system.armadura.total": protecao,
             "system.armadura.atual": atual
         });
