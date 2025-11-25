@@ -81,18 +81,14 @@ Hooks.once("init", async function () {
     CONFIG.Item.typeLabels.arma = "Arma";
     CONFIG.Item.typeLabels.equipamento = "Equipamento";
     
-    // Modificar CONFIG.Item.types para ter apenas os tipos relevantes
-    // Isso afeta a criação de itens em compendiums
+    // Salvar tipos originais de itens
     const originalItemTypes = [...(CONFIG.Item.types || [])];
-    
-    // No hook ready, modificar os tipos para compendiums específicos
-    Hooks.once("ready", () => {
-        // Salvar tipos originais
-        window.RisingSteel.originalItemTypes = originalItemTypes;
-    });
     
     // Log packs disponíveis para debug
     Hooks.once("ready", async () => {
+        // Salvar tipos originais
+        window.RisingSteel = window.RisingSteel || {};
+        window.RisingSteel.originalItemTypes = originalItemTypes;
         console.log("Rising Steel - Packs disponíveis:", Array.from(game.packs).map(p => ({
             id: p.metadata.id,
             name: p.metadata.name,
@@ -109,6 +105,14 @@ Hooks.once("init", async function () {
                 console.warn("[Rising Steel] Erro ao verificar/importar packs:", error);
             }
         }
+        
+        // Modificar CONFIG.Item.types para ter apenas os tipos relevantes para compendiums de itens
+        // Isso afeta a criação de itens em compendiums
+        const originalTypes = CONFIG.Item.types || [];
+        window.RisingSteel.originalItemTypes = originalTypes;
+        
+        // Para compendiums de itens, usar apenas os três tipos
+        // Isso será aplicado quando o compendium for renderizado
     });
 
     // Register sheet application classes (multi-version compatible)
@@ -305,7 +309,7 @@ Hooks.on("renderCompendiumDirectory", (app, html, data) => {
 });
 
 // Filtrar tipos de itens ao criar item no compendium
-// Modificar CONFIG.Item.types quando abrir compendium de itens
+// Interceptar quando o compendium é renderizado para modificar CONFIG.Item.types
 Hooks.on("renderCompendium", (app, html, data) => {
     const packId = app.collection?.metadata?.id || "";
     const isRisingSteel = packId.includes("rising-steel");
@@ -313,7 +317,13 @@ Hooks.on("renderCompendium", (app, html, data) => {
     
     if (isRisingSteel && isTargetPack) {
         // Modificar CONFIG.Item.types para ter apenas os tipos relevantes
+        // Isso afeta o diálogo de criação
         CONFIG.Item.types = ["armadura", "arma", "equipamento"];
+        
+        // Interceptar o botão de criar para garantir que os tipos estão corretos
+        html.find('button[data-action="create"]').off('click.rising-steel-types').on('click.rising-steel-types', () => {
+            CONFIG.Item.types = ["armadura", "arma", "equipamento"];
+        });
     }
 });
 
@@ -341,11 +351,20 @@ Hooks.on("renderDialog", (app, html, data) => {
         // Garantir que CONFIG.Item.types está correto
         CONFIG.Item.types = ["armadura", "arma", "equipamento"];
         
-        // Filtrar o select de forma agressiva
-        let attempts = 0;
-        const maxAttempts = 30;
+        // Filtrar o select de forma agressiva e repetida
         const allowedTypes = ["armadura", "arma", "equipamento"];
         
+        // Filtrar imediatamente
+        typeSelect.find('option').each(function() {
+            const value = $(this).val();
+            if (value && !allowedTypes.includes(value)) {
+                $(this).remove();
+            }
+        });
+        
+        // Continuar filtrando por um tempo para garantir
+        let attempts = 0;
+        const maxAttempts = 20;
         const filterInterval = setInterval(() => {
             attempts++;
             const select = $('select[name="type"]');
@@ -361,7 +380,6 @@ Hooks.on("renderDialog", (app, html, data) => {
                 });
                 
                 if (hasFiltered) {
-                    clearInterval(filterInterval);
                     console.log("[Rising Steel] Tipos filtrados: armadura, arma, equipamento");
                 }
             }
@@ -369,7 +387,7 @@ Hooks.on("renderDialog", (app, html, data) => {
             if (attempts >= maxAttempts) {
                 clearInterval(filterInterval);
             }
-        }, 50);
+        }, 100);
     }
 });
 
