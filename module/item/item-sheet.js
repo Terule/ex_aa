@@ -21,8 +21,9 @@ export class RisingSteelItemSheet extends FoundryCompatibility.getItemSheetBase(
         // Templates HTML existem para: armadura, arma, equipamento
         // Templates HBS existem para: item, feature, spell
         const htmlTypes = ["armadura", "arma", "equipamento"];
-        const extension = htmlTypes.includes(this.item.type) ? "html" : "hbs";
-        return `${path}/item-${this.item.type}-sheet.${extension}`;
+        const itemType = this.item.type?.toLowerCase() || "item";
+        const extension = htmlTypes.includes(itemType) ? "html" : "hbs";
+        return `${path}/item-${itemType}-sheet.${extension}`;
     }
 
     /** @override */
