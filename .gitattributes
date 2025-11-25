@@ -1,6 +1,6 @@
 # Garantir que JSON seja sempre UTF-8 sem BOM
-*.json text eol=lf
+*.json text eol=lf working-tree-encoding=UTF-8
 
 # Especificamente para system.json
-system.json text eol=lf
+system.json text eol=lf working-tree-encoding=UTF-8
 

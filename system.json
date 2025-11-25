@@ -1,8 +1,8 @@
-﻿{
+{
     "id":  "rising-steel",
     "title":  "Rising Steel",
     "description":  "The Rising Steel system for FoundryVTT!",
-    "version":  "0.0.3",
+    "version":  "0.0.4",
     "compatibility":  {
                           "minimum":  "12",
                           "verified":  "12.331"
@@ -30,8 +30,12 @@
     "readme":  "README.md",
     "bugs":  "https://github.com/Terule/ex_aa/issues",
     "changelog":  "CHANGELOG.md",
-    "esmodules":  ["module/rising-steel.js"],
-    "styles":  ["css/rising-steel.css"],
+    "esmodules":  [
+                      "module/rising-steel.js"
+                  ],
+    "styles":  [
+                   "css/rising-steel.css"
+               ],
     "languages":  [
                       {
                           "lang":  "en",
