@@ -216,31 +216,42 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                     }
                     
                     // Se já tem ID, verificar se corresponde
-                    if (arma.id) {
+                    if (arma.id && arma.id.trim() !== "") {
                         const foundById = context.armas.find(a => a.id === arma.id);
                         if (foundById) {
-                            // ID válido, retornar como está
+                            // ID válido e encontrado, retornar como está (preservar todos os valores)
                             return arma;
                         }
                     }
                     
-                    // ID não encontrado ou inválido, tentar encontrar pelo nome
-                    const foundByName = context.armas.find(a => {
-                        const nomeSalvo = (arma.nome || "").trim().toLowerCase();
-                        const nomeItem = (a.name || "").trim().toLowerCase();
-                        return nomeSalvo === nomeItem;
-                    });
+                    // ID não encontrado ou inválido, tentar encontrar pelo nome APENAS se não há ID
+                    // Mas ter cuidado para não sobrescrever armas que já têm IDs válidos
+                    if (!arma.id || arma.id.trim() === "") {
+                        const foundByName = context.armas.find(a => {
+                            const nomeSalvo = (arma.nome || "").trim().toLowerCase();
+                            const nomeItem = (a.name || "").trim().toLowerCase();
+                            return nomeSalvo === nomeItem && nomeSalvo !== "";
+                        });
+                        
+                        if (foundByName) {
+                            armasAtualizadas = true;
+                            console.log(`[Rising Steel] Sincronizando arma ${idx}: "${arma.nome}" - atualizando ID de "" para "${foundByName.id}"`);
+                            // Ao sincronizar pelo nome, usar valores do item encontrado para garantir consistência
+                            return {
+                                id: foundByName.id,
+                                nome: foundByName.name,
+                                dano: foundByName.system?.dano || arma.dano || 0,
+                                alcance: foundByName.system?.alcance || arma.alcance || "",
+                                bonus: foundByName.system?.bonus || arma.bonus || 0
+                            };
+                        }
+                    }
                     
-                    if (foundByName) {
-                        armasAtualizadas = true;
-                        console.log(`[Rising Steel] Sincronizando arma ${idx}: "${arma.nome}"`);
-                        return {
-                            id: foundByName.id,
-                            nome: foundByName.name,
-                            dano: arma.dano || foundByName.system?.dano || 0,
-                            alcance: arma.alcance || foundByName.system?.alcance || "",
-                            bonus: arma.bonus || foundByName.system?.bonus || 0
-                        };
+                    // Se tem ID mas não foi encontrado, manter como está por enquanto
+                    // (pode ser que o pack ainda não carregou ou o item foi removido)
+                    if (arma.id && arma.id.trim() !== "") {
+                        console.warn(`[Rising Steel] Arma ${idx} com ID "${arma.id}" não encontrada no compendium, mantendo valores atuais`);
+                        return arma;
                     }
                     
                     // Não encontrado, limpar
@@ -1238,7 +1249,17 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         await this.actor.update({
             "system.inventario.armas": armasAtuais,
             "system.inventario.equipamentos": equipamentosAtuais
-        });
+        }, {render: true});
+        
+        // Forçar atualização dos campos de input para garantir que os valores sejam exibidos corretamente
+        const html = $(this.element);
+        const danoInput = html.find(`input[name="system.inventario.armas.${index}.dano"]`);
+        const alcanceInput = html.find(`input[name="system.inventario.armas.${index}.alcance"]`);
+        const bonusInput = html.find(`input[name="system.inventario.armas.${index}.bonus"]`);
+        
+        if (danoInput.length) danoInput.val(novaArma.dano);
+        if (alcanceInput.length) alcanceInput.val(novaArma.alcance);
+        if (bonusInput.length) bonusInput.val(novaArma.bonus);
     }
 
     async _onArmaduraSelect(event) {
