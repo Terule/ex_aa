@@ -1,67 +1,71 @@
-{
-  "id": "rising-steel",
-  "title": "Rising Steel",
-  "description": "The Rising Steel system for FoundryVTT!",
-  "version": "0.0.1",
-  "compatibility": {
-    "minimum": "12",
-    "verified": "12.331"
-  },
-  "grid": {
-    "distance": 10,
-    "units": "ft"
-  },
-  "authors": [
-    {
-      "name": "Danilo",
-      "discord": "sloth_pb"
-    },
-    {
-      "name": "Terule",
-      "discord": "terule"
-    },
-    {
-      "name": "Hebert",
-      "discord": "totha"
-    }
-  ],
-  "url": "https://github.com/Terule/ex_aa",
-  "license": "LICENSE.txt",
-  "readme": "README.md",
-  "bugs": "https://github.com/Terule/ex_aa/issues",
-  "changelog": "CHANGELOG.md",
-  "esmodules": ["module/rising-steel.js"],
-  "styles": ["css/rising-steel.css"],
-  "languages": [
-    {
-      "lang": "en",
-      "name": "English",
-      "path": "lang/en.json"
-    }
-  ],
-  "packs": [
-    {
-      "name": "armaduras",
-      "label": "Armaduras",
-      "path": "packs/armaduras.db",
-      "type": "Item",
-      "system": "rising-steel"
-    },
-    {
-      "name": "armas",
-      "label": "Armas",
-      "path": "packs/armas.db",
-      "type": "Item",
-      "system": "rising-steel"
-    },
-    {
-      "name": "equipamentos",
-      "label": "Equipamentos",
-      "path": "packs/equipamentos.db",
-      "type": "Item",
-      "system": "rising-steel"
-    }
-  ],
-  "manifest": "https://raw.githubusercontent.com/Terule/ex_aa/main/system.json",
-  "download": "https://github.com/Terule/ex_aa/archive/refs/heads/main.zip"
+﻿{
+    "id":  "rising-steel",
+    "title":  "Rising Steel",
+    "description":  "The Rising Steel system for FoundryVTT!",
+    "version":  "0.0.3",
+    "compatibility":  {
+                          "minimum":  "12",
+                          "verified":  "12.331"
+                      },
+    "grid":  {
+                 "distance":  10,
+                 "units":  "ft"
+             },
+    "authors":  [
+                    {
+                        "name":  "Danilo",
+                        "discord":  "sloth_pb"
+                    },
+                    {
+                        "name":  "Terule",
+                        "discord":  "terule"
+                    },
+                    {
+                        "name":  "Hebert",
+                        "discord":  "totha"
+                    }
+                ],
+    "url":  "https://github.com/Terule/ex_aa",
+    "license":  "LICENSE.txt",
+    "readme":  "README.md",
+    "bugs":  "https://github.com/Terule/ex_aa/issues",
+    "changelog":  "CHANGELOG.md",
+    "esmodules":  [
+                      "module/rising-steel.js"
+                  ],
+    "styles":  [
+                   "css/rising-steel.css"
+               ],
+    "languages":  [
+                      {
+                          "lang":  "en",
+                          "name":  "English",
+                          "path":  "lang/en.json"
+                      }
+                  ],
+    "packs":  [
+                  {
+                      "name":  "armaduras",
+                      "label":  "Armaduras",
+                      "path":  "packs/armaduras.db",
+                      "type":  "Item",
+                      "system":  "rising-steel"
+                  },
+                  {
+                      "name":  "armas",
+                      "label":  "Armas",
+                      "path":  "packs/armas.db",
+                      "type":  "Item",
+                      "system":  "rising-steel"
+                  },
+                  {
+                      "name":  "equipamentos",
+                      "label":  "Equipamentos",
+                      "path":  "packs/equipamentos.db",
+                      "type":  "Item",
+                      "system":  "rising-steel"
+                  }
+              ],
+    "manifest":  "https://raw.githubusercontent.com/Terule/ex_aa/main/system.json",
+    "download":  "https://github.com/Terule/ex_aa/archive/refs/heads/main.zip"
 }
