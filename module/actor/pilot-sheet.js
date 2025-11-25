@@ -534,27 +534,40 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                     }
                 }
                 
+                // IMPORTANTE: Verificar se itemId é válido ANTES de criar o objeto
+                // Se itemId for null, "null", vazio ou inválido, retornar null imediatamente
+                if (!itemId || itemId === null || itemId === "null" || (typeof itemId === "string" && itemId.trim() === "")) {
+                    // Log apenas se o item tem nome (para ajudar a debugar)
+                    if (item.name) {
+                        console.warn(`[Rising Steel] Item "${item.name}" do pack "${packName}" não tem ID válido - será filtrado.`, {
+                            itemIdOriginal: item.id,
+                            item_idOriginal: item._id,
+                            hasUuid: !!item.uuid,
+                            uuid: item.uuid,
+                            nameInIndex: nameToIdFromIndex.has(item.name),
+                            mappedItemId: itemId
+                        });
+                    }
+                    return null; // Será filtrado depois
+                }
+                
+                // Garantir que itemId é uma string válida
+                itemId = String(itemId).trim();
+                
+                // Verificar novamente após conversão (caso tenha resultado em "null")
+                if (!itemId || itemId === "null") {
+                    return null;
+                }
+                
                 const mappedItem = {
-                    id: itemId || "",
+                    id: itemId, // Já validado
                     name: item.name || "",
                     system: item.system || {}
                 };
                 
-                // Log apenas se realmente não conseguiu encontrar ID válido
-                if (!mappedItem.id && mappedItem.name) {
-                    console.warn(`[Rising Steel] Item "${mappedItem.name}" do pack "${packName}" não tem ID válido.`, {
-                        itemIdOriginal: item.id,
-                        item_idOriginal: item._id,
-                        hasUuid: !!item.uuid,
-                        uuid: item.uuid,
-                        nameInIndex: nameToIdFromIndex.has(item.name),
-                        mappedItemId: itemId
-                    });
-                }
-                
-                // IMPORTANTE: Não retornar itens com ID inválido (null, "null", vazio)
-                if (!mappedItem.id || mappedItem.id === "null" || mappedItem.id === null) {
-                    return null; // Será filtrado depois
+                // Verificação final (não deve chegar aqui se itemId for inválido)
+                if (!mappedItem.id || !mappedItem.name) {
+                    return null;
                 }
                 
                 return mappedItem;
