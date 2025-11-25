@@ -111,8 +111,17 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
             context.armas = await this._getCompendiumItems("armas", "arma");
             
             // Debug: verificar os equipamentos salvos
-            console.log(`[Rising Steel] Equipamentos salvos no actor:`, context.system.inventario?.equipamentos?.map(e => ({name: e.nome})));
-            console.log(`[Rising Steel] Equipamentos disponíveis no compendium:`, context.equipamentos.map(e => ({name: e.name})));
+            console.log(`[Rising Steel] Equipamentos salvos no actor:`, context.system.inventario?.equipamentos?.map(e => ({id: e.id, nome: e.nome})));
+            console.log(`[Rising Steel] Equipamentos disponíveis no compendium:`, context.equipamentos.map(e => ({id: e.id, name: e.name})));
+            // Verificar correspondência
+            if (context.system.inventario?.equipamentos) {
+                context.system.inventario.equipamentos.forEach((eq, idx) => {
+                    if (eq.id) {
+                        const found = context.equipamentos.find(e => e.id === eq.id);
+                        console.log(`[Rising Steel] Equipamento ${idx}: id="${eq.id}", nome="${eq.nome}", encontrado no compendium: ${!!found}`);
+                    }
+                });
+            }
         } catch (error) {
             // Se houver erro ao carregar packs, usar arrays vazios
             context.armaduras = [];
