@@ -236,11 +236,24 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                                 });
                                 
                                 if (foundByName) {
+                                    // Verificar se o item encontrado tem um ID válido
+                                    let novoId = foundByName.id || foundByName._id || "";
+                                    
+                                    // Se o ID é null ou inválido, não atualizar para null - manter o ID antigo
+                                    if (!novoId || novoId === null || novoId === "null" || (typeof novoId === "string" && novoId.trim() === "")) {
+                                        console.warn(`[Rising Steel] Arma ${idx} "${arma.nome}" encontrada no compendium mas o item mapeado não tem ID válido (id=${foundByName.id}, _id=${foundByName._id}). Mantendo ID antigo "${arma.id}" e valores atuais.`, foundByName);
+                                        return arma;
+                                    }
+                                    
+                                    // Garantir que o ID é uma string válida
+                                    novoId = String(novoId).trim();
+                                    
+                                    // ID válido encontrado
                                     armasAtualizadas = true;
-                                    console.log(`[Rising Steel] Arma ${idx} com ID inválido "${arma.id}" não encontrada. Encontrada pelo nome "${arma.nome}" - atualizando ID para "${foundByName.id}"`);
+                                    console.log(`[Rising Steel] Arma ${idx} com ID inválido "${arma.id}" não encontrada. Encontrada pelo nome "${arma.nome}" - atualizando ID para "${novoId}"`);
                                     // Atualizar o ID inválido e sincronizar valores do item encontrado
                                     return {
-                                        id: foundByName.id,
+                                        id: novoId,
                                         nome: foundByName.name,
                                         dano: Number(foundByName.system?.dano || arma.dano || 0),
                                         alcance: foundByName.system?.alcance || arma.alcance || "",
@@ -267,17 +280,32 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                             });
                             
                             if (foundByName) {
-                                armasAtualizadas = true;
-                                console.log(`[Rising Steel] Sincronizando arma ${idx}: "${arma.nome}" - adicionando ID "${foundByName.id}" e atualizando valores do item`);
-                                // Quando sincroniza pelo nome, usar TODOS os valores do item encontrado
-                                // Isso garante consistência entre nome, dano, alcance, bonus
-                                return {
-                                    id: foundByName.id,
-                                    nome: foundByName.name,
-                                    dano: Number(foundByName.system?.dano || arma.dano || 0),
-                                    alcance: foundByName.system?.alcance || arma.alcance || "",
-                                    bonus: Number(foundByName.system?.bonus || arma.bonus || 0)
-                                };
+                                // Verificar se o item encontrado tem um ID válido
+                                const novoId = foundByName.id || foundByName._id || "";
+                                
+                                if (novoId && novoId.trim() !== "" && novoId !== "null") {
+                                    armasAtualizadas = true;
+                                    console.log(`[Rising Steel] Sincronizando arma ${idx}: "${arma.nome}" - adicionando ID "${novoId}" e atualizando valores do item`);
+                                    // Quando sincroniza pelo nome, usar TODOS os valores do item encontrado
+                                    // Isso garante consistência entre nome, dano, alcance, bonus
+                                    return {
+                                        id: String(novoId).trim(),
+                                        nome: foundByName.name,
+                                        dano: Number(foundByName.system?.dano || arma.dano || 0),
+                                        alcance: foundByName.system?.alcance || arma.alcance || "",
+                                        bonus: Number(foundByName.system?.bonus || arma.bonus || 0)
+                                    };
+                                } else {
+                                    // Item encontrado mas sem ID válido - manter sem ID por enquanto
+                                    console.warn(`[Rising Steel] Arma ${idx} "${arma.nome}" encontrada no compendium mas sem ID válido. Mantendo sem ID.`);
+                                    return {
+                                        id: "",
+                                        nome: foundByName.name,
+                                        dano: Number(foundByName.system?.dano || arma.dano || 0),
+                                        alcance: foundByName.system?.alcance || arma.alcance || "",
+                                        bonus: Number(foundByName.system?.bonus || arma.bonus || 0)
+                                    };
+                                }
                             }
                         }
                     }

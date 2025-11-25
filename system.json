@@ -2,7 +2,7 @@
     "id":  "rising-steel",
     "title":  "Rising Steel",
     "description":  "The Rising Steel system for FoundryVTT!",
-    "version":  "0.0.21",
+    "version":  "0.0.22",
     "compatibility":  {
                           "minimum":  "12",
                           "verified":  "12.331"
