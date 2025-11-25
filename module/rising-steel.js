@@ -380,12 +380,24 @@ Hooks.on("preRenderDialog", (app, data, options) => {
 
 // Interceptar quando qualquer diálogo é renderizado para garantir filtro
 Hooks.on("renderDialog", (app, html, data) => {
+    console.log("[Rising Steel] renderDialog chamado", {
+        title: app.options?.title || app.title || "",
+        pack: app.options?.pack || app.data?.pack || "",
+        hasTypeSelect: html.find('select[name="type"]').length > 0
+    });
+    
     // Verificar se é um diálogo de criação de item
     const dialogTitle = app.options?.title || app.title || "";
     const isCreateItemDialog = dialogTitle.includes("Create") && dialogTitle.includes("Item");
     
     const typeSelect = html.find('select[name="type"]');
-    if (!typeSelect.length) return;
+    if (!typeSelect.length) {
+        console.log("[Rising Steel] renderDialog - Nenhum select de tipo encontrado");
+        return;
+    }
+    
+    console.log("[Rising Steel] renderDialog - Select de tipo encontrado, opções atuais:", 
+        typeSelect.find('option').map((i, opt) => $(opt).val()).get());
     
     // Verificar se o diálogo tem um pack associado
     let packId = app.options?.pack || app.data?.pack || "";
