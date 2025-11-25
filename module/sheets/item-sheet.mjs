@@ -26,7 +26,7 @@ export class RisingSteelItemSheet extends ItemSheet {
 
   /** @override */
   get template() {
-    const path = 'systems/rising-steel/templates/item';
+    const path = 'systems/rising-steel/template/item';
     // Return a single sheet for all item types.
     // return `${path}/item-sheet.hbs`;
 

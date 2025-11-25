@@ -31,7 +31,7 @@ export class RisingSteelArmaduraSelectDialog {
             armaduraEquipada: armaduraEquipada
         };
 
-        const htmlContent = await FoundryCompatibility.renderTemplate("systems/rising-steel/templates/app/armadura-select-dialog.html", htmlData);
+        const htmlContent = await FoundryCompatibility.renderTemplate("systems/rising-steel/template/app/armadura-select-dialog.html", htmlData);
         
         return new Promise((resolve) => {
             let d = new Dialog({

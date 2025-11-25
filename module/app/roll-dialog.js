@@ -94,7 +94,7 @@ export class RisingSteelRollDialog {
             } : null
         };
 
-        const htmlContent = await FoundryCompatibility.renderTemplate("systems/rising-steel/templates/app/roll-dialog.html", htmlData);
+        const htmlContent = await FoundryCompatibility.renderTemplate("systems/rising-steel/template/app/roll-dialog.html", htmlData);
         
         return new Promise((resolve) => {
             let d = new Dialog({

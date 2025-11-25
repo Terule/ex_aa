@@ -26,7 +26,7 @@ export class RisingSteelActorSheet extends ActorSheet {
 
   /** @override */
   get template() {
-    return `systems/rising-steel/templates/actor/actor-${this.actor.type}-sheet.hbs`;
+    return `systems/rising-steel/template/actor/actor-${this.actor.type}-sheet.hbs`;
   }
 
   /* -------------------------------------------- */

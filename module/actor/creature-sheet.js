@@ -4,7 +4,7 @@ export class RisingSteelCreatureSheet extends FoundryCompatibility.getActorSheet
     static get defaultOptions() {
         return foundry.utils.mergeObject(super.defaultOptions, {
             classes: ["rising-steel", "sheet", "actor", "creature"],
-            template: "systems/rising-steel/templates/actor/creature-sheet.html",
+            template: "systems/rising-steel/template/actor/creature-sheet.html",
             width: 820,
             height: 760,
             tabs: [{
@@ -406,7 +406,7 @@ export class RisingSteelCreatureSheet extends FoundryCompatibility.getActorSheet
         };
 
         const htmlContent = await FoundryCompatibility.renderTemplate(
-            "systems/rising-steel/templates/app/ataque-dialog.html",
+            "systems/rising-steel/template/app/ataque-dialog.html",
             {
                 ataque,
                 atributos: this._getAttributeOptions()
@@ -571,7 +571,7 @@ export class RisingSteelCreatureSheet extends FoundryCompatibility.getActorSheet
         };
 
         const htmlContent = await FoundryCompatibility.renderTemplate(
-            "systems/rising-steel/templates/app/habilidade-dialog.html",
+            "systems/rising-steel/template/app/habilidade-dialog.html",
             { habilidade }
         );
 

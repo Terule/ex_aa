@@ -5,7 +5,7 @@ export class RisingSteelCompanionSheet extends RisingSteelCreatureSheet {
         const options = super.defaultOptions;
         return foundry.utils.mergeObject(options, {
             classes: ["rising-steel", "sheet", "actor", "companion"],
-            template: "systems/rising-steel/templates/actor/companion-sheet.html",
+            template: "systems/rising-steel/template/actor/companion-sheet.html",
             tabs: [{
                 navSelector: ".companion-tabs",
                 contentSelector: ".creature-tabs-content",

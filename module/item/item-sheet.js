@@ -17,7 +17,7 @@ export class RisingSteelItemSheet extends FoundryCompatibility.getItemSheetBase(
 
     /** @override */
     get template() {
-        const path = "systems/rising-steel/templates/item";
+        const path = "systems/rising-steel/template/item";
         // Templates HTML existem para: armadura, arma, equipamento
         // Templates HBS existem para: item, feature, spell
         const htmlTypes = ["armadura", "arma", "equipamento"];

@@ -12,7 +12,7 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
     static get defaultOptions() {
         return foundry.utils.mergeObject(super.defaultOptions, {
             classes: ["rising-steel", "sheet", "actor", "pilot"],
-            template: "systems/rising-steel/templates/actor/pilot-sheet.html",
+            template: "systems/rising-steel/template/actor/pilot-sheet.html",
             width: 800,
             height: 900,
             tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "identificacao" }]
@@ -1675,7 +1675,7 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         const exapointsMaximo = this.actor.system.exapoints?.maximo || 0;
         
         // Renderizar template do dialog
-        const templatePath = "systems/rising-steel/templates/app/especializacao-dialog.html";
+        const templatePath = "systems/rising-steel/template/app/especializacao-dialog.html";
         const htmlContent = await FoundryCompatibility.renderTemplate(templatePath, {
             especializacao: especializacao || { nome: "", atributo: "", dadoBase: 1, dadoBonus: 0, exapoints: 0 },
             atributos: atributos,

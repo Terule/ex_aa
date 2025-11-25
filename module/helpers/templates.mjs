@@ -6,11 +6,11 @@
 export const preloadHandlebarsTemplates = async function () {
   return loadTemplates([
     // Actor partials.
-    'systems/rising-steel/templates/actor/parts/actor-features.hbs',
-    'systems/rising-steel/templates/actor/parts/actor-items.hbs',
-    'systems/rising-steel/templates/actor/parts/actor-spells.hbs',
-    'systems/rising-steel/templates/actor/parts/actor-effects.hbs',
+    'systems/rising-steel/template/actor/parts/actor-features.hbs',
+    'systems/rising-steel/template/actor/parts/actor-items.hbs',
+    'systems/rising-steel/template/actor/parts/actor-spells.hbs',
+    'systems/rising-steel/template/actor/parts/actor-effects.hbs',
     // Item partials
-    'systems/rising-steel/templates/item/parts/item-effects.hbs',
+    'systems/rising-steel/template/item/parts/item-effects.hbs',
   ]);
 };

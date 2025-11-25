@@ -82,3 +82,4 @@ O sistema **Rising Steel** agora suporta **FoundryVTT v12.0.2** e **v13** com de
 
 
 
+
