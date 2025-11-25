@@ -461,6 +461,11 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
             const mapped = filtered.map((item) => {
                 let itemId = "";
                 
+                // DEBUG: Log detalhado do item para entender sua estrutura
+                if (!item.id || item.id === null || item.id === "null") {
+                    console.log(`[Rising Steel] DEBUG Item "${item.name}" - item.id=${item.id}, item._id=${item._id}, item.uuid=${item.uuid}`);
+                }
+                
                 // Prioridade 1: ID direto do documento (propriedade padrão do Foundry)
                 // IMPORTANTE: Verificar se não é null, undefined ou string "null"
                 if (item.id && item.id !== null && item.id !== "null" && item.id !== undefined) {
@@ -468,7 +473,7 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                     // Se resultou em "null", limpar
                     if (itemId === "null") itemId = "";
                 }
-                // Prioridade 2: _id do documento (alternativa)
+                // Prioridade 2: _id do documento (alternativa) - pode conter o ID explícito que criamos
                 else if (item._id && item._id !== null && item._id !== "null" && item._id !== undefined) {
                     itemId = String(item._id).trim();
                     // Se resultou em "null", limpar
