@@ -13,7 +13,11 @@ import { RisingSteelRollDialog } from "./app/roll-dialog.js";
 /* Setup Rising Steel system	 */
 /* ------------------------------------ */
 
+// Log de carregamento do módulo para debug de cache
+console.log("[Rising Steel] Módulo carregado - Versão:", game.system?.version || "desconhecida", "- Timestamp:", new Date().toISOString());
+
 Hooks.once("init", async function () {
+    console.log("[Rising Steel] Hook init executado - Timestamp:", new Date().toISOString());
     /**
      * Set an initiative formula for the system
      * Iniciativa = Destreza + Perspicácia (como quantidade de dados)
