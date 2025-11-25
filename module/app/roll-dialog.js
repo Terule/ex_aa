@@ -265,36 +265,102 @@ export class RisingSteelRollDialog {
                                 exapointsUsar = 0;
                             }
                             
-                            // Calcular total de dados (base + bônus + atributo + atributo piloto + EXApoints + EXApoints piloto)
-                            const dadosNormais = baseDice + bonusDice + atributoBonus + linkedPilotAtributoBonus;
-                            const totalDice = dadosNormais + exapointsUsar + linkedPilotExapointsUsar;
+                            // Separar dados por tipo: normais (base + atributo), bonus, exapoints
+                            const dadosNormais = baseDice + atributoBonus + linkedPilotAtributoBonus;
+                            const dadosBonus = bonusDice;
+                            const dadosExapoints = exapointsUsar + linkedPilotExapointsUsar;
+                            const totalDice = dadosNormais + dadosBonus + dadosExapoints;
                             
                             if (dadosNormais <= 0) {
                                 ui.notifications.warn("Você precisa de pelo menos 1 dado base para rolar!");
                                 return;
                             }
 
-                            // Fazer a rolagem de todos os dados
-                            const roll = new Roll(`${totalDice}d6`);
-                            await roll.roll();
+                            // Criar rolagens separadas para cada tipo de dado
+                            const rolls = [];
+                            const rollResults = [];
                             
-                            // Separar resultados: dados normais vs dados de EXApoints (companion + piloto)
-                            const results = roll.terms[0].results;
-                            const resultadosNormais = results.slice(0, dadosNormais);
-                            const resultadosExapointsCompanion = results.slice(dadosNormais, dadosNormais + exapointsUsar);
-                            const resultadosExapointsPiloto = results.slice(dadosNormais + exapointsUsar);
+                            // Rolagem de dados normais
+                            if (dadosNormais > 0) {
+                                const rollNormais = new Roll(`${dadosNormais}d6`);
+                                await rollNormais.roll();
+                                rolls.push({ roll: rollNormais, type: "normal", count: dadosNormais });
+                                rollResults.push(...rollNormais.terms[0].results);
+                            }
+                            
+                            // Rolagem de dados bonus
+                            if (dadosBonus > 0) {
+                                const rollBonus = new Roll(`${dadosBonus}d6`);
+                                await rollBonus.roll();
+                                rolls.push({ roll: rollBonus, type: "bonus", count: dadosBonus });
+                                rollResults.push(...rollBonus.terms[0].results);
+                            }
+                            
+                            // Rolagem de dados EXApoints (companion)
+                            let resultadosExapointsCompanion = [];
+                            if (exapointsUsar > 0) {
+                                const rollExaCompanion = new Roll(`${exapointsUsar}d6`);
+                                await rollExaCompanion.roll();
+                                rolls.push({ roll: rollExaCompanion, type: "exapoint", count: exapointsUsar, source: "companion" });
+                                resultadosExapointsCompanion = rollExaCompanion.terms[0].results;
+                                rollResults.push(...resultadosExapointsCompanion);
+                            }
+                            
+                            // Rolagem de dados EXApoints (piloto)
+                            let resultadosExapointsPiloto = [];
+                            if (linkedPilotExapointsUsar > 0) {
+                                const rollExaPiloto = new Roll(`${linkedPilotExapointsUsar}d6`);
+                                await rollExaPiloto.roll();
+                                rolls.push({ roll: rollExaPiloto, type: "exapoint", count: linkedPilotExapointsUsar, source: "pilot" });
+                                resultadosExapointsPiloto = rollExaPiloto.terms[0].results;
+                                rollResults.push(...resultadosExapointsPiloto);
+                            }
+                            
+                            // Combinar todas as rolagens em uma fórmula composta para exibição
+                            // Criar fórmula separada: 3d6+1d6+2d6 em vez de 6d6
+                            const formulaParts = rolls.map(r => `${r.count}d6`).join("+");
+                            
+                            // Clonar termos existentes para manter os resultados separados
+                            const operatorTermClass = CONFIG.Dice?.termTypes?.OperatorTerm ?? foundry?.dice?.terms?.OperatorTerm;
+                            const clonedTerms = [];
+                            
+                            rolls.forEach((rollData, index) => {
+                                const sourceTerm = rollData.roll?.terms?.[0];
+                                if (sourceTerm) {
+                                    const clone = sourceTerm.clone ? sourceTerm.clone() : sourceTerm;
+                                    clonedTerms.push(clone);
+                                }
+                                
+                                if (index < rolls.length - 1 && operatorTermClass) {
+                                    const operatorTerm = new operatorTermClass({ operator: "+" });
+                                    operatorTerm._evaluated = true;
+                                    operatorTerm._total = 0;
+                                    clonedTerms.push(operatorTerm);
+                                }
+                            });
+                            
+                            const combinedRoll = Roll.fromTerms(clonedTerms);
+                            combinedRoll._evaluated = true;
+                            combinedRoll._total = rollResults.reduce((sum, r) => sum + (r.result || r.total || 0), 0);
+                            
+                            // Separar resultados por tipo para processamento
+                            let index = 0;
+                            const resultadosNormais = rollResults.slice(index, index + dadosNormais);
+                            index += dadosNormais;
+                            const resultadosBonus = rollResults.slice(index, index + dadosBonus);
+                            index += dadosBonus;
                             
                             // Contar sucessos (6) em todos os dados
-                            const sucessos = results.filter(d => d.result === 6).length;
+                            const sucessos = rollResults.filter(d => (d.result ?? d.total) === 6).length;
                             
                             // Contar falhas (1) apenas nos dados normais
-                            const unsNormais = resultadosNormais.filter(d => d.result === 1).length;
+                            const unsNormais = resultadosNormais.filter(d => (d.result ?? d.total) === 1).length;
                             
                             // Contar quantos 1s caíram nos dados de EXApoints do companion (isso gasta EXApoints)
-                            const unsExapointsCompanion = resultadosExapointsCompanion.filter(d => d.result === 1).length;
+                            const unsExapointsCompanion = resultadosExapointsCompanion.filter(d => (d.result ?? d.total) === 1).length;
                             
                             // Contar quantos 1s caíram nos dados de EXApoints do piloto (isso gasta EXApoints do piloto)
-                            const unsExapointsPiloto = resultadosExapointsPiloto.filter(d => d.result === 1).length;
+                            const unsExapointsPiloto = resultadosExapointsPiloto.filter(d => (d.result ?? d.total) === 1).length;
                             
                             // Gastar EXApoints do companion: cada 1 nos dados de EXApoints consome 1 EXApoint
                             let exapointsGastos = 0;
@@ -348,24 +414,8 @@ export class RisingSteelRollDialog {
                             flavor += ` | <strong>Total:</strong> ${totalDice} dados`;
                             flavor += `</div>`;
                             
-                            flavor += `<div style="margin-top: 5px;">`;
-                            flavor += `<strong>Resultados:</strong> `;
-                            const resultadosStr = results.map(r => r.result).join(", ");
-                            flavor += resultadosStr;
-                            flavor += `</div>`;
-                            
-                            // Mostrar separação se houver EXApoints
-                            if (exapointsUsar > 0 || linkedPilotExapointsUsar > 0) {
-                                flavor += `<div style="margin-top: 5px; font-size: 0.9em; color: #666;">`;
-                                flavor += `<strong>Dados normais:</strong> ${resultadosNormais.map(r => r.result).join(", ")}`;
-                                if (exapointsUsar > 0) {
-                                    flavor += ` | <strong>Dados EXApoints:</strong> ${resultadosExapointsCompanion.map(r => r.result).join(", ")}`;
-                                }
-                                if (linkedPilotExapointsUsar > 0) {
-                                    flavor += ` | <strong>Dados EXApoints do Piloto (${linkedPilot.name}):</strong> ${resultadosExapointsPiloto.map(r => r.result).join(", ")}`;
-                                }
-                                flavor += `</div>`;
-                            }
+                            // Preparar dados para exibição com cores no chat
+                            // Os dados serão coloridos pelo hook renderChatMessage
                             
                             flavor += `<div style="margin-top: 5px;">`;
                             flavor += `<strong>Sucessos (6):</strong> ${sucessos}`;
@@ -395,19 +445,36 @@ export class RisingSteelRollDialog {
                                 flavor += `</div>`;
                             }
                             
-                            await roll.toMessage({
+                            // Preparar flags com informações sobre os tipos de dados
+                            const diceInfo = [];
+                            if (dadosNormais > 0) {
+                                diceInfo.push({ type: "normal", count: dadosNormais, results: resultadosNormais });
+                            }
+                            if (dadosBonus > 0) {
+                                diceInfo.push({ type: "bonus", count: dadosBonus, results: resultadosBonus });
+                            }
+                            if (exapointsUsar > 0) {
+                                diceInfo.push({ type: "exapoint", count: exapointsUsar, results: resultadosExapointsCompanion, source: "companion" });
+                            }
+                            if (linkedPilotExapointsUsar > 0) {
+                                diceInfo.push({ type: "exapoint", count: linkedPilotExapointsUsar, results: resultadosExapointsPiloto, source: "pilot" });
+                            }
+                            
+                            await combinedRoll.toMessage({
                                 speaker: ChatMessage.getSpeaker({ actor: actor }),
                                 flavor: flavor,
                                 flags: {
                                     "rising-steel": {
                                         rollType: "success-pool",
                                         totalDice: totalDice,
-                                        successes: sucessos
+                                        successes: sucessos,
+                                        diceInfo: diceInfo,
+                                        formula: formulaParts
                                     }
                                 }
                             });
                             
-                            resolve({ roll, sucessos, unsNormais, unsExapoints, exapointsGastos });
+                            resolve({ roll: combinedRoll, sucessos, unsNormais, unsExapoints: unsExapointsCompanion + unsExapointsPiloto, exapointsGastos });
                         },
                     },
                     cancel: {

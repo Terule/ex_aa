@@ -1128,4 +1128,29 @@
   font-size: 0.85rem;
 }
 
+/* Estilos para dados coloridos no chat */
+/* Classes genéricas para diferenciar dados por tipo */
+.rising-steel-dice-bonus {
+  color: #c49000;
+  font-weight: bold;
+}
+
+.rising-steel-dice-exapoint {
+  color: #9b59b6;
+  font-weight: bold;
+}
+
+/* Estilos para dados no chat message */
+.chat-message .dice-roll .dice.rising-steel-dice-bonus {
+  color: #c49000 !important;
+  border-color: #c49000 !important;
+  box-shadow: 0 0 4px rgba(196, 144, 0, 0.65);
+}
+
+.chat-message .dice-roll .dice.rising-steel-dice-exapoint {
+  color: #9b59b6 !important;
+  border-color: #9b59b6 !important;
+  box-shadow: 0 0 4px rgba(155, 89, 182, 0.6);
+}
+
 

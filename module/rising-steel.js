@@ -197,6 +197,40 @@ Hooks.on("renderChatMessage", (message, html) => {
     if (totalEl.length) {
         totalEl.text(label);
     }
+    
+    // Aplicar cores e atualizar detalhamento com sucessos
+    const diceInfo = rsFlags.diceInfo || [];
+    if (diceInfo.length === 0) return;
+    
+    // Aguardar um pouco para garantir que o DOM está totalmente renderizado
+    setTimeout(() => {
+        const rollBlocks = html.find(".dice-roll");
+        if (rollBlocks.length === 0) return;
+        
+        diceInfo.forEach((info, index) => {
+            const block = $(rollBlocks[index]);
+            if (!block?.length) return;
+            
+            const totalEl = block.find(".dice-total, h4.dice-total");
+            
+            // Atualizar texto do total para mostrar sucessos
+            const resultados = info.results || [];
+            const successesPerBlock = resultados.filter(r => (r.result ?? r.total) === 6).length;
+            if (totalEl.length) {
+                const labelPerBlock = successesPerBlock === 1 ? "1 Sucesso" : `${successesPerBlock} Sucessos`;
+                totalEl.text(labelPerBlock);
+            }
+            
+            const diceFaces = block.find(".dice .die, .dice .result");
+            if (!diceFaces.length) return;
+            
+            if (info.type === "bonus") {
+                diceFaces.addClass("rising-steel-dice-bonus");
+            } else if (info.type === "exapoint") {
+                diceFaces.addClass("rising-steel-dice-exapoint");
+            }
+        });
+    }, 75);
 });
 
 // Customizar visualização dos itens do compendium em formato de tabela
