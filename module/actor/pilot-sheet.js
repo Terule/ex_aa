@@ -1041,11 +1041,20 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                     const item = await pack.getDocument(itemId);
                     if (item) {
                         itemName = item.name;
+                        console.log(`[Rising Steel] Equipamento encontrado no pack - Nome: "${item.name}", ID salvo: "${itemId}"`);
                     }
                 }
             } catch (error) {
                 // Silenciosamente ignorar erro
             }
+        }
+        
+        // Garantir que itemId é uma string válida, não null ou undefined
+        const idParaSalvar = String(itemId || "").trim();
+        
+        if (!idParaSalvar && itemId) {
+            // Se itemId existe mas não pode ser convertido para string válida, há problema
+            console.warn(`[Rising Steel] Tentando salvar equipamento ${index} com ID inválido:`, itemId);
         }
         
         // Ler o estado atual completo do array de equipamentos
@@ -1056,9 +1065,11 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         
         // Atualizar apenas o equipamento específico
         equipamentosAtuais[index] = {
-            id: String(itemId || ""),
+            id: idParaSalvar,
             nome: String(itemName || "")
         };
+        
+        console.log(`[Rising Steel] Salvando equipamento ${index} - ID: "${idParaSalvar}", Nome: "${itemName}"`);
         
         await this.actor.update({
             "system.inventario.equipamentos": equipamentosAtuais
@@ -1130,11 +1141,20 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                         dano = Number(itemSystem.dano || 0);
                         alcance = itemSystem.alcance || "";
                         bonus = Number(itemSystem.bonus || 0);
+                        console.log(`[Rising Steel] Arma encontrada no pack - Nome: "${item.name}", Dano: ${dano}, ID salvo: "${itemId}"`);
                     }
                 }
             } catch (error) {
                 // Silenciosamente ignorar erro
             }
+        }
+        
+        // Garantir que itemId é uma string válida, não null ou undefined
+        const idParaSalvar = String(itemId || "").trim();
+        
+        if (!idParaSalvar && itemId) {
+            // Se itemId existe mas não pode ser convertido para string válida, há problema
+            console.warn(`[Rising Steel] Tentando salvar arma ${index} com ID inválido:`, itemId);
         }
         
         // Ler o estado atual completo do array de armas
@@ -1144,15 +1164,14 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         }
         
         armasAtuais[index] = {
-            id: itemId,
+            id: idParaSalvar,
             nome: itemName,
             dano: dano,
             alcance: alcance,
             bonus: bonus
         };
         
-        // Debug: verificar o que será atualizado
-        // Arma atualizada
+        console.log(`[Rising Steel] Salvando arma ${index} - ID: "${idParaSalvar}", Nome: "${itemName}", Dano: ${dano}`);
         
         // Preservar equipamentos durante a atualização
         const equipamentosAtuais = foundry.utils.duplicate(this.actor.system.inventario?.equipamentos || []);
