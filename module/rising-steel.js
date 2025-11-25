@@ -75,6 +75,22 @@ Hooks.once("init", async function () {
     CONFIG.Actor.typeLabels.companion = "Companion";
     CONFIG.Actor.defaultType = "piloto";
     
+    // Configurar labels para tipos de itens
+    CONFIG.Item.typeLabels = CONFIG.Item.typeLabels || {};
+    CONFIG.Item.typeLabels.armadura = "Armadura";
+    CONFIG.Item.typeLabels.arma = "Arma";
+    CONFIG.Item.typeLabels.equipamento = "Equipamento";
+    
+    // Modificar CONFIG.Item.types para ter apenas os tipos relevantes
+    // Isso afeta a criação de itens em compendiums
+    const originalItemTypes = [...(CONFIG.Item.types || [])];
+    
+    // No hook ready, modificar os tipos para compendiums específicos
+    Hooks.once("ready", () => {
+        // Salvar tipos originais
+        window.RisingSteel.originalItemTypes = originalItemTypes;
+    });
+    
     // Log packs disponíveis para debug
     Hooks.once("ready", async () => {
         console.log("Rising Steel - Packs disponíveis:", Array.from(game.packs).map(p => ({
@@ -289,69 +305,71 @@ Hooks.on("renderCompendiumDirectory", (app, html, data) => {
 });
 
 // Filtrar tipos de itens ao criar item no compendium
-// Interceptar quando o diálogo de criação for renderizado
+// Modificar CONFIG.Item.types quando abrir compendium de itens
+Hooks.on("renderCompendium", (app, html, data) => {
+    const packId = app.collection?.metadata?.id || "";
+    const isRisingSteel = packId.includes("rising-steel");
+    const isTargetPack = packId.includes("armaduras") || packId.includes("armas") || packId.includes("equipamentos");
+    
+    if (isRisingSteel && isTargetPack) {
+        // Modificar CONFIG.Item.types para ter apenas os tipos relevantes
+        CONFIG.Item.types = ["armadura", "arma", "equipamento"];
+    }
+});
+
+// Interceptar quando qualquer diálogo é renderizado para garantir filtro
 Hooks.on("renderDialog", (app, html, data) => {
-    // Verificar se é o diálogo de criação de item (tem select[name="type"])
     const typeSelect = html.find('select[name="type"]');
     if (!typeSelect.length) return;
     
-    // Função para filtrar tipos
-    const filterTypes = () => {
-        // Verificar se há um compendium ativo procurando nas janelas abertas
-        const activeWindows = Object.values(ui.windows || {});
-        let isTargetCompendium = false;
-        
-        for (const window of activeWindows) {
-            if (window.collection && window.collection.metadata) {
-                const packId = window.collection.metadata.id || "";
-                if (packId.includes("rising-steel") && 
-                    (packId.includes("armaduras") || packId.includes("armas") || packId.includes("equipamentos"))) {
-                    isTargetCompendium = true;
-                    break;
-                }
-            }
-        }
-        
-        // Se não encontrou, verificar se o app tem collection
-        if (!isTargetCompendium && app.collection) {
-            const packId = app.collection.metadata?.id || "";
+    // Verificar se há um compendium ativo
+    const activeWindows = Object.values(ui.windows || {});
+    let isTargetCompendium = false;
+    
+    for (const window of activeWindows) {
+        if (window.collection && window.collection.metadata) {
+            const packId = window.collection.metadata.id || "";
             if (packId.includes("rising-steel") && 
                 (packId.includes("armaduras") || packId.includes("armas") || packId.includes("equipamentos"))) {
                 isTargetCompendium = true;
+                break;
             }
         }
+    }
+    
+    if (isTargetCompendium) {
+        // Garantir que CONFIG.Item.types está correto
+        CONFIG.Item.types = ["armadura", "arma", "equipamento"];
         
-        if (isTargetCompendium) {
-            // Filtrar apenas os tipos permitidos: armadura, arma e equipamento
-            const allowedTypes = ["armadura", "arma", "equipamento"];
-            const select = html.find('select[name="type"]');
+        // Filtrar o select de forma agressiva
+        let attempts = 0;
+        const maxAttempts = 30;
+        const allowedTypes = ["armadura", "arma", "equipamento"];
+        
+        const filterInterval = setInterval(() => {
+            attempts++;
+            const select = $('select[name="type"]');
+            
             if (select.length) {
+                let hasFiltered = false;
                 select.find('option').each(function() {
                     const value = $(this).val();
                     if (value && !allowedTypes.includes(value)) {
                         $(this).remove();
+                        hasFiltered = true;
                     }
                 });
+                
+                if (hasFiltered) {
+                    clearInterval(filterInterval);
+                    console.log("[Rising Steel] Tipos filtrados: armadura, arma, equipamento");
+                }
             }
-        }
-    };
-    
-    // Filtrar imediatamente
-    filterTypes();
-    
-    // Usar MutationObserver para detectar quando o select é modificado
-    const observer = new MutationObserver(() => {
-        filterTypes();
-    });
-    
-    const selectElement = typeSelect[0];
-    if (selectElement) {
-        observer.observe(selectElement, { childList: true, subtree: true });
-        
-        // Parar de observar quando o diálogo for fechado
-        html.closest('.window-app').on('close', () => {
-            observer.disconnect();
-        });
+            
+            if (attempts >= maxAttempts) {
+                clearInterval(filterInterval);
+            }
+        }, 50);
     }
 });
 
