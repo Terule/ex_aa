@@ -127,7 +127,8 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                         });
                         if (foundByProtecao) {
                             // Encontrada armadura com proteção correspondente, atualizar ID
-                            console.log(`[Rising Steel] Sincronizando armadura: ID antigo "${armaduraEquipadaId}", novo ID "${foundByProtecao.id}"`);
+                            // Se houver múltiplas com a mesma proteção, usar a primeira
+                            console.log(`[Rising Steel] Sincronizando armadura: ID antigo "${armaduraEquipadaId}", novo ID "${foundByProtecao.id}" (proteção: ${protecaoSalva})`);
                             await this.actor.update({
                                 "system.armadura.equipada": foundByProtecao.id,
                                 "system.armadura.total": protecaoSalva,
@@ -1182,7 +1183,9 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         
         // Debug: verificar qual ID foi selecionado
         if (armaduraId) {
-            console.log(`[Rising Steel] Armadura selecionada - ID: "${armaduraId}", selectedIndex: ${select.selectedIndex}`);
+            console.log(`[Rising Steel] Armadura selecionada - ID: "${armaduraId}", selectedIndex: ${select.selectedIndex}, valor atual do select: "${select.value}"`);
+        } else {
+            console.log(`[Rising Steel] Nenhuma armadura selecionada - selectedIndex: ${select.selectedIndex}, valor atual do select: "${select.value}"`);
         }
         
         if (!armaduraId) {
@@ -1216,6 +1219,14 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                         console.log(`[Rising Steel] Armadura encontrada no pack - Nome: "${item.name}", Proteção: ${protecao}, ID: "${item.id}"`);
                     } else {
                         console.warn(`[Rising Steel] Armadura com ID "${armaduraId}" não encontrada no pack!`);
+                        // Tentar listar todos os IDs disponíveis para debug
+                        try {
+                            const allItems = await pack.getDocuments();
+                            const availableIds = allItems.map(i => i.id);
+                            console.warn(`[Rising Steel] IDs disponíveis no pack de armaduras:`, availableIds);
+                        } catch (err) {
+                            // Ignorar erro ao listar itens
+                        }
                     }
                 }
             } catch (error) {
