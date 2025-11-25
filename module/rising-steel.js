@@ -329,29 +329,52 @@ Hooks.on("renderCompendium", (app, html, data) => {
         
         // Interceptar o botão de criar ANTES do diálogo ser criado
         html.find('button[data-action="create"]').off('click.rising-steel-types').on('click.rising-steel-types', (event) => {
-            // Garantir tipos antes do diálogo abrir
+            // Garantir tipos ANTES do template ser renderizado
             CONFIG.Item.types = ["armadura", "arma", "equipamento"];
-            
-            // Aguardar um pouco e filtrar novamente quando o diálogo aparecer
-            setTimeout(() => {
-                const dialog = $('.window-app.dialog');
-                if (dialog.length) {
-                    const typeSelect = dialog.find('select[name="type"]');
-                    if (typeSelect.length) {
-                        const allowedTypes = ["armadura", "arma", "equipamento"];
-                        typeSelect.find('option').each(function() {
-                            const value = $(this).val();
-                            if (value && !allowedTypes.includes(value)) {
-                                $(this).remove();
-                            }
-                        });
-                        if (typeSelect.find('option:selected').length === 0 || !allowedTypes.includes(typeSelect.val())) {
-                            typeSelect.find('option').first().prop('selected', true);
-                        }
-                    }
-                }
-            }, 50);
+            console.log("[Rising Steel] CONFIG.Item.types definido antes do diálogo:", CONFIG.Item.types);
         });
+    }
+});
+
+// Interceptar ANTES do diálogo ser renderizado para garantir que CONFIG.Item.types está correto
+// Isso é crítico porque o template do Foundry lê CONFIG.Item.types quando prepara os dados
+Hooks.on("preRenderDialog", (app, data, options) => {
+    // Verificar se é um diálogo de criação de item
+    const dialogTitle = app.options?.title || app.title || options?.title || "";
+    const isCreateItemDialog = dialogTitle.includes("Create") && dialogTitle.includes("Item");
+    
+    // Verificar se o diálogo tem um pack associado
+    let packId = app.options?.pack || options?.pack || "";
+    let isRisingSteel = packId.includes("rising-steel");
+    let isTargetPack = packId.includes("armaduras") || packId.includes("armas") || packId.includes("equipamentos");
+    
+    // Se não encontrou pelo packId, verificar nas janelas abertas
+    if (!isRisingSteel || !isTargetPack) {
+        const activeWindows = Object.values(ui.windows || {});
+        for (const window of activeWindows) {
+            if (window.collection && window.collection.metadata) {
+                const wPackId = window.collection.metadata.id || "";
+                if (wPackId.includes("rising-steel") && 
+                    (wPackId.includes("armaduras") || wPackId.includes("armas") || wPackId.includes("equipamentos"))) {
+                    isRisingSteel = true;
+                    isTargetPack = true;
+                    packId = wPackId;
+                    break;
+                }
+            }
+        }
+    }
+    
+    // Aplicar filtro se for um diálogo de criação de item OU se for um compendium do Rising Steel
+    if (isCreateItemDialog || (isRisingSteel && isTargetPack)) {
+        // Garantir que CONFIG.Item.types está correto ANTES do template ser renderizado
+        CONFIG.Item.types = ["armadura", "arma", "equipamento"];
+        console.log("[Rising Steel] preRenderDialog - CONFIG.Item.types definido:", CONFIG.Item.types);
+        
+        // Se o data tem tipos, filtrar também
+        if (data && data.types) {
+            data.types = data.types.filter(t => ["armadura", "arma", "equipamento"].includes(t));
+        }
     }
 });
 
