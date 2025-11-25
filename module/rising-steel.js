@@ -81,8 +81,12 @@ Hooks.once("init", async function () {
     CONFIG.Item.typeLabels.arma = "Arma";
     CONFIG.Item.typeLabels.equipamento = "Equipamento";
     
-    // Salvar tipos originais de itens
-    const originalItemTypes = [...(CONFIG.Item.types || [])];
+    // Modificar CONFIG.Item.types para ter apenas os tipos relevantes
+    // Isso afeta todos os lugares onde os tipos são listados, incluindo compendiums
+    CONFIG.Item.types = ["armadura", "arma", "equipamento"];
+    
+    // Salvar tipos originais de itens (caso precise restaurar)
+    const originalItemTypes = ["item", "feature", "spell", "armadura", "arma", "equipamento"];
     
     // Log packs disponíveis para debug
     Hooks.once("ready", async () => {
@@ -106,13 +110,8 @@ Hooks.once("init", async function () {
             }
         }
         
-        // Modificar CONFIG.Item.types para ter apenas os tipos relevantes para compendiums de itens
-        // Isso afeta a criação de itens em compendiums
-        const originalTypes = CONFIG.Item.types || [];
-        window.RisingSteel.originalItemTypes = originalTypes;
-        
-        // Para compendiums de itens, usar apenas os três tipos
-        // Isso será aplicado quando o compendium for renderizado
+        // Garantir que CONFIG.Item.types está correto
+        CONFIG.Item.types = ["armadura", "arma", "equipamento"];
     });
 
     // Register sheet application classes (multi-version compatible)
