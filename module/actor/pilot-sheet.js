@@ -462,12 +462,17 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                 let itemId = "";
                 
                 // Prioridade 1: ID direto do documento (propriedade padrão do Foundry)
-                if (item.id) {
-                    itemId = String(item.id);
+                // IMPORTANTE: Verificar se não é null, undefined ou string "null"
+                if (item.id && item.id !== null && item.id !== "null" && item.id !== undefined) {
+                    itemId = String(item.id).trim();
+                    // Se resultou em "null", limpar
+                    if (itemId === "null") itemId = "";
                 }
                 // Prioridade 2: _id do documento (alternativa)
-                else if (item._id) {
-                    itemId = String(item._id);
+                else if (item._id && item._id !== null && item._id !== "null" && item._id !== undefined) {
+                    itemId = String(item._id).trim();
+                    // Se resultou em "null", limpar
+                    if (itemId === "null") itemId = "";
                 }
                 // Prioridade 3: Buscar no mapa do índice pelo nome (mais confiável)
                 else if (item.name && nameToIdFromIndex.has(item.name)) {
@@ -506,25 +511,54 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                     }
                 }
                 
+                // Garantir que itemId não é "null" ou null
+                if (itemId === "null" || itemId === null) {
+                    itemId = "";
+                }
+                
+                // Se ainda não tem ID válido, tentar buscar diretamente do índice pelo nome
+                if (!itemId && item.name && index && index.size > 0) {
+                    try {
+                        const indexEntries = Array.from(index.entries());
+                        for (const [id, indexEntry] of indexEntries) {
+                            if (indexEntry && indexEntry.name === item.name) {
+                                const idFromIndex = String(id).trim();
+                                if (idFromIndex && idFromIndex !== "null") {
+                                    itemId = idFromIndex;
+                                    break;
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        // Continuar sem ID se houver erro
+                    }
+                }
+                
                 const mappedItem = {
                     id: itemId || "",
                     name: item.name || "",
                     system: item.system || {}
                 };
                 
-                // Log apenas se realmente não conseguiu encontrar ID
+                // Log apenas se realmente não conseguiu encontrar ID válido
                 if (!mappedItem.id && mappedItem.name) {
-                    console.warn(`[Rising Steel] Item "${mappedItem.name}" do pack "${packName}" não tem ID.`, {
-                        hasId: !!item.id,
-                        has_id: !!item._id,
+                    console.warn(`[Rising Steel] Item "${mappedItem.name}" do pack "${packName}" não tem ID válido.`, {
+                        itemIdOriginal: item.id,
+                        item_idOriginal: item._id,
                         hasUuid: !!item.uuid,
                         uuid: item.uuid,
-                        nameInIndex: nameToIdFromIndex.has(item.name)
+                        nameInIndex: nameToIdFromIndex.has(item.name),
+                        mappedItemId: itemId
                     });
                 }
                 
+                // IMPORTANTE: Não retornar itens com ID inválido (null, "null", vazio)
+                if (!mappedItem.id || mappedItem.id === "null" || mappedItem.id === null) {
+                    return null; // Será filtrado depois
+                }
+                
                 return mappedItem;
-            }).filter(item => item.name); // Manter apenas itens com nome
+            }).filter(item => item && item.name && item.id && item.id !== "null" && item.id !== null); // Manter apenas itens com nome E ID válido
             
             console.log(`[Rising Steel] Mapeando ${mapped.length} itens do pack "${packName}"`);
             
