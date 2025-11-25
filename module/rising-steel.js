@@ -239,9 +239,25 @@ Hooks.on("renderCompendiumDirectory", (app, html, data) => {
                 }
 
                 // Tornar a linha clicável para abrir o item
-                row.on('click', (e) => {
+                row.on('click', async (e) => {
                     if (!$(e.target).is('a')) {
-                        doc.sheet.render(true);
+                        e.preventDefault();
+                        e.stopPropagation();
+                        try {
+                            // Abrir o sheet do item do compendium
+                            if (doc.sheet) {
+                                doc.sheet.render(true);
+                            } else {
+                                // Se não tiver sheet disponível, usar o método padrão do Foundry
+                                const uuid = doc.uuid || `Compendium.${packId}.${doc.id}`;
+                                const item = await fromUuid(uuid);
+                                if (item && item.sheet) {
+                                    item.sheet.render(true);
+                                }
+                            }
+                        } catch (error) {
+                            console.error("[Rising Steel] Erro ao abrir item do compendium:", error, doc);
+                        }
                     }
                 });
                 row.css('cursor', 'pointer');
