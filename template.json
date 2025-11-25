@@ -127,7 +127,7 @@
     }
   },
   "Item": {
-    "types": ["item", "feature", "spell", "armadura", "arma", "equipamento"],
+    "types": ["armadura", "arma", "equipamento"],
     "templates": {
       "base": {
         "description": ""
