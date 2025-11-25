@@ -210,22 +210,32 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
             // Fazer o mesmo para armas
             if (context.system.inventario?.armas && context.armas.length > 0) {
                 let armasAtualizadas = false;
+                // IMPORTANTE: Não sincronizar automaticamente durante o getData
+                // A sincronização só deve acontecer quando realmente necessário (IDs vazios ou inválidos)
+                // Não devemos alterar armas que já têm IDs válidos, mesmo que o nome coincida
                 const armasCorrigidas = context.system.inventario.armas.map((arma, idx) => {
                     if (!arma || !arma.nome || !arma.nome.trim()) {
                         return {id: "", nome: "", dano: 0, alcance: "", bonus: 0};
                     }
                     
-                    // Se já tem ID, verificar se corresponde
+                    // Se já tem ID, verificar se corresponde ao compendium
                     if (arma.id && arma.id.trim() !== "") {
                         const foundById = context.armas.find(a => a.id === arma.id);
                         if (foundById) {
-                            // ID válido e encontrado, retornar como está (preservar todos os valores)
+                            // ID válido e encontrado no compendium, preservar TODOS os valores como estão
+                            // Não atualizar nome, dano, alcance - manter exatamente como está salvo
+                            return arma;
+                        } else {
+                            // ID existe mas não foi encontrado no compendium
+                            // Pode ser que o item foi removido ou o pack ainda não carregou
+                            // Manter valores atuais sem alterar
+                            console.warn(`[Rising Steel] Arma ${idx} com ID "${arma.id}" não encontrada no compendium, mantendo valores atuais sem alteração`);
                             return arma;
                         }
                     }
                     
-                    // ID não encontrado ou inválido, tentar encontrar pelo nome APENAS se não há ID
-                    // Mas ter cuidado para não sobrescrever armas que já têm IDs válidos
+                    // SÓ sincronizar se NÃO tem ID e tem nome
+                    // Isso ajuda quando uma arma foi salva apenas com nome (sem ID)
                     if (!arma.id || arma.id.trim() === "") {
                         const foundByName = context.armas.find(a => {
                             const nomeSalvo = (arma.nome || "").trim().toLowerCase();
@@ -235,35 +245,28 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                         
                         if (foundByName) {
                             armasAtualizadas = true;
-                            console.log(`[Rising Steel] Sincronizando arma ${idx}: "${arma.nome}" - atualizando ID de "" para "${foundByName.id}"`);
-                            // Ao sincronizar pelo nome, usar valores do item encontrado para garantir consistência
+                            console.log(`[Rising Steel] Sincronizando arma ${idx}: "${arma.nome}" - adicionando ID "${foundByName.id}" e atualizando valores do item`);
+                            // Quando sincroniza pelo nome, usar TODOS os valores do item encontrado
+                            // Isso garante consistência entre nome, dano, alcance, bonus
                             return {
                                 id: foundByName.id,
                                 nome: foundByName.name,
-                                dano: foundByName.system?.dano || arma.dano || 0,
+                                dano: Number(foundByName.system?.dano || arma.dano || 0),
                                 alcance: foundByName.system?.alcance || arma.alcance || "",
-                                bonus: foundByName.system?.bonus || arma.bonus || 0
+                                bonus: Number(foundByName.system?.bonus || arma.bonus || 0)
                             };
                         }
                     }
                     
-                    // Se tem ID mas não foi encontrado, manter como está por enquanto
-                    // (pode ser que o pack ainda não carregou ou o item foi removido)
-                    if (arma.id && arma.id.trim() !== "") {
-                        console.warn(`[Rising Steel] Arma ${idx} com ID "${arma.id}" não encontrada no compendium, mantendo valores atuais`);
-                        return arma;
-                    }
-                    
-                    // Não encontrado, limpar
-                    if (arma.id || arma.nome) {
-                        armasAtualizadas = true;
-                        console.log(`[Rising Steel] Arma ${idx} "${arma.nome}" não encontrada no compendium, limpando...`);
-                    }
-                    return {id: "", nome: "", dano: 0, alcance: "", bonus: 0};
+                    // Se chegou aqui, não encontrou correspondência
+                    // Se tem nome mas não encontrou, pode ser um nome customizado
+                    // Manter como está (não limpar automaticamente)
+                    return arma;
                 });
                 
-                // Se houve atualizações, salvar as armas corrigidas
+                // Se houve atualizações (apenas IDs vazios foram corrigidos), salvar as armas corrigidas
                 if (armasAtualizadas) {
+                    console.log(`[Rising Steel] Sincronização automática corrigiu ${armasCorrigidas.filter((a, i) => a.id !== (context.system.inventario.armas[i]?.id || "")).length} armas com IDs vazios`);
                     await this.actor.update({
                         "system.inventario.armas": armasCorrigidas
                     }, {render: false});
@@ -1242,8 +1245,8 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
             bonus: a?.bonus || 0
         })));
         
-        // Preservar equipamentos durante a atualização
-        const equipamentosAtuais = foundry.utils.duplicate(this.actor.system.inventario?.equipamentos || []);
+        // Preservar equipamentos durante a atualização (usar deep clone também)
+        const equipamentosAtuais = JSON.parse(JSON.stringify(this.actor.system.inventario?.equipamentos || []));
         
         // Atualizar e renderizar para mostrar os dados preenchidos
         await this.actor.update({
