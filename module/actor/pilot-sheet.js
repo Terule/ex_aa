@@ -1201,6 +1201,10 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
             return;
         }
         
+        // Ler o estado atual das armas antes de buscar no pack (para caso precisemos buscar pelo nome)
+        const armasAtuaisParaBusca = JSON.parse(JSON.stringify(this.actor.system.inventario?.armas || []));
+        const armaSalvaAtual = armasAtuaisParaBusca[index] || null;
+        
         if (itemId && game.packs && game.packs.size > 0) {
             try {
                 let pack = game.packs.get("rising-steel.armas");
@@ -1213,7 +1217,14 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                     });
                 }
                 if (pack) {
-                    const item = await pack.getDocument(itemId);
+                    // Tentar buscar o item pelo ID do dropdown primeiro
+                    let item = null;
+                    try {
+                        item = await pack.getDocument(itemId);
+                    } catch (error) {
+                        console.warn(`[Rising Steel] Erro ao buscar arma com ID "${itemId}":`, error);
+                    }
+                    
                     if (item) {
                         itemName = item.name;
                         // Acessar os dados do sistema do item
@@ -1221,11 +1232,66 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                         dano = Number(itemSystem.dano || 0);
                         alcance = itemSystem.alcance || "";
                         bonus = Number(itemSystem.bonus || 0);
-                        console.log(`[Rising Steel] Arma encontrada no pack - Nome: "${item.name}", Dano: ${dano}, ID salvo: "${itemId}"`);
+                        
+                        // IMPORTANTE: Usar o ID real do documento retornado pelo getDocument
+                        // Este é o ID que deve ser usado para buscar no futuro
+                        const idRealDoItem = item.id || item._id || itemId;
+                        itemId = String(idRealDoItem);
+                        
+                        console.log(`[Rising Steel] Arma encontrada no pack - Nome: "${item.name}", Dano: ${dano}, Alcance: "${alcance}", ID usado: "${itemId}"`);
+                    } else {
+                        // Se não encontrou pelo ID, tentar buscar todos os itens e encontrar pelo nome
+                        console.warn(`[Rising Steel] Arma com ID "${itemId}" não encontrada no pack. Buscando todas as armas...`);
+                        try {
+                            const allItems = await pack.getDocuments();
+                            // Tentar encontrar pelo ID em todos os itens (pode estar com formato diferente)
+                            let foundItem = allItems.find(i => {
+                                const idDoItem = String(i.id || i._id || "");
+                                return idDoItem === itemId || idDoItem === String(itemId);
+                            });
+                            
+                            // Se não encontrou pelo ID, tentar pelo nome da opção selecionada no dropdown
+                            if (!foundItem) {
+                                const selectedOption = select.selectedIndex >= 0 ? select.options[select.selectedIndex] : null;
+                                if (selectedOption && selectedOption.text) {
+                                    const nomeDoDropdown = selectedOption.text.trim();
+                                    foundItem = allItems.find(i => {
+                                        const nomeItem = (i.name || "").trim();
+                                        return nomeItem === nomeDoDropdown && nomeItem !== "";
+                                    });
+                                }
+                            }
+                            
+                            // Se ainda não encontrou, tentar pelo nome da arma salva atualmente
+                            if (!foundItem && armaSalvaAtual && armaSalvaAtual.nome) {
+                                const nomeSalvo = (armaSalvaAtual.nome || "").trim().toLowerCase();
+                                foundItem = allItems.find(i => {
+                                    const nomeItem = (i.name || "").trim().toLowerCase();
+                                    return nomeItem === nomeSalvo && nomeItem !== "";
+                                });
+                            }
+                            
+                            if (foundItem) {
+                                item = foundItem;
+                                itemName = item.name;
+                                const itemSystem = item.system || {};
+                                dano = Number(itemSystem.dano || 0);
+                                alcance = itemSystem.alcance || "";
+                                bonus = Number(itemSystem.bonus || 0);
+                                
+                                // Atualizar o ID para o ID real do item encontrado
+                                itemId = String(item.id || item._id || itemId);
+                                console.log(`[Rising Steel] Arma encontrada após busca - Nome: "${item.name}", ID corrigido: "${itemId}"`);
+                            } else {
+                                console.warn(`[Rising Steel] Não foi possível encontrar a arma com ID "${itemId}" no pack. Usando valores do dropdown.`);
+                            }
+                        } catch (err) {
+                            console.warn(`[Rising Steel] Erro ao buscar arma no pack:`, err);
+                        }
                     }
                 }
             } catch (error) {
-                // Silenciosamente ignorar erro
+                console.warn(`[Rising Steel] Erro ao buscar pack de armas:`, error);
             }
         }
         
