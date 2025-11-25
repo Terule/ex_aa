@@ -1138,22 +1138,42 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         let alcance = "";
         let bonus = 0;
         
-        // Se não houver itemId, limpar os campos
+        // Se não houver itemId, limpar os campos do slot específico
         if (!itemId) {
-            const armasAtuais = foundry.utils.duplicate(this.actor.system.inventario?.armas || []);
+            // Criar um array completamente novo com deep clone
+            const armasAtuais = JSON.parse(JSON.stringify(this.actor.system.inventario?.armas || []));
+            
+            // Garantir que o array tenha o tamanho mínimo necessário
             while (armasAtuais.length <= index) {
                 armasAtuais.push({id: "", nome: "", dano: 0, alcance: "", bonus: 0});
             }
-            armasAtuais[index] = {
-                id: "",
-                nome: "",
-                dano: 0,
-                alcance: "",
-                bonus: 0
-            };
+            
+            // Criar um novo array onde cada slot é um objeto completamente novo
+            const armasNovas = armasAtuais.map((arma, idx) => {
+                if (idx === index) {
+                    // Para o slot sendo limpo, criar objeto vazio
+                    return {
+                        id: "",
+                        nome: "",
+                        dano: 0,
+                        alcance: "",
+                        bonus: 0
+                    };
+                } else {
+                    // Para os outros slots, criar novo objeto com valores atuais
+                    return {
+                        id: String(arma?.id || ""),
+                        nome: String(arma?.nome || ""),
+                        dano: Number(arma?.dano || 0),
+                        alcance: String(arma?.alcance || ""),
+                        bonus: Number(arma?.bonus || 0)
+                    };
+                }
+            });
+            
             await this.actor.update({
-                "system.inventario.armas": armasAtuais
-            }, {render: false});
+                "system.inventario.armas": armasNovas
+            }, {render: true});
             return;
         }
         
@@ -1212,21 +1232,41 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
             bonus: a?.bonus || 0
         })));
         
-        // Criar um novo objeto para a arma específica, preservando valores existentes das outras
-        const armaExistente = armasAtuais[index] || {id: "", nome: "", dano: 0, alcance: "", bonus: 0};
-        
-        // Se há um item selecionado, atualizar todos os campos com os valores do item
-        // Se não há item (itemName vazio), limpar todos os campos
+        // IMPORTANTE: Garantir que cada slot de arma é completamente independente
+        // Criar um novo objeto totalmente novo para a arma no slot específico
+        // NÃO usar referências ou objetos compartilhados
         const novaArma = {
             id: idParaSalvar || "",
             nome: itemName || "",
-            dano: itemName ? dano : 0,
-            alcance: itemName ? alcance : "",
-            bonus: itemName ? bonus : 0
+            dano: itemName ? Number(dano) : 0,
+            alcance: itemName ? String(alcance || "") : "",
+            bonus: itemName ? Number(bonus) : 0
         };
         
-        // Atualizar APENAS o índice específico
-        armasAtuais[index] = novaArma;
+        // Garantir que estamos criando um array completamente novo
+        // Copiar todas as armas existentes, criando novos objetos para cada uma
+        const armasNovas = armasAtuais.map((arma, idx) => {
+            if (idx === index) {
+                // Para o slot sendo atualizado, usar o novo objeto
+                return {
+                    id: novaArma.id,
+                    nome: novaArma.nome,
+                    dano: novaArma.dano,
+                    alcance: novaArma.alcance,
+                    bonus: novaArma.bonus
+                };
+            } else {
+                // Para os outros slots, criar um novo objeto com os valores atuais
+                // Isso garante que não há referências compartilhadas
+                return {
+                    id: String(arma?.id || ""),
+                    nome: String(arma?.nome || ""),
+                    dano: Number(arma?.dano || 0),
+                    alcance: String(arma?.alcance || ""),
+                    bonus: Number(arma?.bonus || 0)
+                };
+            }
+        });
         
         console.log(`[Rising Steel] Salvando arma ${index}:`, {
             id: novaArma.id,
@@ -1236,7 +1276,7 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
             bonus: novaArma.bonus
         });
         
-        console.log(`[Rising Steel] Estado completo das armas APÓS atualização:`, armasAtuais.map((a, i) => ({
+        console.log(`[Rising Steel] Estado completo das armas APÓS atualização:`, armasNovas.map((a, i) => ({
             index: i,
             id: a?.id || "",
             nome: a?.nome || "",
@@ -1248,9 +1288,10 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         // Preservar equipamentos durante a atualização (usar deep clone também)
         const equipamentosAtuais = JSON.parse(JSON.stringify(this.actor.system.inventario?.equipamentos || []));
         
-        // Atualizar e renderizar para mostrar os dados preenchidos
+        // Atualizar APENAS o array de armas, garantindo que cada slot seja independente
+        // Usar render: true para que a UI seja atualizada imediatamente
         await this.actor.update({
-            "system.inventario.armas": armasAtuais,
+            "system.inventario.armas": armasNovas,
             "system.inventario.equipamentos": equipamentosAtuais
         }, {render: true});
         
