@@ -331,62 +331,68 @@ Hooks.on("renderDialog", (app, html, data) => {
     const typeSelect = html.find('select[name="type"]');
     if (!typeSelect.length) return;
     
-    // Verificar se há um compendium ativo
-    const activeWindows = Object.values(ui.windows || {});
-    let isTargetCompendium = false;
+    // Verificar se o diálogo tem um pack associado
+    const packId = app.options?.pack || app.data?.pack || "";
+    const isRisingSteel = packId.includes("rising-steel");
+    const isTargetPack = packId.includes("armaduras") || packId.includes("armas") || packId.includes("equipamentos");
     
-    for (const window of activeWindows) {
-        if (window.collection && window.collection.metadata) {
-            const packId = window.collection.metadata.id || "";
-            if (packId.includes("rising-steel") && 
-                (packId.includes("armaduras") || packId.includes("armas") || packId.includes("equipamentos"))) {
-                isTargetCompendium = true;
-                break;
+    if (!isRisingSteel || !isTargetPack) {
+        // Verificar se há um compendium ativo nas janelas abertas
+        const activeWindows = Object.values(ui.windows || {});
+        let foundTarget = false;
+        
+        for (const window of activeWindows) {
+            if (window.collection && window.collection.metadata) {
+                const wPackId = window.collection.metadata.id || "";
+                if (wPackId.includes("rising-steel") && 
+                    (wPackId.includes("armaduras") || wPackId.includes("armas") || wPackId.includes("equipamentos"))) {
+                    foundTarget = true;
+                    break;
+                }
             }
         }
+        
+        if (!foundTarget) return;
     }
     
-    if (isTargetCompendium) {
-        // Garantir que CONFIG.Item.types está correto
-        CONFIG.Item.types = ["armadura", "arma", "equipamento"];
-        
-        // Filtrar o select de forma agressiva e repetida
-        const allowedTypes = ["armadura", "arma", "equipamento"];
-        
-        // Filtrar imediatamente
+    // Garantir que CONFIG.Item.types está correto
+    CONFIG.Item.types = ["armadura", "arma", "equipamento"];
+    
+    // Filtrar o select usando MutationObserver para garantir que funcione mesmo com opções dinâmicas
+    const allowedTypes = ["armadura", "arma", "equipamento"];
+    
+    const filterOptions = () => {
         typeSelect.find('option').each(function() {
             const value = $(this).val();
             if (value && !allowedTypes.includes(value)) {
                 $(this).remove();
             }
         });
+        // Garantir que uma opção válida está selecionada
+        if (typeSelect.find('option:selected').length === 0 || !allowedTypes.includes(typeSelect.val())) {
+            typeSelect.find('option').first().prop('selected', true);
+        }
+    };
+    
+    // Filtrar imediatamente
+    filterOptions();
+    
+    // Usar MutationObserver para filtrar opções adicionadas dinamicamente
+    if (typeSelect.length && typeSelect[0]) {
+        const observer = new MutationObserver(() => {
+            filterOptions();
+        });
         
-        // Continuar filtrando por um tempo para garantir
-        let attempts = 0;
-        const maxAttempts = 20;
-        const filterInterval = setInterval(() => {
-            attempts++;
-            const select = $('select[name="type"]');
-            
-            if (select.length) {
-                let hasFiltered = false;
-                select.find('option').each(function() {
-                    const value = $(this).val();
-                    if (value && !allowedTypes.includes(value)) {
-                        $(this).remove();
-                        hasFiltered = true;
-                    }
-                });
-                
-                if (hasFiltered) {
-                    console.log("[Rising Steel] Tipos filtrados: armadura, arma, equipamento");
-                }
-            }
-            
-            if (attempts >= maxAttempts) {
-                clearInterval(filterInterval);
-            }
-        }, 100);
+        observer.observe(typeSelect[0], { childList: true, subtree: true });
+        
+        // Limpar observer quando o diálogo for fechado (usar o evento de fechamento do app)
+        const originalClose = app.close?.bind(app);
+        if (originalClose) {
+            app.close = function(...args) {
+                observer.disconnect();
+                return originalClose.apply(this, args);
+            };
+        }
     }
 });
 
