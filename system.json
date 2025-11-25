@@ -30,12 +30,8 @@
     "readme":  "README.md",
     "bugs":  "https://github.com/Terule/ex_aa/issues",
     "changelog":  "CHANGELOG.md",
-    "esmodules":  [
-                      "module/rising-steel.js"
-                  ],
-    "styles":  [
-                   "css/rising-steel.css"
-               ],
+    "esmodules":  ["module/rising-steel.js"],
+    "styles":  ["css/rising-steel.css"],
     "languages":  [
                       {
                           "lang":  "en",
