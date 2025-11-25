@@ -1058,18 +1058,40 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         }
         
         // Ler o estado atual completo do array de equipamentos
-        const equipamentosAtuais = foundry.utils.duplicate(this.actor.system.inventario?.equipamentos || []);
+        // Usar deep clone para garantir que não há referências compartilhadas
+        const equipamentosAtuais = JSON.parse(JSON.stringify(this.actor.system.inventario?.equipamentos || []));
+        
+        // Garantir que o array tenha o tamanho mínimo necessário
         while (equipamentosAtuais.length <= index) {
             equipamentosAtuais.push({id: "", nome: ""});
         }
         
-        // Atualizar apenas o equipamento específico
-        equipamentosAtuais[index] = {
-            id: idParaSalvar,
+        // Preservar os valores existentes dos outros equipamentos antes de atualizar
+        console.log(`[Rising Steel] Estado atual dos equipamentos ANTES da atualização (índice ${index}):`, equipamentosAtuais.map((e, i) => ({
+            index: i,
+            id: e?.id || "",
+            nome: e?.nome || ""
+        })));
+        
+        // Criar um novo objeto para o equipamento específico
+        const novoEquipamento = {
+            id: idParaSalvar || "",
             nome: String(itemName || "")
         };
         
-        console.log(`[Rising Steel] Salvando equipamento ${index} - ID: "${idParaSalvar}", Nome: "${itemName}"`);
+        // Atualizar APENAS o índice específico
+        equipamentosAtuais[index] = novoEquipamento;
+        
+        console.log(`[Rising Steel] Salvando equipamento ${index}:`, {
+            id: novoEquipamento.id,
+            nome: novoEquipamento.nome
+        });
+        
+        console.log(`[Rising Steel] Estado completo dos equipamentos APÓS atualização:`, equipamentosAtuais.map((e, i) => ({
+            index: i,
+            id: e?.id || "",
+            nome: e?.nome || ""
+        })));
         
         await this.actor.update({
             "system.inventario.equipamentos": equipamentosAtuais
@@ -1158,20 +1180,56 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         }
         
         // Ler o estado atual completo do array de armas
-        const armasAtuais = foundry.utils.duplicate(this.actor.system.inventario?.armas || []);
+        // Usar deep clone para garantir que não há referências compartilhadas
+        const armasAtuais = JSON.parse(JSON.stringify(this.actor.system.inventario?.armas || []));
+        
+        // Garantir que o array tenha o tamanho mínimo necessário
         while (armasAtuais.length <= index) {
             armasAtuais.push({id: "", nome: "", dano: 0, alcance: "", bonus: 0});
         }
         
-        armasAtuais[index] = {
-            id: idParaSalvar,
-            nome: itemName,
-            dano: dano,
-            alcance: alcance,
-            bonus: bonus
+        // Preservar os valores existentes das outras armas antes de atualizar
+        console.log(`[Rising Steel] Estado atual das armas ANTES da atualização (índice ${index}):`, armasAtuais.map((a, i) => ({
+            index: i,
+            id: a?.id || "",
+            nome: a?.nome || "",
+            dano: a?.dano || 0,
+            alcance: a?.alcance || "",
+            bonus: a?.bonus || 0
+        })));
+        
+        // Criar um novo objeto para a arma específica, preservando valores existentes das outras
+        const armaExistente = armasAtuais[index] || {id: "", nome: "", dano: 0, alcance: "", bonus: 0};
+        
+        // Se há um item selecionado, atualizar todos os campos com os valores do item
+        // Se não há item (itemName vazio), limpar todos os campos
+        const novaArma = {
+            id: idParaSalvar || "",
+            nome: itemName || "",
+            dano: itemName ? dano : 0,
+            alcance: itemName ? alcance : "",
+            bonus: itemName ? bonus : 0
         };
         
-        console.log(`[Rising Steel] Salvando arma ${index} - ID: "${idParaSalvar}", Nome: "${itemName}", Dano: ${dano}`);
+        // Atualizar APENAS o índice específico
+        armasAtuais[index] = novaArma;
+        
+        console.log(`[Rising Steel] Salvando arma ${index}:`, {
+            id: novaArma.id,
+            nome: novaArma.nome,
+            dano: novaArma.dano,
+            alcance: novaArma.alcance,
+            bonus: novaArma.bonus
+        });
+        
+        console.log(`[Rising Steel] Estado completo das armas APÓS atualização:`, armasAtuais.map((a, i) => ({
+            index: i,
+            id: a?.id || "",
+            nome: a?.nome || "",
+            dano: a?.dano || 0,
+            alcance: a?.alcance || "",
+            bonus: a?.bonus || 0
+        })));
         
         // Preservar equipamentos durante a atualização
         const equipamentosAtuais = foundry.utils.duplicate(this.actor.system.inventario?.equipamentos || []);
