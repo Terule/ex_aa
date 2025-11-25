@@ -288,6 +288,73 @@ Hooks.on("renderCompendiumDirectory", (app, html, data) => {
     }, 100);
 });
 
+// Filtrar tipos de itens ao criar item no compendium
+// Interceptar quando o diálogo de criação for renderizado
+Hooks.on("renderDialog", (app, html, data) => {
+    // Verificar se é o diálogo de criação de item (tem select[name="type"])
+    const typeSelect = html.find('select[name="type"]');
+    if (!typeSelect.length) return;
+    
+    // Função para filtrar tipos
+    const filterTypes = () => {
+        // Verificar se há um compendium ativo procurando nas janelas abertas
+        const activeWindows = Object.values(ui.windows || {});
+        let isTargetCompendium = false;
+        
+        for (const window of activeWindows) {
+            if (window.collection && window.collection.metadata) {
+                const packId = window.collection.metadata.id || "";
+                if (packId.includes("rising-steel") && 
+                    (packId.includes("armaduras") || packId.includes("armas") || packId.includes("equipamentos"))) {
+                    isTargetCompendium = true;
+                    break;
+                }
+            }
+        }
+        
+        // Se não encontrou, verificar se o app tem collection
+        if (!isTargetCompendium && app.collection) {
+            const packId = app.collection.metadata?.id || "";
+            if (packId.includes("rising-steel") && 
+                (packId.includes("armaduras") || packId.includes("armas") || packId.includes("equipamentos"))) {
+                isTargetCompendium = true;
+            }
+        }
+        
+        if (isTargetCompendium) {
+            // Filtrar apenas os tipos permitidos: armadura, arma e equipamento
+            const allowedTypes = ["armadura", "arma", "equipamento"];
+            const select = html.find('select[name="type"]');
+            if (select.length) {
+                select.find('option').each(function() {
+                    const value = $(this).val();
+                    if (value && !allowedTypes.includes(value)) {
+                        $(this).remove();
+                    }
+                });
+            }
+        }
+    };
+    
+    // Filtrar imediatamente
+    filterTypes();
+    
+    // Usar MutationObserver para detectar quando o select é modificado
+    const observer = new MutationObserver(() => {
+        filterTypes();
+    });
+    
+    const selectElement = typeSelect[0];
+    if (selectElement) {
+        observer.observe(selectElement, { childList: true, subtree: true });
+        
+        // Parar de observar quando o diálogo for fechado
+        html.closest('.window-app').on('close', () => {
+            observer.disconnect();
+        });
+    }
+});
+
 // Funções para importar itens dos arquivos para os packs
 window.RisingSteel = window.RisingSteel || {};
 
