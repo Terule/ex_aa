@@ -381,20 +381,26 @@ Hooks.on("preRenderDialog", (app, data, options) => {
 // Interceptar quando qualquer diálogo é renderizado para garantir filtro
 console.log("[Rising Steel] Registrando hook renderDialog");
 Hooks.on("renderDialog", (app, html, data) => {
-    console.log("[Rising Steel] renderDialog chamado", {
-        title: app.options?.title || app.title || "",
-        pack: app.options?.pack || app.data?.pack || "",
-        hasTypeSelect: html.find('select[name="type"]').length > 0,
-        appClass: app.constructor?.name || "unknown"
-    });
-    
     // Verificar se é um diálogo de criação de item
     const dialogTitle = app.options?.title || app.title || "";
-    const isCreateItemDialog = dialogTitle.includes("Create") && dialogTitle.includes("Item");
+    const isCreateItemDialog = dialogTitle.includes("Create") && (dialogTitle.includes("Item") || dialogTitle.includes("New"));
+    
+    console.log("[Rising Steel] renderDialog chamado", {
+        title: dialogTitle,
+        pack: app.options?.pack || app.data?.pack || "",
+        hasTypeSelect: html.find('select[name="type"]').length > 0,
+        appClass: app.constructor?.name || "unknown",
+        isCreateItemDialog: isCreateItemDialog
+    });
     
     const typeSelect = html.find('select[name="type"]');
     if (!typeSelect.length) {
-        console.log("[Rising Steel] renderDialog - Nenhum select de tipo encontrado");
+        // Tentar encontrar o select de outra forma
+        const allSelects = html.find('select');
+        console.log("[Rising Steel] renderDialog - Nenhum select[name='type'] encontrado, mas há", allSelects.length, "selects no diálogo");
+        if (allSelects.length > 0) {
+            console.log("[Rising Steel] renderDialog - Primeiro select:", allSelects.first().attr('name'), allSelects.first().html());
+        }
         return;
     }
     

@@ -19,7 +19,7 @@ export class RisingSteelItem extends Item {
         const originalTypes = CONFIG.Item.types;
         CONFIG.Item.types = ["armadura", "arma", "equipamento"];
         
-        console.log("[Rising Steel] createDialog - CONFIG.Item.types definido:", CONFIG.Item.types);
+        console.log("[Rising Steel] createDialog chamado - CONFIG.Item.types definido:", CONFIG.Item.types);
         
         try {
             // Chamar o método original do Foundry
@@ -28,6 +28,33 @@ export class RisingSteelItem extends Item {
         } finally {
             // Restaurar tipos originais se necessário (opcional)
             // CONFIG.Item.types = originalTypes;
+        }
+    }
+
+    /**
+     * Override getCreateDialogData to filter types before dialog data is prepared
+     * This method is called by Foundry V12 to prepare dialog data
+     * @override
+     */
+    static getCreateDialogData(data = {}, options = {}) {
+        // Garantir que CONFIG.Item.types está correto antes de preparar os dados
+        const originalTypes = CONFIG.Item.types;
+        CONFIG.Item.types = ["armadura", "arma", "equipamento"];
+        
+        console.log("[Rising Steel] getCreateDialogData chamado - CONFIG.Item.types definido:", CONFIG.Item.types);
+        
+        try {
+            // Chamar o método original do Foundry
+            const result = super.getCreateDialogData ? super.getCreateDialogData(data, options) : data;
+            
+            // Filtrar tipos nos dados se existirem
+            if (result && result.types) {
+                result.types = result.types.filter(t => ["armadura", "arma", "equipamento"].includes(t));
+            }
+            
+            return result;
+        } finally {
+            // Não restaurar aqui, deixar para o createDialog
         }
     }
 }
