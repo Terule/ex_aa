@@ -1,0 +1,6 @@
+# Garantir que JSON seja sempre UTF-8 sem BOM
+*.json text eol=lf
+
+# Especificamente para system.json
+system.json text eol=lf
+
