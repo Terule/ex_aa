@@ -115,15 +115,45 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                 const armaduraEquipadaId = context.system.armadura.equipada;
                 const foundById = context.armaduras.find(a => a.id === armaduraEquipadaId);
                 if (!foundById) {
-                    // Tentar encontrar pelo nome (se tiver nome salvo)
-                    // Se não encontrar, limpar a armadura equipada
-                    console.log(`[Rising Steel] Armadura equipada não encontrada no compendium, limpando...`);
-                    await this.actor.update({
-                        "system.armadura.equipada": "",
-                        "system.armadura.total": 0,
-                        "system.armadura.atual": 0
-                    }, {render: false});
-                    context.system.armadura.equipada = "";
+                    // ID não encontrado - isso indica que o ID salvo não corresponde ao ID do compendium
+                    // Vamos verificar se podemos encontrar uma correspondência pelo valor total salvo
+                    // (já que o total é atualizado quando uma armadura é selecionada)
+                    const protecaoSalva = context.system.armadura?.total || 0;
+                    if (protecaoSalva > 0) {
+                        // Tentar encontrar armadura com a mesma proteção
+                        const foundByProtecao = context.armaduras.find(a => {
+                            const protecaoArmadura = Number(a.system?.protecao || 0);
+                            return protecaoArmadura === protecaoSalva;
+                        });
+                        if (foundByProtecao) {
+                            // Encontrada armadura com proteção correspondente, atualizar ID
+                            console.log(`[Rising Steel] Sincronizando armadura: ID antigo "${armaduraEquipadaId}", novo ID "${foundByProtecao.id}"`);
+                            await this.actor.update({
+                                "system.armadura.equipada": foundByProtecao.id,
+                                "system.armadura.total": protecaoSalva,
+                                "system.armadura.atual": Math.max(0, protecaoSalva - (context.system.armadura?.dano || 0))
+                            }, {render: false});
+                            context.system.armadura.equipada = foundByProtecao.id;
+                        } else {
+                            // Não encontrada correspondência, limpar
+                            console.log(`[Rising Steel] Armadura equipada com ID "${armaduraEquipadaId}" não encontrada no compendium, limpando...`);
+                            await this.actor.update({
+                                "system.armadura.equipada": "",
+                                "system.armadura.total": 0,
+                                "system.armadura.atual": 0
+                            }, {render: false});
+                            context.system.armadura.equipada = "";
+                        }
+                    } else {
+                        // Sem proteção salva, limpar
+                        console.log(`[Rising Steel] Armadura equipada com ID "${armaduraEquipadaId}" não encontrada no compendium, limpando...`);
+                        await this.actor.update({
+                            "system.armadura.equipada": "",
+                            "system.armadura.total": 0,
+                            "system.armadura.atual": 0
+                        }, {render: false});
+                        context.system.armadura.equipada = "";
+                    }
                 }
             }
             
@@ -1150,6 +1180,11 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
             armaduraId = select.value || $(select).val() || "";
         }
         
+        // Debug: verificar qual ID foi selecionado
+        if (armaduraId) {
+            console.log(`[Rising Steel] Armadura selecionada - ID: "${armaduraId}", selectedIndex: ${select.selectedIndex}`);
+        }
+        
         if (!armaduraId) {
             // Se nenhuma armadura foi selecionada, limpar os valores
             await this.actor.update({
@@ -1178,6 +1213,9 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                     const item = await pack.getDocument(armaduraId);
                     if (item) {
                         protecao = Number(item.system?.protecao || 0);
+                        console.log(`[Rising Steel] Armadura encontrada no pack - Nome: "${item.name}", Proteção: ${protecao}, ID: "${item.id}"`);
+                    } else {
+                        console.warn(`[Rising Steel] Armadura com ID "${armaduraId}" não encontrada no pack!`);
                     }
                 }
             } catch (error) {
