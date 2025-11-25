@@ -26,8 +26,10 @@ try {
     # Atualizar a versão
     $systemJson.version = $newVersion
     
-    # Salvar o arquivo
-    $systemJson | ConvertTo-Json -Depth 10 | Set-Content $systemJsonPath -Encoding UTF8
+    # Salvar o arquivo sem BOM (UTF8 sem BOM)
+    $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+    $jsonContent = $systemJson | ConvertTo-Json -Depth 10
+    [System.IO.File]::WriteAllText((Resolve-Path $systemJsonPath), $jsonContent, $utf8NoBom)
     
     Write-Host "Versão incrementada: $currentVersion -> $newVersion"
     

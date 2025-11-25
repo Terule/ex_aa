@@ -33,8 +33,16 @@ try {
     // Atualizar a versão
     systemJson.version = newVersion;
     
-    // Salvar o arquivo
-    fs.writeFileSync(systemJsonPath, JSON.stringify(systemJson, null, 2) + '\n', 'utf8');
+    // Salvar o arquivo sem BOM (UTF8 sem BOM)
+    const jsonContent = JSON.stringify(systemJson, null, 2) + '\n';
+    // Usar writeFileSync com encoding UTF8 sem BOM
+    const BOM = '\uFEFF';
+    if (jsonContent.charCodeAt(0) === 0xFEFF) {
+        // Se já tem BOM, remover
+        fs.writeFileSync(systemJsonPath, jsonContent.slice(1), { encoding: 'utf8' });
+    } else {
+        fs.writeFileSync(systemJsonPath, jsonContent, { encoding: 'utf8' });
+    }
     
     console.log(`Versão incrementada: ${currentVersion} -> ${newVersion}`);
     
