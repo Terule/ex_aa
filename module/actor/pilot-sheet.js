@@ -110,17 +110,124 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
             context.equipamentos = await this._getCompendiumItems("equipamentos", "equipamento");
             context.armas = await this._getCompendiumItems("armas", "arma");
             
-            // Debug: verificar os equipamentos salvos
-            console.log(`[Rising Steel] Equipamentos salvos no actor:`, context.system.inventario?.equipamentos?.map(e => ({id: e.id, nome: e.nome})));
-            console.log(`[Rising Steel] Equipamentos disponíveis no compendium:`, context.equipamentos.map(e => ({id: e.id, name: e.name})));
-            // Verificar correspondência
-            if (context.system.inventario?.equipamentos) {
-                context.system.inventario.equipamentos.forEach((eq, idx) => {
-                    if (eq.id) {
-                        const found = context.equipamentos.find(e => e.id === eq.id);
-                        console.log(`[Rising Steel] Equipamento ${idx}: id="${eq.id}", nome="${eq.nome}", encontrado no compendium: ${!!found}`);
+            // Sincronizar ID da armadura equipada
+            if (context.system.armadura?.equipada && context.armaduras.length > 0) {
+                const armaduraEquipadaId = context.system.armadura.equipada;
+                const foundById = context.armaduras.find(a => a.id === armaduraEquipadaId);
+                if (!foundById) {
+                    // Tentar encontrar pelo nome (se tiver nome salvo)
+                    // Se não encontrar, limpar a armadura equipada
+                    console.log(`[Rising Steel] Armadura equipada não encontrada no compendium, limpando...`);
+                    await this.actor.update({
+                        "system.armadura.equipada": "",
+                        "system.armadura.total": 0,
+                        "system.armadura.atual": 0
+                    }, {render: false});
+                    context.system.armadura.equipada = "";
+                }
+            }
+            
+            // Sincronizar IDs dos equipamentos salvos com os IDs do compendium
+            // Se um ID não corresponder, tentar encontrar pelo nome e atualizar
+            if (context.system.inventario?.equipamentos && context.equipamentos.length > 0) {
+                let equipamentosAtualizados = false;
+                const equipamentosCorrigidos = context.system.inventario.equipamentos.map((eq, idx) => {
+                    if (!eq || !eq.nome || !eq.nome.trim()) {
+                        return {id: "", nome: ""};
                     }
+                    
+                    // Se já tem ID, verificar se corresponde
+                    if (eq.id) {
+                        const foundById = context.equipamentos.find(e => e.id === eq.id);
+                        if (foundById) {
+                            // ID válido, retornar como está
+                            return {id: eq.id, nome: eq.nome};
+                        }
+                    }
+                    
+                    // ID não encontrado ou inválido, tentar encontrar pelo nome
+                    const foundByName = context.equipamentos.find(e => {
+                        const nomeSalvo = (eq.nome || "").trim().toLowerCase();
+                        const nomeItem = (e.name || "").trim().toLowerCase();
+                        return nomeSalvo === nomeItem;
+                    });
+                    
+                    if (foundByName) {
+                        equipamentosAtualizados = true;
+                        console.log(`[Rising Steel] Sincronizando equipamento ${idx}: "${eq.nome}"`);
+                        return {id: foundByName.id, nome: foundByName.name};
+                    }
+                    
+                    // Não encontrado, limpar
+                    if (eq.id || eq.nome) {
+                        equipamentosAtualizados = true;
+                        console.log(`[Rising Steel] Equipamento ${idx} "${eq.nome}" não encontrado no compendium, limpando...`);
+                    }
+                    return {id: "", nome: ""};
                 });
+                
+                // Se houve atualizações, salvar os IDs corrigidos
+                if (equipamentosAtualizados) {
+                    await this.actor.update({
+                        "system.inventario.equipamentos": equipamentosCorrigidos
+                    }, {render: false});
+                    // Atualizar o context com os valores corrigidos
+                    context.system.inventario.equipamentos = equipamentosCorrigidos;
+                }
+            }
+            
+            // Fazer o mesmo para armas
+            if (context.system.inventario?.armas && context.armas.length > 0) {
+                let armasAtualizadas = false;
+                const armasCorrigidas = context.system.inventario.armas.map((arma, idx) => {
+                    if (!arma || !arma.nome || !arma.nome.trim()) {
+                        return {id: "", nome: "", dano: 0, alcance: "", bonus: 0};
+                    }
+                    
+                    // Se já tem ID, verificar se corresponde
+                    if (arma.id) {
+                        const foundById = context.armas.find(a => a.id === arma.id);
+                        if (foundById) {
+                            // ID válido, retornar como está
+                            return arma;
+                        }
+                    }
+                    
+                    // ID não encontrado ou inválido, tentar encontrar pelo nome
+                    const foundByName = context.armas.find(a => {
+                        const nomeSalvo = (arma.nome || "").trim().toLowerCase();
+                        const nomeItem = (a.name || "").trim().toLowerCase();
+                        return nomeSalvo === nomeItem;
+                    });
+                    
+                    if (foundByName) {
+                        armasAtualizadas = true;
+                        console.log(`[Rising Steel] Sincronizando arma ${idx}: "${arma.nome}"`);
+                        return {
+                            id: foundByName.id,
+                            nome: foundByName.name,
+                            dano: arma.dano || foundByName.system?.dano || 0,
+                            alcance: arma.alcance || foundByName.system?.alcance || "",
+                            bonus: arma.bonus || foundByName.system?.bonus || 0
+                        };
+                    }
+                    
+                    // Não encontrado, limpar
+                    if (arma.id || arma.nome) {
+                        armasAtualizadas = true;
+                        console.log(`[Rising Steel] Arma ${idx} "${arma.nome}" não encontrada no compendium, limpando...`);
+                    }
+                    return {id: "", nome: "", dano: 0, alcance: "", bonus: 0};
+                });
+                
+                // Se houve atualizações, salvar as armas corrigidas
+                if (armasAtualizadas) {
+                    await this.actor.update({
+                        "system.inventario.armas": armasCorrigidas
+                    }, {render: false});
+                    // Atualizar o context com os valores corrigidos
+                    context.system.inventario.armas = armasCorrigidas;
+                }
             }
         } catch (error) {
             // Se houver erro ao carregar packs, usar arrays vazios
@@ -922,8 +1029,6 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
             nome: String(itemName || "")
         };
         
-        console.log(`[Rising Steel] Salvando equipamento ${index}:`, equipamentosAtuais[index]);
-        
         await this.actor.update({
             "system.inventario.equipamentos": equipamentosAtuais
         });
@@ -994,14 +1099,6 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                         dano = Number(itemSystem.dano || 0);
                         alcance = itemSystem.alcance || "";
                         bonus = Number(itemSystem.bonus || 0);
-                        
-                        // Debug: verificar se os dados foram encontrados
-                        console.log(`[Rising Steel] Dados da arma "${itemName}":`, {
-                            dano: dano,
-                            alcance: alcance,
-                            bonus: bonus,
-                            itemSystem: itemSystem
-                        });
                     }
                 }
             } catch (error) {
@@ -1024,7 +1121,7 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         };
         
         // Debug: verificar o que será atualizado
-        console.log(`[Rising Steel] Atualizando arma ${index}:`, armasAtuais[index]);
+        // Arma atualizada
         
         // Preservar equipamentos durante a atualização
         const equipamentosAtuais = foundry.utils.duplicate(this.actor.system.inventario?.equipamentos || []);
