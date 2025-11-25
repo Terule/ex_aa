@@ -162,6 +162,116 @@ Hooks.on("renderChatMessage", (message, html) => {
     }
 });
 
+// Customizar visualização dos itens do compendium em formato de tabela
+Hooks.on("renderCompendiumDirectory", (app, html, data) => {
+    // Verificar se é um pack de itens do sistema Rising Steel
+    const packId = app.collection?.metadata?.id || app.collection?.metadata?.name || "";
+    const isRisingSteel = packId.includes("rising-steel");
+    const isTargetPack = packId.includes("armaduras") || packId.includes("armas") || packId.includes("equipamentos");
+    
+    if (!isRisingSteel || !isTargetPack) {
+        return;
+    }
+
+    // Aguardar o conteúdo ser renderizado
+    setTimeout(async () => {
+        const directoryItems = html.find(".directory-item");
+        
+        if (directoryItems.length === 0) return;
+
+        // Determinar o tipo de pack
+        const isArmaduras = packId.includes("armaduras");
+        const isArmas = packId.includes("armas");
+        const isEquipamentos = packId.includes("equipamentos");
+
+        // Carregar os documentos completos para obter os dados do system
+        const pack = game.packs.get(packId);
+        if (!pack) return;
+
+        try {
+            const documents = await pack.getDocuments();
+            
+            // Criar tabela
+            const tableContainer = $('<div class="rising-steel-compendium-table"></div>');
+            const table = $('<table class="rising-steel-compendium-items-table"></table>');
+            const thead = $('<thead></thead>');
+            const tbody = $('<tbody></tbody>');
+
+            // Definir cabeçalhos baseado no tipo
+            let headers = [];
+            if (isArmaduras) {
+                headers = ['Nome', 'Tipo', 'Proteção', 'Peso', 'Especial'];
+            } else if (isArmas) {
+                headers = ['Nome', 'Tipo', 'Dano', 'Alcance', 'Peso', 'Especial'];
+            } else if (isEquipamentos) {
+                headers = ['Nome', 'Tipo', 'Efeito', 'Peso'];
+            }
+
+            const headerRow = $('<tr></tr>');
+            headers.forEach(header => {
+                headerRow.append($(`<th>${header}</th>`));
+            });
+            thead.append(headerRow);
+            table.append(thead);
+
+            // Adicionar linhas para cada item
+            documents.forEach(doc => {
+                const row = $('<tr class="compendium-item-row" data-item-id="' + doc.id + '"></tr>');
+                
+                if (isArmaduras) {
+                    row.append($(`<td><strong>${doc.name}</strong></td>`));
+                    row.append($(`<td>${doc.system?.tipo || '-'}</td>`));
+                    row.append($(`<td>${doc.system?.protecao || '-'}</td>`));
+                    row.append($(`<td>${doc.system?.peso || '-'} kg</td>`));
+                    row.append($(`<td><small>${doc.system?.especial || '-'}</small></td>`));
+                } else if (isArmas) {
+                    row.append($(`<td><strong>${doc.name}</strong></td>`));
+                    row.append($(`<td>${doc.system?.tipo || '-'}</td>`));
+                    row.append($(`<td>${doc.system?.dano || '-'}</td>`));
+                    row.append($(`<td>${doc.system?.alcance || '-'}</td>`));
+                    row.append($(`<td>${doc.system?.peso || '-'} kg</td>`));
+                    row.append($(`<td><small>${doc.system?.especial || '-'}</small></td>`));
+                } else if (isEquipamentos) {
+                    row.append($(`<td><strong>${doc.name}</strong></td>`));
+                    row.append($(`<td>${doc.system?.tipo || '-'}</td>`));
+                    row.append($(`<td><small>${doc.system?.efeito || '-'}</small></td>`));
+                    row.append($(`<td>${doc.system?.peso || '-'} kg</td>`));
+                }
+
+                // Tornar a linha clicável para abrir o item
+                row.on('click', (e) => {
+                    if (!$(e.target).is('a')) {
+                        doc.sheet.render(true);
+                    }
+                });
+                row.css('cursor', 'pointer');
+
+                tbody.append(row);
+            });
+
+            table.append(tbody);
+            tableContainer.append(table);
+
+            // Substituir a lista padrão pela tabela
+            const directoryList = html.find('.directory-list');
+            if (directoryList.length) {
+                directoryList.hide();
+                directoryList.after(tableContainer);
+            } else {
+                // Se não encontrar .directory-list, tentar adicionar após o header
+                const directoryHeader = html.find('.directory-header');
+                if (directoryHeader.length) {
+                    directoryHeader.after(tableContainer);
+                } else {
+                    html.append(tableContainer);
+                }
+            }
+        } catch (error) {
+            console.error("[Rising Steel] Erro ao renderizar tabela do compendium:", error);
+        }
+    }, 100);
+});
+
 // Funções para importar itens dos arquivos para os packs
 window.RisingSteel = window.RisingSteel || {};
 

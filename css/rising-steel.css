@@ -1076,4 +1076,56 @@
   font-size: 1.1rem;
 }
 
+/* Estilos para tabela de compendium */
+.rising-steel-compendium-table {
+  margin-top: 0.5rem;
+  overflow-x: auto;
+}
+
+.rising-steel-compendium-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.rising-steel-compendium-items-table thead {
+  background: rgba(122, 60, 194, 0.2);
+}
+
+.rising-steel-compendium-items-table th {
+  padding: 0.5rem;
+  text-align: left;
+  font-weight: bold;
+  color: #4a2c6b;
+  border-bottom: 2px solid #7a3cc2;
+}
+
+.rising-steel-compendium-items-table td {
+  padding: 0.5rem;
+  border-bottom: 1px solid rgba(196, 189, 214, 0.5);
+}
+
+.rising-steel-compendium-items-table tbody tr:hover {
+  background: rgba(122, 60, 194, 0.1);
+}
+
+.rising-steel-compendium-items-table tbody tr.compendium-item-row {
+  transition: background-color 0.2s;
+}
+
+.rising-steel-compendium-items-table tbody tr.compendium-item-row:hover {
+  background: rgba(122, 60, 194, 0.15);
+}
+
+.rising-steel-compendium-items-table td strong {
+  color: #4a2c6b;
+}
+
+.rising-steel-compendium-items-table td small {
+  color: #666;
+  font-size: 0.85rem;
+}
+
 
