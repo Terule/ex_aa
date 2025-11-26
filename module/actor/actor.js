@@ -65,6 +65,31 @@ export class RisingSteelActor extends Actor {
             if (systemData.exapoints.atual !== undefined) systemData.exapoints.atual = normalizeValue(systemData.exapoints.atual);
             if (systemData.exapoints.overdrive !== undefined) systemData.exapoints.overdrive = normalizeValue(systemData.exapoints.overdrive);
         }
+
+        if (systemData.sistema) {
+            ["neuromotor", "sensorial", "estrutural"].forEach(prop => {
+                if (systemData.sistema[prop] !== undefined) {
+                    systemData.sistema[prop] = normalizeValue(systemData.sistema[prop]);
+                }
+            });
+        }
+
+        if (systemData.combate) {
+            ["esquiva", "mobilidade"].forEach(prop => {
+                if (systemData.combate[prop] !== undefined) {
+                    systemData.combate[prop] = normalizeValue(systemData.combate[prop]);
+                }
+            });
+        }
+
+        if (systemData.exa) {
+            if (systemData.exa.sincronia !== undefined) {
+                systemData.exa.sincronia = normalizeValue(systemData.exa.sincronia);
+            }
+            if (systemData.exa.overdrive !== undefined) {
+                systemData.exa.overdrive = normalizeValue(systemData.exa.overdrive);
+            }
+        }
     }
 
     /**
@@ -77,6 +102,9 @@ export class RisingSteelActor extends Actor {
     // @override
     prepareBaseData(){
         if (this.type === "piloto") {
+            if (this.system.exacomId === undefined || this.system.exacomId === null) {
+                this.system.exacomId = "";
+            }
             this._preparePilotoData();
         } else if (this.type === "criatura" || this.type === "companion") {
             this._prepareCriaturaData();
@@ -85,6 +113,8 @@ export class RisingSteelActor extends Actor {
             } else if (this.system.vinculo.pilotoId === undefined || this.system.vinculo.pilotoId === null) {
                 this.system.vinculo.pilotoId = "";
             }
+        } else if (this.type === "exacom") {
+            this._prepareExacomData();
         }
     }
 
@@ -166,16 +196,17 @@ export class RisingSteelActor extends Actor {
         const gastos = safeNumber(this.system.exapoints.gastos || 0, 0);
         this.system.exapoints.atual = Math.max(0, maximo - gastos);
         
-        // Garantir que overdrive existe (padrão 1)
-        if (this.system.exapoints.overdrive === undefined || this.system.exapoints.overdrive === null) {
-            this.system.exapoints.overdrive = 1;
+        // Calcular Pontos de Atributo e Overdrive baseado na patente
+        const patente = this.system.identificacao?.patente || "Recruta";
+        const pontosPorPatente = CONFIG.RisingSteel?.getPatentePontos(patente) || 5;
+        const overdrivePorPatente = CONFIG.RisingSteel?.getPatenteOverdrive(patente) || 0;
+        
+        // Atualizar overdrive baseado na patente
+        if (this.system.exapoints) {
+            this.system.exapoints.overdrive = overdrivePorPatente;
         }
         
-        // Calcular Pontos de Atributo baseado na patente
         if (this.system.pontosAtributo) {
-            const patente = this.system.identificacao?.patente || "Recruta";
-            const pontosPorPatente = CONFIG.RisingSteel?.getPatentePontos(patente) || 5;
-            
             // Atualizar total baseado na patente
             this.system.pontosAtributo.total = pontosPorPatente;
             
@@ -560,6 +591,165 @@ export class RisingSteelActor extends Actor {
                 total: safeNumber(hab?.usos?.total, 0)
             }
         }));
+    }
+
+    _prepareExacomData() {
+        const safeNumber = (value) => {
+            if (value === null || value === undefined || value === "") return 0;
+            const normalized = String(value).replace(/,/g, ".");
+            const num = Number(normalized);
+            return Number.isNaN(num) ? 0 : num;
+        };
+
+        if (!this.system.identificacao) {
+            this.system.identificacao = {};
+        }
+
+        const ident = this.system.identificacao;
+        // Escala é sempre "Grande" para EXAcom
+        ident.escala = "Grande";
+        ["piloto", "categoria", "modelo", "mce", "admissao"].forEach(field => {
+            if (ident[field] === undefined || ident[field] === null) {
+                ident[field] = "";
+            }
+        });
+
+        if (this.system.modeloId === undefined || this.system.modeloId === null) {
+            this.system.modeloId = "";
+        }
+
+        if (!this.system.vinculo) {
+            this.system.vinculo = { pilotoId: "" };
+        } else if (this.system.vinculo.pilotoId === undefined || this.system.vinculo.pilotoId === null) {
+            this.system.vinculo.pilotoId = "";
+        }
+
+        if (!this.system.sistema) {
+            this.system.sistema = { neuromotor: 0, sensorial: 0, estrutural: 0 };
+        }
+        ["neuromotor", "sensorial", "estrutural"].forEach(attr => {
+            this.system.sistema[attr] = safeNumber(this.system.sistema[attr]);
+        });
+
+        if (!this.system.combate) {
+            this.system.combate = {};
+        }
+        // Calcular atributos de combate automaticamente
+        const neuromotor = safeNumber(this.system.sistema.neuromotor);
+        const blindagem = safeNumber(this.system.equipamentosExa?.blindagem || 0);
+        const sincronia = safeNumber(this.system.exa?.sincronia || 0);
+        const estrutural = safeNumber(this.system.sistema.estrutural);
+        
+        // Esquiva = (Neuromotor - Blindagem) + Sincronia
+        this.system.combate.esquiva = Math.max(0, (neuromotor - blindagem) + sincronia);
+        
+        // Mobilidade = (2 + Neuromotor) - Estrutural
+        this.system.combate.mobilidade = Math.max(0, (2 + neuromotor) - estrutural);
+
+        // Inicializar limiar de dano
+        if (!this.system.limiarDano) {
+            this.system.limiarDano = {
+                leve: { limiar: 0, marcacoes: 0 },
+                moderado: { limiar: 0, marcacoes: 0 },
+                grave: { limiar: 0, marcacoes: 0 },
+                penalidades: 0
+            };
+        }
+        
+        // Calcular limiares baseados no estrutural (já declarado acima)
+        this.system.limiarDano.leve.limiar = estrutural * 10;
+        this.system.limiarDano.moderado.limiar = estrutural * 20;
+        this.system.limiarDano.grave.limiar = estrutural * 40;
+        
+        // Garantir que marcações e penalidades existam
+        this.system.limiarDano.leve.marcacoes = safeNumber(this.system.limiarDano.leve.marcacoes);
+        this.system.limiarDano.moderado.marcacoes = safeNumber(this.system.limiarDano.moderado.marcacoes);
+        this.system.limiarDano.grave.marcacoes = safeNumber(this.system.limiarDano.grave.marcacoes);
+        this.system.limiarDano.penalidades = safeNumber(this.system.limiarDano.penalidades);
+
+        if (!this.system.equipamentosExa) {
+            this.system.equipamentosExa = {};
+        }
+
+        const ensureEntries = (entries, template, min = 1) => {
+            let list = Array.isArray(entries) ? entries.map(entry => ({
+                ...template,
+                ...entry
+            })) : [];
+            while (list.length < min) {
+                list.push(foundry.utils.duplicate(template));
+            }
+            return list;
+        };
+
+        // Armas agora usam a mesma estrutura de ataques
+        if (!Array.isArray(this.system.equipamentosExa.armas)) {
+            this.system.equipamentosExa.armas = [];
+        }
+        this.system.equipamentosExa.armas = this.system.equipamentosExa.armas.map(arma => {
+            // Migrar de estrutura antiga (nome, descricao) para nova (ataque)
+            if (arma.descricao && !arma.atributo) {
+                return {
+                    nome: arma.nome || "",
+                    atributo: "",
+                    dadoBonus: 0,
+                    condicao: "",
+                    alcance: "",
+                    dano: "",
+                    efeito: arma.descricao || ""
+                };
+            }
+            return {
+                nome: arma?.nome ?? "",
+                atributo: arma?.atributo ?? "",
+                dadoBase: safeNumber(arma?.dadoBase, 1) || 1,
+                dadoBonus: safeNumber(arma?.dadoBonus, 0),
+                condicao: arma?.condicao ?? "",
+                alcance: arma?.alcance ?? "",
+                dano: arma?.dano ?? "",
+                efeito: arma?.efeito ?? ""
+            };
+        });
+        
+        // Blindagem agora é um número, não uma lista
+        if (this.system.equipamentosExa.blindagem === undefined || this.system.equipamentosExa.blindagem === null) {
+            this.system.equipamentosExa.blindagem = 0;
+        } else if (Array.isArray(this.system.equipamentosExa.blindagem)) {
+            // Migrar de array para número (pegar o primeiro valor ou 0)
+            this.system.equipamentosExa.blindagem = 0;
+        } else {
+            this.system.equipamentosExa.blindagem = safeNumber(this.system.equipamentosExa.blindagem);
+        }
+
+        if (!this.system.exa) {
+            this.system.exa = {
+                exalink: "",
+                sincronia: 0,
+                overdrive: 0,
+                mods: {
+                    reator: [{ descricao: "" }],
+                    modulos: [{ descricao: "" }]
+                }
+            };
+        }
+
+        this.system.exa.exalink = this.system.exa.exalink ?? "";
+        this.system.exa.sincronia = safeNumber(this.system.exa.sincronia);
+        this.system.exa.overdrive = safeNumber(this.system.exa.overdrive);
+
+        if (!this.system.exa.mods) {
+            this.system.exa.mods = { reator: [], modulos: [] };
+        }
+        this.system.exa.mods.reator = ensureEntries(
+            this.system.exa.mods.reator,
+            { descricao: "" },
+            1
+        );
+        this.system.exa.mods.modulos = ensureEntries(
+            this.system.exa.mods.modulos,
+            { descricao: "" },
+            1
+        );
     }
 }
 

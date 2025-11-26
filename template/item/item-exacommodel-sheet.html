@@ -3,7 +3,7 @@
     <header class="sheet-header">
         <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}" height="64" width="64"/>
         <div class="header-fields">
-            <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Nome da Armadura" {{#if isLocked}}disabled{{/if}}/></h1>
+            <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Nome do Modelo EXAcom" {{#if isLocked}}disabled{{/if}}/></h1>
         </div>
         <div class="header-actions">
             <button type="button" class="item-lock-toggle" title="{{#if isLocked}}Desbloquear para editar{{else}}Bloquear edição{{/if}}">
@@ -28,20 +28,24 @@
         {{!-- Details Tab --}}
         <div class="tab" data-group="primary" data-tab="details">
             <div class="form-group">
-                <label>Tipo:</label>
-                <input type="text" name="system.tipo" value="{{system.tipo}}" {{#if isLocked}}disabled{{/if}} />
+                <label>Modelo:</label>
+                <input type="text" name="system.modelo" value="{{system.modelo}}" placeholder="Nome do modelo" {{#if isLocked}}disabled{{/if}} />
             </div>
             <div class="form-group">
-                <label>Nível de Proteção:</label>
-                <input type="number" name="system.protecao" value="{{system.protecao}}" min="0" step="1" data-dtype="Number" {{#if isLocked}}disabled{{/if}} />
+                <label>Neuromotor:</label>
+                <input type="number" name="system.neuromotor" value="{{system.neuromotor}}" min="0" step="1" data-dtype="Number" {{#if isLocked}}disabled{{/if}} />
             </div>
             <div class="form-group">
-                <label>Peso (kg):</label>
-                <input type="number" name="system.peso" value="{{system.peso}}" min="0" step="0.1" data-dtype="Number" {{#if isLocked}}disabled{{/if}} />
+                <label>Sensorial:</label>
+                <input type="number" name="system.sensorial" value="{{system.sensorial}}" min="0" step="1" data-dtype="Number" {{#if isLocked}}disabled{{/if}} />
             </div>
             <div class="form-group">
-                <label>Especial:</label>
-                <textarea name="system.especial" rows="3" {{#if isLocked}}disabled{{/if}}>{{system.especial}}</textarea>
+                <label>Estrutural:</label>
+                <input type="number" name="system.estrutural" value="{{system.estrutural}}" min="0" step="1" data-dtype="Number" {{#if isLocked}}disabled{{/if}} />
+            </div>
+            <div class="form-group">
+                <label>Reator:</label>
+                <input type="text" name="system.reator" value="{{system.reator}}" placeholder="Tipo de reator" {{#if isLocked}}disabled{{/if}} />
             </div>
         </div>
     </section>

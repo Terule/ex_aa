@@ -29,9 +29,6 @@ export class RisingSteelRollDialog {
             return;
         }
 
-        const exapointsAtual = actor.system.exapoints?.atual || 0;
-        const exapointsMaximo = actor.system.exapoints?.maximo || 0;
-
         // Preparar lista de atributos para seleção
         const atributos = allowAttributeSelection ? {
             fisicos: {
@@ -51,7 +48,7 @@ export class RisingSteelRollDialog {
             }
         } : null;
 
-        // Preparar atributos do piloto vinculado (se houver)
+        // Preparar atributos e EXApoints do piloto vinculado (se houver)
         let linkedPilotAttributes = null;
         let linkedPilotExapoints = { atual: 0, maximo: 0 };
         if (linkedPilot) {
@@ -81,9 +78,6 @@ export class RisingSteelRollDialog {
         const htmlData = {
             baseDice: baseDice,
             bonusDice: 0,
-            exapointsGastar: 0,
-            exapointsDisponiveis: exapointsAtual,
-            exapointsMaximo: exapointsMaximo,
             label: label || rollName,
             allowAttributeSelection: allowAttributeSelection,
             atributos: atributos,
@@ -105,14 +99,11 @@ export class RisingSteelRollDialog {
                     const baseDiceInput = html.find("#base-dice")[0];
                     const bonusDiceInput = html.find("#bonus-dice")[0];
                     const totalDiceSpan = html.find("#total-dice");
-                    const exapointsGastarInput = html.find("#exapoints-gastar")[0];
-                    const exapointsDisponiveisSpan = html.find("#exapoints-disponiveis");
                     
                     // Função para atualizar total de dados
                     const updateTotalDice = () => {
                         const base = parseInt(baseDiceInput.value || 0);
                         const bonus = parseInt(bonusDiceInput.value || 0);
-                        const exa = parseInt(exapointsGastarInput.value || 0);
                         
                         // Obter bônus do atributo se permitido
                         let atributoBonus = 0;
@@ -121,16 +112,6 @@ export class RisingSteelRollDialog {
                             if (atributoSelect && atributoSelect.value) {
                                 const atributoPath = atributoSelect.value;
                                 atributoBonus = foundry.utils.getProperty(actor.system, atributoPath) || 0;
-                            }
-                        }
-                        
-                        // Obter bônus do atributo do piloto vinculado (se houver)
-                        let linkedPilotAtributoBonus = 0;
-                        if (linkedPilot) {
-                            const linkedPilotAtributoSelect = html.find("#linked-pilot-atributo-select")[0];
-                            if (linkedPilotAtributoSelect && linkedPilotAtributoSelect.value) {
-                                const atributoPath = linkedPilotAtributoSelect.value;
-                                linkedPilotAtributoBonus = foundry.utils.getProperty(linkedPilot.system, atributoPath) || 0;
                             }
                         }
                         
@@ -143,7 +124,7 @@ export class RisingSteelRollDialog {
                             }
                         }
                         
-                        const total = base + bonus + atributoBonus + linkedPilotAtributoBonus + exa + linkedPilotExa;
+                        const total = base + bonus + atributoBonus + exa + linkedPilotExa;
                         totalDiceSpan.text(total);
                     };
                     
@@ -160,7 +141,7 @@ export class RisingSteelRollDialog {
                         }
                     }
                     
-                    // Atualizar total quando atributo do piloto vinculado mudar
+                    // Atualizar total quando atributo ou EXApoints do piloto vinculado mudar
                     if (linkedPilot) {
                         const linkedPilotAtributoSelect = html.find("#linked-pilot-atributo-select");
                         if (linkedPilotAtributoSelect.length) {
@@ -191,28 +172,6 @@ export class RisingSteelRollDialog {
                         }
                     }
                     
-                    // Validar EXApoints quando mudar e atualizar total
-                    if (exapointsGastarInput && exapointsDisponiveisSpan.length) {
-                        $(exapointsGastarInput).on("input", function() {
-                            let valor = parseInt(this.value || 0);
-                            const maximo = parseInt(exapointsDisponiveisSpan.text() || 0);
-                            
-                            // Garantir que não ultrapasse o máximo
-                            if (valor > maximo) {
-                                valor = maximo;
-                                this.value = valor;
-                            }
-                            
-                            // Garantir que não seja negativo
-                            if (valor < 0) {
-                                valor = 0;
-                                this.value = valor;
-                            }
-                            
-                            // Atualizar total de dados
-                            updateTotalDice();
-                        });
-                    }
                 },
                 buttons: {
                     roll: {
@@ -220,7 +179,6 @@ export class RisingSteelRollDialog {
                         label: "Rolar",
                         callback: async (html) => {
                             const bonusDice = parseInt(html.find("#bonus-dice")[0].value) || 0;
-                            let exapointsUsar = parseInt(html.find("#exapoints-gastar")[0].value) || 0;
                             
                             // Obter atributo selecionado se permitido
                             let atributoBonus = 0;
@@ -232,7 +190,7 @@ export class RisingSteelRollDialog {
                                 }
                             }
                             
-                            // Obter atributo do piloto vinculado (se houver)
+                            // Obter atributo e EXApoints do piloto vinculado (se houver)
                             let linkedPilotAtributoBonus = 0;
                             let linkedPilotExapointsUsar = 0;
                             if (linkedPilot) {
@@ -255,20 +213,10 @@ export class RisingSteelRollDialog {
                                 }
                             }
                             
-                            // Validar EXApoints
-                            if (exapointsUsar > exapointsAtual) {
-                                ui.notifications.warn(`Você só tem ${exapointsAtual} EXApoints disponíveis!`);
-                                exapointsUsar = Math.min(exapointsUsar, exapointsAtual);
-                            }
-                            
-                            if (exapointsUsar < 0) {
-                                exapointsUsar = 0;
-                            }
-                            
-                            // Separar dados por tipo: normais (base + atributo), bonus, exapoints
+                            // Separar dados por tipo: normais (base + atributo + atributo piloto), bonus, exapoints piloto
                             const dadosNormais = baseDice + atributoBonus + linkedPilotAtributoBonus;
                             const dadosBonus = bonusDice;
-                            const dadosExapoints = exapointsUsar + linkedPilotExapointsUsar;
+                            const dadosExapoints = linkedPilotExapointsUsar;
                             const totalDice = dadosNormais + dadosBonus + dadosExapoints;
                             
                             if (dadosNormais <= 0) {
@@ -296,17 +244,7 @@ export class RisingSteelRollDialog {
                                 rollResults.push(...rollBonus.terms[0].results);
                             }
                             
-                            // Rolagem de dados EXApoints (companion)
-                            let resultadosExapointsCompanion = [];
-                            if (exapointsUsar > 0) {
-                                const rollExaCompanion = new Roll(`${exapointsUsar}d6`);
-                                await rollExaCompanion.roll();
-                                rolls.push({ roll: rollExaCompanion, type: "exapoint", count: exapointsUsar, source: "companion" });
-                                resultadosExapointsCompanion = rollExaCompanion.terms[0].results;
-                                rollResults.push(...resultadosExapointsCompanion);
-                            }
-                            
-                            // Rolagem de dados EXApoints (piloto)
+                            // Rolagem de dados EXApoints (piloto vinculado)
                             let resultadosExapointsPiloto = [];
                             if (linkedPilotExapointsUsar > 0) {
                                 const rollExaPiloto = new Roll(`${linkedPilotExapointsUsar}d6`);
@@ -324,14 +262,14 @@ export class RisingSteelRollDialog {
                             const operatorTermClass = CONFIG.Dice?.termTypes?.OperatorTerm ?? foundry?.dice?.terms?.OperatorTerm;
                             const clonedTerms = [];
                             
-                            rolls.forEach((rollData, index) => {
+                            rolls.forEach((rollData, rollIndex) => {
                                 const sourceTerm = rollData.roll?.terms?.[0];
                                 if (sourceTerm) {
                                     const clone = sourceTerm.clone ? sourceTerm.clone() : sourceTerm;
                                     clonedTerms.push(clone);
                                 }
                                 
-                                if (index < rolls.length - 1 && operatorTermClass) {
+                                if (rollIndex < rolls.length - 1 && operatorTermClass) {
                                     const operatorTerm = new operatorTermClass({ operator: "+" });
                                     operatorTerm._evaluated = true;
                                     operatorTerm._total = 0;
@@ -344,11 +282,14 @@ export class RisingSteelRollDialog {
                             combinedRoll._total = rollResults.reduce((sum, r) => sum + (r.result || r.total || 0), 0);
                             
                             // Separar resultados por tipo para processamento
-                            let index = 0;
-                            const resultadosNormais = rollResults.slice(index, index + dadosNormais);
-                            index += dadosNormais;
-                            const resultadosBonus = rollResults.slice(index, index + dadosBonus);
-                            index += dadosBonus;
+                            // Nota: resultadosExapointsPiloto já foi definido acima durante a rolagem (linha 248)
+                            let resultIndex = 0;
+                            const resultadosNormais = rollResults.slice(resultIndex, resultIndex + dadosNormais);
+                            resultIndex += dadosNormais;
+                            const resultadosBonus = rollResults.slice(resultIndex, resultIndex + dadosBonus);
+                            resultIndex += dadosBonus;
+                            // resultadosExapointsPiloto já contém os resultados dos dados de EXApoints do piloto
+                            // Não redeclarar aqui para evitar erro de variável já declarada
                             
                             // Contar sucessos (6) em todos os dados
                             const sucessos = rollResults.filter(d => (d.result ?? d.total) === 6).length;
@@ -356,28 +297,8 @@ export class RisingSteelRollDialog {
                             // Contar falhas (1) apenas nos dados normais
                             const unsNormais = resultadosNormais.filter(d => (d.result ?? d.total) === 1).length;
                             
-                            // Contar quantos 1s caíram nos dados de EXApoints do companion (isso gasta EXApoints)
-                            const unsExapointsCompanion = resultadosExapointsCompanion.filter(d => (d.result ?? d.total) === 1).length;
-                            
                             // Contar quantos 1s caíram nos dados de EXApoints do piloto (isso gasta EXApoints do piloto)
                             const unsExapointsPiloto = resultadosExapointsPiloto.filter(d => (d.result ?? d.total) === 1).length;
-                            
-                            // Gastar EXApoints do companion: cada 1 nos dados de EXApoints consome 1 EXApoint
-                            let exapointsGastos = 0;
-                            
-                            if (exapointsUsar > 0) {
-                                // Gastar EXApoints baseado nos 1s que caíram nos dados de EXApoints
-                                exapointsGastos = unsExapointsCompanion;
-                                
-                                // Atualizar EXApoints gastos no actor
-                                const novosGastos = (actor.system.exapoints.gastos || 0) + exapointsGastos;
-                                const novoAtual = Math.max(0, exapointsAtual - exapointsGastos);
-                                
-                                await actor.update({
-                                    "system.exapoints.gastos": novosGastos,
-                                    "system.exapoints.atual": novoAtual
-                                });
-                            }
                             
                             // Gastar EXApoints do piloto vinculado (se houver)
                             if (linkedPilot && linkedPilotExapointsUsar > 0) {
@@ -405,9 +326,6 @@ export class RisingSteelRollDialog {
                             if (linkedPilotAtributoBonus > 0) {
                                 flavor += ` | <strong>Dados do Atributo do Piloto (${linkedPilot.name}):</strong> ${linkedPilotAtributoBonus}`;
                             }
-                            if (exapointsUsar > 0) {
-                                flavor += ` | <strong>Dados EXApoints:</strong> ${exapointsUsar}`;
-                            }
                             if (linkedPilotExapointsUsar > 0) {
                                 flavor += ` | <strong>Dados EXApoints do Piloto (${linkedPilot.name}):</strong> ${linkedPilotExapointsUsar}`;
                             }
@@ -420,18 +338,6 @@ export class RisingSteelRollDialog {
                             flavor += `<div style="margin-top: 5px;">`;
                             flavor += `<strong>Sucessos (6):</strong> ${sucessos}`;
                             flavor += `</div>`;
-                            
-                            // Informações sobre EXApoints
-                            if (exapointsUsar > 0) {
-                                flavor += `<div style="margin-top: 5px; color: #4a9eff;">`;
-                                flavor += `<strong>EXApoints usados:</strong> ${exapointsUsar} dados`;
-                                if (unsExapointsCompanion > 0) {
-                                    flavor += ` | <strong>Falhas (1):</strong> ${unsExapointsCompanion} | <strong>EXApoints gastos:</strong> ${exapointsGastos}`;
-                                } else {
-                                    flavor += ` | <strong>Falhas (1):</strong> 0 | <strong>EXApoints gastos:</strong> 0`;
-                                }
-                                flavor += `</div>`;
-                            }
                             
                             // Informações sobre EXApoints do piloto vinculado
                             if (linkedPilot && linkedPilotExapointsUsar > 0) {
@@ -452,9 +358,6 @@ export class RisingSteelRollDialog {
                             }
                             if (dadosBonus > 0) {
                                 diceInfo.push({ type: "bonus", count: dadosBonus, results: resultadosBonus });
-                            }
-                            if (exapointsUsar > 0) {
-                                diceInfo.push({ type: "exapoint", count: exapointsUsar, results: resultadosExapointsCompanion, source: "companion" });
                             }
                             if (linkedPilotExapointsUsar > 0) {
                                 diceInfo.push({ type: "exapoint", count: linkedPilotExapointsUsar, results: resultadosExapointsPiloto, source: "pilot" });

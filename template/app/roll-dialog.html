@@ -57,18 +57,16 @@
     <input type="number" id="bonus-dice" value="{{bonusDice}}" min="0" />
   </div>
   
+  {{#if linkedPilot}}
   <div class="form-group">
-    <label>EXApoints para usar (opcional):</label>
-    <input type="number" id="exapoints-gastar" value="0" min="0" max="{{exapointsDisponiveis}}" step="1" />
+    <label style="font-weight: bold; color: #5a2b91;">EXApoints do Piloto ({{linkedPilot.name}}) - Opcional:</label>
+    <input type="number" id="linked-pilot-exapoints-gastar" value="0" min="0" max="{{linkedPilot.exapoints.atual}}" step="1" />
     <div class="exapoints-info">
-      <small>EXApoints disponíveis: <span id="exapoints-disponiveis">{{exapointsDisponiveis}}</span> / {{exapointsMaximo}}</small>
-      {{#if linkedPilot}}
-      <small style="display: block; margin-top: 3px; color: #5a2b91; font-weight: bold;">EXApoints do Piloto ({{linkedPilot.name}}): <span id="linked-pilot-exapoints-disponiveis">{{linkedPilot.exapoints.atual}}</span> / {{linkedPilot.exapoints.maximo}}</small>
-      <input type="number" id="linked-pilot-exapoints-gastar" value="0" min="0" max="{{linkedPilot.exapoints.atual}}" step="1" style="margin-top: 5px;" placeholder="EXApoints do piloto (opcional)" />
-      {{/if}}
+      <small style="display: block; margin-top: 3px; color: #5a2b91; font-weight: bold;">EXApoints disponíveis: <span id="linked-pilot-exapoints-disponiveis">{{linkedPilot.exapoints.atual}}</span> / {{linkedPilot.exapoints.maximo}}</small>
       <small style="display: block; margin-top: 3px; color: #666;">Cada EXApoint usado adiciona 1 dado extra. Se esse dado cair 1, você perde 1 EXApoint.</small>
     </div>
   </div>
+  {{/if}}
   
   <div class="form-group">
     <strong>Total de dados: <span id="total-dice">{{baseDice}}</span></strong>

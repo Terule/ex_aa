@@ -5,6 +5,7 @@ import { RisingSteelActor } from "./actor/actor.js";
 import { RisingSteelPilotSheet } from "./actor/pilot-sheet.js";
 import { RisingSteelCreatureSheet } from "./actor/creature-sheet.js";
 import { RisingSteelCompanionSheet } from "./actor/companion-sheet.js";
+import { RisingSteelExacomSheet } from "./actor/exacom-sheet.js";
 import { RisingSteelItem } from "./item/item.js";
 import { RisingSteelItemSheet } from "./item/item-sheet.js";
 import { RisingSteelRollDialog } from "./app/roll-dialog.js";
@@ -75,11 +76,12 @@ Hooks.once("init", async function () {
     CONFIG.Item.documentClass = RisingSteelItem;
     
     // Configurar tipos de Actor
-    CONFIG.Actor.types = ["piloto", "criatura", "companion"];
+    CONFIG.Actor.types = ["piloto", "criatura", "companion", "exacom"];
     CONFIG.Actor.typeLabels = CONFIG.Actor.typeLabels || {};
     CONFIG.Actor.typeLabels.piloto = "Piloto";
     CONFIG.Actor.typeLabels.criatura = "Criatura";
     CONFIG.Actor.typeLabels.companion = "Companion";
+    CONFIG.Actor.typeLabels.exacom = "EXAcom";
     CONFIG.Actor.defaultType = "piloto";
     
     // Configurar labels para tipos de itens
@@ -87,21 +89,17 @@ Hooks.once("init", async function () {
     CONFIG.Item.typeLabels.armadura = "Armadura";
     CONFIG.Item.typeLabels.arma = "Arma";
     CONFIG.Item.typeLabels.equipamento = "Equipamento";
+    CONFIG.Item.typeLabels.exacomModel = "Modelo EXAcom";
+    CONFIG.Item.typeLabels.blindagemExacom = "Blindagem EXAcom";
     
-    // Modificar CONFIG.Item.types para ter apenas os tipos relevantes
+    // Modificar CONFIG.Item.types para ter apenas os tipos relevantes do sistema
     // Isso afeta todos os lugares onde os tipos são listados, incluindo compendiums
     // IMPORTANTE: Isso deve ser feito ANTES de qualquer outro sistema carregar
-    CONFIG.Item.types = ["armadura", "arma", "equipamento"];
-    
-    // Sobrescrever o getter se existir para garantir que sempre retorne os tipos corretos
-    if (CONFIG.Item.types && Array.isArray(CONFIG.Item.types)) {
-        // Forçar a atualização imediata
-        Object.freeze(CONFIG.Item.types);
-        CONFIG.Item.types = ["armadura", "arma", "equipamento"];
-    }
+    const systemItemTypes = ["armadura", "arma", "equipamento", "exacomModel", "blindagemExacom"];
+    CONFIG.Item.types = [...systemItemTypes];
     
     // Salvar tipos originais de itens (caso precise restaurar)
-    const originalItemTypes = ["item", "feature", "spell", "armadura", "arma", "equipamento"];
+    const originalItemTypes = ["item", "feature", "spell", ...systemItemTypes];
     
     // Log packs disponíveis para debug
     Hooks.once("ready", async () => {
@@ -126,7 +124,8 @@ Hooks.once("init", async function () {
         }
         
         // Garantir que CONFIG.Item.types está correto
-        CONFIG.Item.types = ["armadura", "arma", "equipamento"];
+        // Mantemos também o tipo "exacomModel" para permitir criação de modelos de EXAcom
+        CONFIG.Item.types = ["armadura", "arma", "equipamento", "exacomModel", "blindagemExacom"];
         
         // Registrar hook renderDialog aqui para garantir que seja executado
         console.log("[Rising Steel] Registrando hook renderDialog no ready");
@@ -144,6 +143,10 @@ Hooks.once("init", async function () {
     });
     FoundryCompatibility.registerActorSheet("rising-steel", RisingSteelCompanionSheet, {
         types: ["companion"],
+        makeDefault: true
+    });
+    FoundryCompatibility.registerActorSheet("rising-steel", RisingSteelExacomSheet, {
+        types: ["exacom"],
         makeDefault: true
     });
     FoundryCompatibility.unregisterItemSheet("core", FoundryCompatibility.getDefaultItemSheet());
@@ -185,6 +188,64 @@ Hooks.once("init", async function () {
         return isNaN(num) ? 0 : num;
     });
 
+});
+
+// Hook para garantir que os atributos do template.json sejam aplicados quando um item é criado
+// Usamos uma abordagem direta sem depender da API deprecada
+Hooks.on("preCreateItem", (item, data, options, userId) => {
+    // Apenas processar se o item não tiver dados do sistema ou se estiver faltando atributos essenciais
+    if (!data.system || Object.keys(data.system).length === 0 || 
+        (data.type === "armadura" && data.system.tipo === undefined) ||
+        (data.type === "arma" && data.system.tipo === undefined) ||
+        (data.type === "equipamento" && data.system.tipo === undefined) ||
+        (data.type === "exacomModel" && data.system.modelo === undefined)) {
+        
+        const itemType = data.type;
+        
+        // Inicializar system se não existir
+        if (!data.system) {
+            data.system = {};
+        }
+        
+        // Definir atributos baseados no tipo de item diretamente
+        // Isso evita usar a API deprecada game.system.template
+        if (itemType === "armadura") {
+            if (data.system.tipo === undefined) data.system.tipo = "";
+            if (data.system.protecao === undefined) data.system.protecao = 0;
+            if (data.system.peso === undefined) data.system.peso = 0;
+            if (data.system.descricao === undefined) data.system.descricao = "";
+            if (data.system.especial === undefined) data.system.especial = "";
+            if (data.system.description === undefined) data.system.description = "";
+        } else if (itemType === "arma") {
+            if (data.system.tipo === undefined) data.system.tipo = "";
+            if (data.system.dano === undefined) data.system.dano = 0;
+            if (data.system.alcance === undefined) data.system.alcance = "";
+            if (data.system.bonus === undefined) data.system.bonus = 0;
+            if (data.system.descricao === undefined) data.system.descricao = "";
+            if (data.system.description === undefined) data.system.description = "";
+        } else if (itemType === "equipamento") {
+            if (data.system.tipo === undefined) data.system.tipo = "";
+            if (data.system.efeito === undefined) data.system.efeito = "";
+            if (data.system.peso === undefined) data.system.peso = 0;
+            if (data.system.descricao === undefined) data.system.descricao = "";
+            if (data.system.description === undefined) data.system.description = "";
+        } else if (itemType === "exacomModel") {
+            if (data.system.modelo === undefined) data.system.modelo = "";
+            if (data.system.neuromotor === undefined) data.system.neuromotor = 0;
+            if (data.system.sensorial === undefined) data.system.sensorial = 0;
+            if (data.system.estrutural === undefined) data.system.estrutural = 0;
+            if (data.system.reator === undefined) data.system.reator = "";
+            if (data.system.description === undefined) data.system.description = "";
+        } else if (itemType === "blindagemExacom") {
+            if (data.system.tipo === undefined) data.system.tipo = "";
+            if (data.system.blindagem === undefined) data.system.blindagem = 0;
+            if (data.system.descricao === undefined) data.system.descricao = "";
+            if (data.system.especial === undefined) data.system.especial = "";
+            if (data.system.description === undefined) data.system.description = "";
+        }
+        
+        console.log(`[Rising Steel] Atributos inicializados para item tipo ${itemType}:`, data.system);
+    }
 });
 
 Hooks.on("renderChatMessage", (message, html) => {
@@ -254,6 +315,7 @@ Hooks.on("renderCompendiumDirectory", (app, html, data) => {
         const isArmaduras = packId.includes("armaduras");
         const isArmas = packId.includes("armas");
         const isEquipamentos = packId.includes("equipamentos");
+        const isExacom = packId.includes("exacom");
 
         // Carregar os documentos completos para obter os dados do system
         const pack = game.packs.get(packId);
@@ -276,6 +338,8 @@ Hooks.on("renderCompendiumDirectory", (app, html, data) => {
                 headers = ['Nome', 'Tipo', 'Dano', 'Alcance', 'Peso', 'Especial'];
             } else if (isEquipamentos) {
                 headers = ['Nome', 'Tipo', 'Efeito', 'Peso'];
+            } else if (isExacom) {
+                headers = ['Modelo', 'Neuromotor', 'Sensorial', 'Estrutural', 'Reator'];
             }
 
             const headerRow = $('<tr></tr>');
@@ -307,6 +371,12 @@ Hooks.on("renderCompendiumDirectory", (app, html, data) => {
                     row.append($(`<td>${doc.system?.tipo || '-'}</td>`));
                     row.append($(`<td><small>${doc.system?.efeito || '-'}</small></td>`));
                     row.append($(`<td>${doc.system?.peso || '-'} kg</td>`));
+                } else if (isExacom) {
+                    row.append($(`<td><strong>${doc.name}</strong></td>`));
+                    row.append($(`<td>${doc.system?.neuromotor ?? '-'}</td>`));
+                    row.append($(`<td>${doc.system?.sensorial ?? '-'}</td>`));
+                    row.append($(`<td>${doc.system?.estrutural ?? '-'}</td>`));
+                    row.append($(`<td><small>${doc.system?.reator || '-'}</small></td>`));
                 }
 
                 // Tornar a linha clicável para abrir o item
@@ -364,17 +434,17 @@ Hooks.on("renderCompendiumDirectory", (app, html, data) => {
 Hooks.on("renderCompendium", (app, html, data) => {
     const packId = app.collection?.metadata?.id || "";
     const isRisingSteel = packId.includes("rising-steel");
-    const isTargetPack = packId.includes("armaduras") || packId.includes("armas") || packId.includes("equipamentos");
+    const isTargetPack = packId.includes("armaduras") || packId.includes("armas") || packId.includes("equipamentos") || packId.includes("exacom");
     
     if (isRisingSteel && isTargetPack) {
         // Modificar CONFIG.Item.types para ter apenas os tipos relevantes
         // Isso afeta o diálogo de criação
-        CONFIG.Item.types = ["armadura", "arma", "equipamento"];
+        CONFIG.Item.types = ["armadura", "arma", "equipamento", "exacomModel"];
         
         // Interceptar o botão de criar ANTES do diálogo ser criado
         html.find('button[data-action="create"]').off('click.rising-steel-types').on('click.rising-steel-types', (event) => {
             // Garantir tipos ANTES do template ser renderizado
-            CONFIG.Item.types = ["armadura", "arma", "equipamento"];
+            CONFIG.Item.types = ["armadura", "arma", "equipamento", "exacomModel"];
             console.log("[Rising Steel] CONFIG.Item.types definido antes do diálogo:", CONFIG.Item.types);
         });
     }
@@ -397,7 +467,7 @@ Hooks.on("preRenderDialog", (app, data, options) => {
     // Verificar se o diálogo tem um pack associado
     let packId = app.options?.pack || options?.pack || "";
     let isRisingSteel = packId.includes("rising-steel");
-    let isTargetPack = packId.includes("armaduras") || packId.includes("armas") || packId.includes("equipamentos");
+    let isTargetPack = packId.includes("armaduras") || packId.includes("armas") || packId.includes("equipamentos") || packId.includes("exacom");
     
     // Se não encontrou pelo packId, verificar nas janelas abertas
     if (!isRisingSteel || !isTargetPack) {
@@ -406,7 +476,7 @@ Hooks.on("preRenderDialog", (app, data, options) => {
             if (window.collection && window.collection.metadata) {
                 const wPackId = window.collection.metadata.id || "";
                 if (wPackId.includes("rising-steel") && 
-                    (wPackId.includes("armaduras") || wPackId.includes("armas") || wPackId.includes("equipamentos"))) {
+                    (wPackId.includes("armaduras") || wPackId.includes("armas") || wPackId.includes("equipamentos") || wPackId.includes("exacom"))) {
                     isRisingSteel = true;
                     isTargetPack = true;
                     packId = wPackId;
@@ -419,12 +489,13 @@ Hooks.on("preRenderDialog", (app, data, options) => {
     // Aplicar filtro APENAS se for um diálogo de criação de item OU se for um compendium do Rising Steel de itens
     if (isCreateItemDialog || (isRisingSteel && isTargetPack)) {
         // Garantir que CONFIG.Item.types está correto ANTES do template ser renderizado
-        CONFIG.Item.types = ["armadura", "arma", "equipamento"];
+        CONFIG.Item.types = ["armadura", "arma", "equipamento", "exacomModel", "blindagemExacom"];
         console.log("[Rising Steel] preRenderDialog - CONFIG.Item.types definido:", CONFIG.Item.types);
         
         // Se o data tem tipos, filtrar também
         if (data && data.types) {
-            data.types = data.types.filter(t => ["armadura", "arma", "equipamento"].includes(t));
+            const allowed = ["armadura", "arma", "equipamento", "exacomModel", "blindagemExacom"];
+            data.types = data.types.filter(t => allowed.includes(t));
         }
     }
 });
@@ -470,7 +541,7 @@ Hooks.on("renderDialog", (app, html, data) => {
     // Verificar se o diálogo tem um pack associado
     let packId = app.options?.pack || app.data?.pack || "";
     let isRisingSteel = packId.includes("rising-steel");
-    let isTargetPack = packId.includes("armaduras") || packId.includes("armas") || packId.includes("equipamentos");
+    let isTargetPack = packId.includes("armaduras") || packId.includes("armas") || packId.includes("equipamentos") || packId.includes("exacom") || packId.includes("blindagemExacom");
     
     // Se não encontrou pelo packId, verificar nas janelas abertas
     if (!isRisingSteel || !isTargetPack) {
@@ -479,7 +550,7 @@ Hooks.on("renderDialog", (app, html, data) => {
             if (window.collection && window.collection.metadata) {
                 const wPackId = window.collection.metadata.id || "";
                 if (wPackId.includes("rising-steel") && 
-                    (wPackId.includes("armaduras") || wPackId.includes("armas") || wPackId.includes("equipamentos"))) {
+                    (wPackId.includes("armaduras") || wPackId.includes("armas") || wPackId.includes("equipamentos") || wPackId.includes("exacom") || wPackId.includes("blindagemExacom"))) {
                     isRisingSteel = true;
                     isTargetPack = true;
                     packId = wPackId;
@@ -492,10 +563,10 @@ Hooks.on("renderDialog", (app, html, data) => {
     // Aplicar filtro APENAS se for um diálogo de criação de item OU se for um compendium do Rising Steel de itens
     if (isCreateItemDialog || (isRisingSteel && isTargetPack)) {
         // Garantir que CONFIG.Item.types está correto
-        CONFIG.Item.types = ["armadura", "arma", "equipamento"];
+        CONFIG.Item.types = ["armadura", "arma", "equipamento", "exacomModel", "blindagemExacom"];
         
         // Filtrar o select usando MutationObserver para garantir que funcione mesmo com opções dinâmicas
-        const allowedTypes = ["armadura", "arma", "equipamento"];
+        const allowedTypes = ["armadura", "arma", "equipamento", "exacomModel", "blindagemExacom"];
         
         const filterOptions = () => {
             let changed = false;
@@ -560,30 +631,19 @@ async function ensurePackFilled(packId, importFn, label) {
 }
 
 /**
- * Gera um ID único baseado no nome do item
- * Usa uma função hash simples para garantir IDs consistentes
- * @param {string} name - Nome do item
+ * Gera um ID único no formato exigido pelo Foundry v13:
+ * 16 caracteres alfanuméricos (sem hífens).
+ * @param {string} name - Nome do item (não é usado diretamente, mas mantido por compatibilidade)
  * @returns {string} - ID único gerado
  */
 function generateItemId(name) {
-    // Normalizar o nome: remover acentos, espaços, caracteres especiais
-    let normalized = name.toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '') // Remove acentos
-        .replace(/[^a-z0-9]/g, '') // Remove caracteres não alfanuméricos
-        .substring(0, 20); // Limita a 20 caracteres
-    
-    // Criar um hash simples do nome completo para garantir unicidade
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-        const char = name.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
+    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+    let id = "";
+    for (let i = 0; i < 16; i++) {
+        const idx = Math.floor(Math.random() * chars.length);
+        id += chars[idx];
     }
-    
-    // Combinar nome normalizado com hash para garantir unicidade
-    const hashStr = Math.abs(hash).toString(36).substring(0, 8);
-    return `${normalized}-${hashStr}`;
+    return id;
 }
 
 /**
@@ -799,6 +859,111 @@ window.RisingSteel.importArmas = async function() {
     }
 };
 
+window.RisingSteel.importExacomModels = async function() {
+    const modelosData = [
+        {
+            name: "Hawnkins",
+            type: "exacomModel",
+            img: "icons/svg/item-bag.svg",
+            system: {
+                modelo: "Hawnkins",
+                neuromotor: 2,
+                sensorial: 2,
+                estrutural: 4,
+                reator: "1"
+            },
+            flags: {},
+            effects: []
+        },
+        {
+            name: "Currie",
+            type: "exacomModel",
+            img: "icons/svg/item-bag.svg",
+            system: {
+                modelo: "Currie",
+                neuromotor: 2,
+                sensorial: 4,
+                estrutural: 1,
+                reator: "2"
+            },
+            flags: {},
+            effects: []
+        },
+        {
+            name: "Oppenheimer",
+            type: "exacomModel",
+            img: "icons/svg/item-bag.svg",
+            system: {
+                modelo: "Oppenheimer",
+                neuromotor: 4,
+                sensorial: 2,
+                estrutural: 1,
+                reator: "2"
+            },
+            flags: {},
+            effects: []
+        },
+        {
+            name: "Darwin",
+            type: "exacomModel",
+            img: "icons/svg/item-bag.svg",
+            system: {
+                modelo: "Darwin",
+                neuromotor: 1,
+                sensorial: 2,
+                estrutural: 2,
+                reator: "4"
+            },
+            flags: {},
+            effects: []
+        }
+    ];
+
+    const pack = game.packs.get("rising-steel.exacom");
+    if (!pack) {
+        ui.notifications.error("Pack de modelos EXAcom não encontrado!");
+        return;
+    }
+
+    try {
+        if (pack.locked) {
+            await pack.configure({ locked: false });
+        }
+
+        try {
+            const existingItems = await pack.getDocuments();
+            if (existingItems && existingItems.length > 0) {
+                const validItemIds = existingItems
+                    .filter(item => item && (item.id || item._id))
+                    .map(item => item.id || item._id);
+
+                if (validItemIds.length > 0) {
+                    await Item.deleteDocuments(validItemIds, { pack: pack.collection });
+                    console.log(`[Rising Steel] Removidos ${validItemIds.length} modelos EXAcom antigos`);
+                }
+            }
+        } catch (error) {
+            console.warn("[Rising Steel] Erro ao remover modelos EXAcom antigos (continuando mesmo assim):", error);
+        }
+
+        const modelosDataWithIds = addIdsToItems(modelosData);
+
+        const created = await Item.createDocuments(modelosDataWithIds, {
+            pack: pack.collection
+        });
+
+        await pack.configure({ locked: true });
+
+        ui.notifications.info(`Importados ${created.length} modelos EXAcom com sucesso!`);
+        console.log(`[Rising Steel] Importados ${created.length} modelos EXAcom`);
+
+        await pack.getIndex({ force: true });
+    } catch (error) {
+        console.error("[Rising Steel] Erro ao importar modelos EXAcom:", error);
+        ui.notifications.error("Erro ao importar modelos EXAcom. Verifique o console.");
+    }
+};
+
 /**
  * Recria todos os compendiums (armaduras, equipamentos e armas) com IDs explícitos
  * Esta função limpa e recria todos os packs do zero
@@ -821,12 +986,55 @@ window.RisingSteel.recriarTodosPacks = async function() {
         
         // Recriar armas
         await window.RisingSteel.importArmas();
+
+        // Recriar modelos EXAcom
+        await window.RisingSteel.importExacomModels();
+        await window.RisingSteel.importBlindagensExacom();
         
         ui.notifications.info("Todos os packs foram recriados com sucesso! Recarregue a página para aplicar as mudanças.");
         console.log("[Rising Steel] Todos os packs foram recriados com IDs explícitos!");
     } catch (error) {
         console.error("[Rising Steel] Erro ao recriar packs:", error);
         ui.notifications.error("Erro ao recriar packs. Verifique o console.");
+    }
+};
+
+window.RisingSteel.importBlindagensExacom = async function() {
+    const blindagensData = [
+        {"name":"Blindagem EXAcom 1","type":"blindagemExacom","img":"icons/svg/shield.svg","system":{"tipo":"Blindagem Básica","blindagem":1,"descricao":"Blindagem básica para EXAcom. Oferece proteção mínima contra danos.","especial":""},"flags":{},"effects":[]},
+        {"name":"Blindagem EXAcom 2","type":"blindagemExacom","img":"icons/svg/shield.svg","system":{"tipo":"Blindagem Intermediária","blindagem":2,"descricao":"Blindagem intermediária para EXAcom. Oferece proteção moderada contra danos.","especial":""},"flags":{},"effects":[]},
+        {"name":"Blindagem EXAcom 3","type":"blindagemExacom","img":"icons/svg/shield.svg","system":{"tipo":"Blindagem Avançada","blindagem":3,"descricao":"Blindagem avançada para EXAcom. Oferece proteção superior contra danos.","especial":""},"flags":{},"effects":[]}
+    ];
+    
+    const pack = game.packs.get("rising-steel.blindagemExacom");
+    if (!pack) {
+        ui.notifications.error("Pack de blindagens EXAcom não encontrado!");
+        return;
+    }
+    
+    try {
+        // Desbloquear o pack se estiver bloqueado
+        if (pack.locked) {
+            await pack.configure({ locked: false });
+        }
+        
+        // Limpar itens existentes
+        const existingItems = await pack.getDocuments();
+        if (existingItems.length > 0) {
+            await Item.deleteDocuments(existingItems.map(i => i.id), { pack: pack.collection });
+        }
+        
+        // Adicionar IDs aos itens
+        const itemsWithIds = addIdsToItems(blindagensData);
+        
+        // Criar os itens no pack
+        await Item.createDocuments(itemsWithIds, { pack: pack.collection });
+        
+        ui.notifications.info(`Blindagens EXAcom importadas com sucesso! (${itemsWithIds.length} itens)`);
+        console.log("[Rising Steel] Blindagens EXAcom importadas:", itemsWithIds);
+    } catch (error) {
+        console.error("[Rising Steel] Erro ao importar blindagens EXAcom:", error);
+        ui.notifications.error("Erro ao importar blindagens EXAcom. Verifique o console.");
     }
 };
 

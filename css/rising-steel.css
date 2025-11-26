@@ -234,6 +234,253 @@
   grid-column-end: span 12;
 }
 
+/* EXAcom sheet */
+.pilot-sheet .exacom-link-card {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(122, 60, 194, 0.2);
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+.pilot-sheet .exacom-link-card .form-group {
+  flex: 1;
+  margin: 0;
+}
+
+.pilot-sheet .exacom-link-card button {
+  height: 38px;
+  border: 1px solid rgba(122, 60, 194, 0.4);
+  border-radius: 4px;
+  background: rgba(122, 60, 194, 0.08);
+  padding: 0 1rem;
+}
+
+.pilot-sheet .exacom-inline-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.pilot-sheet .exacom-inline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.pilot-sheet .exacom-inline-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: #4b3c63;
+}
+
+.pilot-sheet .exacom-exa-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.pilot-sheet .exacom-list {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin: 0.25rem 0 0;
+}
+
+.exacom-sheet {
+  font-family: "Roboto", sans-serif;
+}
+
+.exacom-header {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  align-items: flex-start;
+}
+
+.exacom-header .profile-img {
+  border-radius: 6px;
+  border: 2px solid rgba(122, 60, 194, 0.4);
+}
+
+.exacom-header .header-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.exacom-header label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #4b3c63;
+  letter-spacing: 0.06em;
+}
+
+.exacom-header input {
+  width: 100%;
+  border: 1px solid #c4bdd6;
+  border-radius: 4px;
+  padding: 0.35rem 0.5rem;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.exacom-name-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 180px;
+  gap: 1rem;
+  align-items: end;
+}
+
+.exacom-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.exacom-tabs {
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(122, 60, 194, 0.2);
+}
+
+.exacom-tabs .item {
+  padding: 0.5rem 0.75rem;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+
+.exacom-body .tab {
+  display: none;
+}
+
+.exacom-body .tab.active {
+  display: block;
+}
+
+.exacom-body .card {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(122, 60, 194, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.exacom-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.triple-grid,
+.dual-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.triple-grid {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.dual-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.exacom-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+
+.exacom-table th,
+.exacom-table td {
+  border: 1px solid rgba(122, 60, 194, 0.15);
+  padding: 0.4rem;
+  vertical-align: top;
+}
+
+.exacom-table thead {
+  background: rgba(122, 60, 194, 0.08);
+}
+
+.exacom-table textarea,
+.exacom-table input {
+  width: 100%;
+  border: 1px solid #c4bdd6;
+  border-radius: 4px;
+  padding: 0.35rem;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.equipamentos-card .equipamento-bloco + .equipamento-bloco,
+.exa-mods-card .equipamento-bloco + .equipamento-bloco {
+  margin-top: 1rem;
+}
+
+.equipamento-bloco header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.equipamento-bloco header button,
+.exacom-row-remove {
+  border: 1px solid rgba(122, 60, 194, 0.4);
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  background: rgba(122, 60, 194, 0.08);
+  cursor: pointer;
+}
+
+.equipamento-bloco header button:hover,
+.exacom-row-remove:hover {
+  background: rgba(122, 60, 194, 0.18);
+}
+
+.exacom-table .acoes {
+  width: 48px;
+  text-align: center;
+}
+
+.empty-row {
+  text-align: center;
+  font-style: italic;
+  color: #6f6287;
+  padding: 0.75rem 0;
+}
+
+.exacom-header .linked-input {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.exacom-header .linked-input button,
+.pilot-sheet .exacom-link-card button {
+  border: 1px solid rgba(122, 60, 194, 0.4);
+  border-radius: 4px;
+  padding: 0.25rem 0.75rem;
+  background: rgba(122, 60, 194, 0.08);
+  cursor: pointer;
+}
+
+.exacom-header .linked-input input[readonly] {
+  background: #dcd7e8;
+  color: #4a3f66;
+}
+
+.exacom-header .linked-input button:disabled,
+.pilot-sheet .exacom-link-card button:disabled,
+.pilot-sheet .open-exacom-sheet:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .flex-group-center,
 .flex-group-left,
 .flex-group-right {
