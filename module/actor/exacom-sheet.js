@@ -633,6 +633,7 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
         const arma = index !== undefined ? foundry.utils.duplicate(armas[index]) : {
             nome: "",
             atributo: "",
+            dadoBase: 0,
             dadoBonus: 0,
             condicao: "",
             alcance: "",
@@ -658,6 +659,7 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
                     callback: async (html) => {
                         const nome = html.find("#ataque-nome").val().trim();
                         const atributo = html.find("#ataque-atributo").val();
+                        const dadoBase = parseInt(html.find("#ataque-dado-base").val()) || 0;
                         const dadoBonus = parseInt(html.find("#ataque-dado-bonus").val()) || 0;
                         const condicao = html.find("#ataque-condicao").val().trim();
                         const alcance = html.find("#ataque-alcance").val().trim();
@@ -676,6 +678,7 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
                         const novaArma = {
                             nome,
                             atributo,
+                            dadoBase: Math.max(0, dadoBase),
                             dadoBonus: Math.max(0, dadoBonus),
                             condicao,
                             alcance,
@@ -726,8 +729,9 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
             return;
         }
 
+        const dadoBase = Math.max(0, this._normalizeNumber(arma.dadoBase) || 0);
         const dadoBonus = Math.max(0, this._normalizeNumber(arma.dadoBonus) || 0);
-        const totalDados = atributoValor + dadoBonus;
+        const totalDados = atributoValor + dadoBase + dadoBonus;
 
         // Obter piloto vinculado se houver
         let linkedPilot = null;

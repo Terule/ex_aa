@@ -48,6 +48,15 @@ export class RisingSteelRollDialog {
             }
         } : null;
 
+        // Preparar EXApoints do próprio piloto (se o actor for um piloto)
+        let actorExapoints = null;
+        if (actor && actor.type === "piloto") {
+            actorExapoints = {
+                atual: actor.system?.exapoints?.atual || 0,
+                maximo: actor.system?.exapoints?.maximo || 0
+            };
+        }
+
         // Preparar atributos e EXApoints do piloto vinculado (se houver)
         let linkedPilotAttributes = null;
         let linkedPilotExapoints = { atual: 0, maximo: 0 };
@@ -81,6 +90,7 @@ export class RisingSteelRollDialog {
             label: label || rollName,
             allowAttributeSelection: allowAttributeSelection,
             atributos: atributos,
+            actorExapoints: actorExapoints,
             linkedPilot: linkedPilot ? {
                 name: linkedPilot.name,
                 attributes: linkedPilotAttributes,
@@ -115,6 +125,15 @@ export class RisingSteelRollDialog {
                             }
                         }
                         
+                        // Obter EXApoints do próprio piloto (se for um piloto)
+                        let actorExa = 0;
+                        if (actor && actor.type === "piloto") {
+                            const actorExaInput = html.find("#actor-exapoints-gastar")[0];
+                            if (actorExaInput) {
+                                actorExa = parseInt(actorExaInput.value || 0);
+                            }
+                        }
+                        
                         // Obter EXApoints do piloto vinculado (se houver)
                         let linkedPilotExa = 0;
                         if (linkedPilot) {
@@ -124,7 +143,7 @@ export class RisingSteelRollDialog {
                             }
                         }
                         
-                        const total = base + bonus + atributoBonus + exa + linkedPilotExa;
+                        const total = base + bonus + atributoBonus + actorExa + linkedPilotExa;
                         totalDiceSpan.text(total);
                     };
                     
@@ -138,6 +157,32 @@ export class RisingSteelRollDialog {
                         const atributoSelect = html.find("#atributo-select");
                         if (atributoSelect.length) {
                             atributoSelect.on("change", updateTotalDice);
+                        }
+                    }
+                    
+                    // Atualizar total quando EXApoints do próprio piloto mudar
+                    if (actor && actor.type === "piloto") {
+                        const actorExaInput = html.find("#actor-exapoints-gastar")[0];
+                        if (actorExaInput) {
+                            $(actorExaInput).on("input", function() {
+                                let valor = parseInt(this.value || 0);
+                                const maximo = parseInt(html.find("#actor-exapoints-disponiveis").text() || 0);
+                                
+                                // Garantir que não ultrapasse o máximo
+                                if (valor > maximo) {
+                                    valor = maximo;
+                                    this.value = valor;
+                                }
+                                
+                                // Garantir que não seja negativo
+                                if (valor < 0) {
+                                    valor = 0;
+                                    this.value = valor;
+                                }
+                                
+                                // Atualizar total de dados
+                                updateTotalDice();
+                            });
                         }
                     }
                     
@@ -190,6 +235,23 @@ export class RisingSteelRollDialog {
                                 }
                             }
                             
+                            // Obter EXApoints do próprio piloto (se for um piloto)
+                            let actorExapointsUsar = 0;
+                            if (actor && actor.type === "piloto") {
+                                actorExapointsUsar = parseInt(html.find("#actor-exapoints-gastar")[0]?.value || 0) || 0;
+                                
+                                // Validar EXApoints do próprio piloto
+                                const actorExapointsAtual = actor.system?.exapoints?.atual || 0;
+                                if (actorExapointsUsar > actorExapointsAtual) {
+                                    ui.notifications.warn(`Você só tem ${actorExapointsAtual} EXApoints disponíveis!`);
+                                    actorExapointsUsar = Math.min(actorExapointsUsar, actorExapointsAtual);
+                                }
+                                
+                                if (actorExapointsUsar < 0) {
+                                    actorExapointsUsar = 0;
+                                }
+                            }
+                            
                             // Obter atributo e EXApoints do piloto vinculado (se houver)
                             let linkedPilotAtributoBonus = 0;
                             let linkedPilotExapointsUsar = 0;
@@ -213,11 +275,12 @@ export class RisingSteelRollDialog {
                                 }
                             }
                             
-                            // Separar dados por tipo: normais (base + atributo + atributo piloto), bonus, exapoints piloto
+                            // Separar dados por tipo: normais (base + atributo + atributo piloto), bonus, exapoints próprio piloto, exapoints piloto vinculado
                             const dadosNormais = baseDice + atributoBonus + linkedPilotAtributoBonus;
                             const dadosBonus = bonusDice;
-                            const dadosExapoints = linkedPilotExapointsUsar;
-                            const totalDice = dadosNormais + dadosBonus + dadosExapoints;
+                            const dadosExapointsActor = actorExapointsUsar;
+                            const dadosExapointsPiloto = linkedPilotExapointsUsar;
+                            const totalDice = dadosNormais + dadosBonus + dadosExapointsActor + dadosExapointsPiloto;
                             
                             if (dadosNormais <= 0) {
                                 ui.notifications.warn("Você precisa de pelo menos 1 dado base para rolar!");
@@ -242,6 +305,16 @@ export class RisingSteelRollDialog {
                                 await rollBonus.roll();
                                 rolls.push({ roll: rollBonus, type: "bonus", count: dadosBonus });
                                 rollResults.push(...rollBonus.terms[0].results);
+                            }
+                            
+                            // Rolagem de dados EXApoints do próprio piloto
+                            let resultadosExapointsActor = [];
+                            if (actorExapointsUsar > 0) {
+                                const rollExaActor = new Roll(`${actorExapointsUsar}d6`);
+                                await rollExaActor.roll();
+                                rolls.push({ roll: rollExaActor, type: "exapoint", count: actorExapointsUsar, source: "actor" });
+                                resultadosExapointsActor = rollExaActor.terms[0].results;
+                                rollResults.push(...resultadosExapointsActor);
                             }
                             
                             // Rolagem de dados EXApoints (piloto vinculado)
@@ -282,14 +355,12 @@ export class RisingSteelRollDialog {
                             combinedRoll._total = rollResults.reduce((sum, r) => sum + (r.result || r.total || 0), 0);
                             
                             // Separar resultados por tipo para processamento
-                            // Nota: resultadosExapointsPiloto já foi definido acima durante a rolagem (linha 248)
                             let resultIndex = 0;
                             const resultadosNormais = rollResults.slice(resultIndex, resultIndex + dadosNormais);
                             resultIndex += dadosNormais;
                             const resultadosBonus = rollResults.slice(resultIndex, resultIndex + dadosBonus);
                             resultIndex += dadosBonus;
-                            // resultadosExapointsPiloto já contém os resultados dos dados de EXApoints do piloto
-                            // Não redeclarar aqui para evitar erro de variável já declarada
+                            // resultadosExapointsActor e resultadosExapointsPiloto já foram definidos acima durante a rolagem
                             
                             // Contar sucessos (6) em todos os dados
                             const sucessos = rollResults.filter(d => (d.result ?? d.total) === 6).length;
@@ -297,8 +368,24 @@ export class RisingSteelRollDialog {
                             // Contar falhas (1) apenas nos dados normais
                             const unsNormais = resultadosNormais.filter(d => (d.result ?? d.total) === 1).length;
                             
-                            // Contar quantos 1s caíram nos dados de EXApoints do piloto (isso gasta EXApoints do piloto)
+                            // Contar quantos 1s caíram nos dados de EXApoints do próprio piloto (isso gasta EXApoints)
+                            const unsExapointsActor = resultadosExapointsActor.filter(d => (d.result ?? d.total) === 1).length;
+                            
+                            // Contar quantos 1s caíram nos dados de EXApoints do piloto vinculado (isso gasta EXApoints do piloto)
                             const unsExapointsPiloto = resultadosExapointsPiloto.filter(d => (d.result ?? d.total) === 1).length;
+                            
+                            // Gastar EXApoints do próprio piloto (se houver)
+                            if (actor && actor.type === "piloto" && actorExapointsUsar > 0) {
+                                const exapointsGastosActor = unsExapointsActor;
+                                const exapointsAtualActor = actor.system.exapoints?.atual || 0;
+                                const novosGastosActor = (actor.system.exapoints.gastos || 0) + exapointsGastosActor;
+                                const novoAtualActor = Math.max(0, exapointsAtualActor - exapointsGastosActor);
+                                
+                                await actor.update({
+                                    "system.exapoints.gastos": novosGastosActor,
+                                    "system.exapoints.atual": novoAtualActor
+                                });
+                            }
                             
                             // Gastar EXApoints do piloto vinculado (se houver)
                             if (linkedPilot && linkedPilotExapointsUsar > 0) {
@@ -323,6 +410,9 @@ export class RisingSteelRollDialog {
                             if (atributoBonus > 0) {
                                 flavor += ` | <strong>Dados do Atributo:</strong> ${atributoBonus}`;
                             }
+                            if (actorExapointsUsar > 0) {
+                                flavor += ` | <strong>Dados EXApoints:</strong> ${actorExapointsUsar}`;
+                            }
                             if (linkedPilotAtributoBonus > 0) {
                                 flavor += ` | <strong>Dados do Atributo do Piloto (${linkedPilot.name}):</strong> ${linkedPilotAtributoBonus}`;
                             }
@@ -338,6 +428,18 @@ export class RisingSteelRollDialog {
                             flavor += `<div style="margin-top: 5px;">`;
                             flavor += `<strong>Sucessos (6):</strong> ${sucessos}`;
                             flavor += `</div>`;
+                            
+                            // Informações sobre EXApoints do próprio piloto
+                            if (actor && actor.type === "piloto" && actorExapointsUsar > 0) {
+                                flavor += `<div style="margin-top: 5px; color: #5a2b91;">`;
+                                flavor += `<strong>EXApoints usados:</strong> ${actorExapointsUsar} dados`;
+                                if (unsExapointsActor > 0) {
+                                    flavor += ` | <strong>Falhas (1):</strong> ${unsExapointsActor} | <strong>EXApoints gastos:</strong> ${unsExapointsActor}`;
+                                } else {
+                                    flavor += ` | <strong>Falhas (1):</strong> 0 | <strong>EXApoints gastos:</strong> 0`;
+                                }
+                                flavor += `</div>`;
+                            }
                             
                             // Informações sobre EXApoints do piloto vinculado
                             if (linkedPilot && linkedPilotExapointsUsar > 0) {
@@ -359,6 +461,9 @@ export class RisingSteelRollDialog {
                             if (dadosBonus > 0) {
                                 diceInfo.push({ type: "bonus", count: dadosBonus, results: resultadosBonus });
                             }
+                            if (actorExapointsUsar > 0) {
+                                diceInfo.push({ type: "exapoint", count: actorExapointsUsar, results: resultadosExapointsActor, source: "actor" });
+                            }
                             if (linkedPilotExapointsUsar > 0) {
                                 diceInfo.push({ type: "exapoint", count: linkedPilotExapointsUsar, results: resultadosExapointsPiloto, source: "pilot" });
                             }
@@ -377,7 +482,7 @@ export class RisingSteelRollDialog {
                                 }
                             });
                             
-                            resolve({ roll: combinedRoll, sucessos, unsNormais, unsExapoints: unsExapointsCompanion + unsExapointsPiloto, exapointsGastos });
+                            resolve({ roll: combinedRoll, sucessos, unsNormais, unsExapoints: unsExapointsActor + unsExapointsPiloto, exapointsGastos: unsExapointsActor + unsExapointsPiloto });
                         },
                     },
                     cancel: {

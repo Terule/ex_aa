@@ -57,6 +57,17 @@
     <input type="number" id="bonus-dice" value="{{bonusDice}}" min="0" />
   </div>
   
+  {{#if actorExapoints}}
+  <div class="form-group">
+    <label style="font-weight: bold; color: #5a2b91;">EXApoints - Opcional:</label>
+    <input type="number" id="actor-exapoints-gastar" value="0" min="0" max="{{actorExapoints.atual}}" step="1" />
+    <div class="exapoints-info">
+      <small style="display: block; margin-top: 3px; color: #5a2b91; font-weight: bold;">EXApoints disponíveis: <span id="actor-exapoints-disponiveis">{{actorExapoints.atual}}</span> / {{actorExapoints.maximo}}</small>
+      <small style="display: block; margin-top: 3px; color: #666;">Cada EXApoint usado adiciona 1 dado extra. Se esse dado cair 1, você perde 1 EXApoint.</small>
+    </div>
+  </div>
+  {{/if}}
+  
   {{#if linkedPilot}}
   <div class="form-group">
     <label style="font-weight: bold; color: #5a2b91;">EXApoints do Piloto ({{linkedPilot.name}}) - Opcional:</label>
