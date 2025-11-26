@@ -118,6 +118,8 @@ Hooks.once("init", async function () {
                 await ensurePackFilled("rising-steel.armaduras", window.RisingSteel.importArmaduras, "armaduras");
                 await ensurePackFilled("rising-steel.armas", window.RisingSteel.importArmas, "armas");
                 await ensurePackFilled("rising-steel.equipamentos", window.RisingSteel.importEquipamentos, "equipamentos");
+                await ensurePackFilled("rising-steel.exacom", window.RisingSteel.importExacomModels, "exacom");
+                await ensurePackFilled("rising-steel.blindagemExacom", window.RisingSteel.importBlindagensExacom, "blindagemExacom");
             } catch (error) {
                 console.warn("[Rising Steel] Erro ao verificar/importar packs:", error);
             }
