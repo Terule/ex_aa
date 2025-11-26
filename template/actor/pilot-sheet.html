@@ -225,7 +225,8 @@
       </div>
       <div class="form-group">
         <label>Overdrive:</label>
-        <input type="number" name="system.exapoints.overdrive" value="{{#if system.exapoints.overdrive}}{{number system.exapoints.overdrive}}{{else}}1{{/if}}" min="0" step="1" data-dtype="Number" />
+        <input type="number" name="system.exapoints.overdrive" value="{{number system.exapoints.overdrive}}" readonly />
+        <small>Baseado na Patente</small>
       </div>
     </div>
 
@@ -325,8 +326,167 @@
     </div>
 
     <div class="tab exacom-tab" data-tab="exacom">
-      <h3>EXACOM</h3>
-      <p>EXACOM será implementado em breve.</p>
+      <div class="card exacom-link-card">
+        <div class="form-group">
+          <label>EXAcom Vinculado</label>
+          <select name="system.exacomId" data-dtype="String">
+            <option value="">-- Nenhum --</option>
+            {{#each availableExacoms}}
+            <option value="{{this.id}}" {{#if (eq ../system.exacomId this.id)}}selected{{/if}}>{{this.name}}</option>
+            {{/each}}
+          </select>
+        </div>
+        <button type="button" class="open-exacom-sheet" {{#unless system.exacomId}}disabled{{/unless}}>Abrir Ficha</button>
+      </div>
+
+      {{#if currentExacom}}
+      <section class="exacom-inline-view">
+        <div class="card exacom-inline-header">
+          <div>
+            <h3>{{currentExacom.name}}</h3>
+            {{#if currentExacom.system.identificacao.piloto}}
+            <small>Piloto: {{currentExacom.system.identificacao.piloto}}</small>
+            {{/if}}
+          </div>
+          <div class="exacom-inline-meta">
+            <span>Escala: {{currentExacom.system.identificacao.escala}}</span>
+            <span>Categoria: {{currentExacom.system.identificacao.categoria}}</span>
+            <span>Modelo: {{currentExacom.system.identificacao.modelo}}</span>
+            <span>MCE: {{currentExacom.system.identificacao.mce}}</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4>Sistema</h4>
+          <div class="triple-grid">
+            <div>
+              <label>Neuromotor</label>
+              <strong>{{number currentExacom.system.sistema.neuromotor}}</strong>
+            </div>
+            <div>
+              <label>Sensorial</label>
+              <strong>{{number currentExacom.system.sistema.sensorial}}</strong>
+            </div>
+            <div>
+              <label>Estrutural</label>
+              <strong>{{number currentExacom.system.sistema.estrutural}}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4>Atributos de Combate</h4>
+          <div class="dual-grid">
+            <div>
+              <label>Esquiva</label>
+              <strong>{{number currentExacom.system.combate.esquiva}}</strong>
+            </div>
+            <div>
+              <label>Mobilidade</label>
+              <strong>{{number currentExacom.system.combate.mobilidade}}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4>Armas</h4>
+          <table class="exacom-table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Descrição</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#if currentExacom.system.equipamentosExa.armas.length}}
+                {{#each currentExacom.system.equipamentosExa.armas}}
+                <tr>
+                  <td>{{this.nome}}</td>
+                  <td>{{this.descricao}}</td>
+                </tr>
+                {{/each}}
+              {{else}}
+              <tr>
+                <td colspan="2" class="empty-row">Nenhuma arma cadastrada.</td>
+              </tr>
+              {{/if}}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h4>Blindagem</h4>
+          <table class="exacom-table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Descrição</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#if currentExacom.system.equipamentosExa.blindagem.length}}
+                {{#each currentExacom.system.equipamentosExa.blindagem}}
+                <tr>
+                  <td>{{this.nome}}</td>
+                  <td>{{this.descricao}}</td>
+                </tr>
+                {{/each}}
+              {{else}}
+              <tr>
+                <td colspan="2" class="empty-row">Nenhuma blindagem cadastrada.</td>
+              </tr>
+              {{/if}}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h4>EXA</h4>
+          <div class="exacom-exa-stats">
+            <div>
+              <label>EXAlink</label>
+              <strong>{{#if currentExacom.system.exa.exalink}}{{currentExacom.system.exa.exalink}}{{else}}—{{/if}}</strong>
+            </div>
+            <div>
+              <label>Sincronia</label>
+              <strong>{{number currentExacom.system.exa.sincronia}}</strong>
+            </div>
+            <div>
+              <label>Overdrive</label>
+              <strong>{{number currentExacom.system.exa.overdrive}}</strong>
+            </div>
+          </div>
+          <div class="dual-grid">
+            <div>
+              <label>Reator</label>
+              <ul class="exacom-list">
+                {{#if currentExacom.system.exa.mods.reator.length}}
+                  {{#each currentExacom.system.exa.mods.reator}}
+                  <li>{{#if this.descricao}}{{this.descricao}}{{else}}—{{/if}}</li>
+                  {{/each}}
+                {{else}}
+                  <li>Sem registros.</li>
+                {{/if}}
+              </ul>
+            </div>
+            <div>
+              <label>Módulos</label>
+              <ul class="exacom-list">
+                {{#if currentExacom.system.exa.mods.modulos.length}}
+                  {{#each currentExacom.system.exa.mods.modulos}}
+                  <li>{{#if this.descricao}}{{this.descricao}}{{else}}—{{/if}}</li>
+                  {{/each}}
+                {{else}}
+                  <li>Sem registros.</li>
+                {{/if}}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+      {{else}}
+      <p class="empty-row">Selecione um EXAcom para exibir os detalhes.</p>
+      {{/if}}
     </div>
 
     <div class="tab inventario-tab" data-tab="inventario">

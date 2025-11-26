@@ -14,7 +14,13 @@
           type='text'
           value='{{item.name}}'
           placeholder='Name'
+          {{#if isLocked}}disabled{{/if}}
         /></h1>
+    </div>
+    <div class='header-actions'>
+      <button type='button' class='item-lock-toggle' title='{{#if isLocked}}Desbloquear para editar{{else}}Bloquear edição{{/if}}'>
+        {{#if isLocked}}🔒{{else}}🔓{{/if}}
+      </button>
     </div>
   </header>
 
@@ -35,7 +41,7 @@
         target='system.description'
         engine='prosemirror'
         button=true
-        editable=editable
+        editable=(and editable (not isLocked))
       }}
     </div>
 

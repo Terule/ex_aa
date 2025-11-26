@@ -3,19 +3,26 @@
  */
 export class RisingSteel {
     static PATENTES = {
-        "Recruta": 5,      // Começa com 5 pontos
-        "Cabo": 7,        // +2 pontos
-        "Sargento": 9,    // +2 pontos
-        "Tenente": 11,    // +2 pontos
-        "Capitão": 13,    // +2 pontos
-        "Major": 15,      // +2 pontos
-        "Coronel": 17,    // +2 pontos
-        "General": 19,    // +2 pontos
-        "Marechal": 21    // +2 pontos
+        "Recruta": { pontos: 5, overdrive: 0 },
+        "Soldado": { pontos: 5, overdrive: 0 },
+        "Cabo": { pontos: 7, overdrive: 1 },
+        "Sargento": { pontos: 9, overdrive: 1 },
+        "Tenente": { pontos: 11, overdrive: 2 },
+        "Capitão": { pontos: 13, overdrive: 2 },
+        "Major": { pontos: 15, overdrive: 3 },
+        "Coronel": { pontos: 17, overdrive: 3 },
+        "General": { pontos: 19, overdrive: 4 },
+        "Marechal": { pontos: 21, overdrive: 5 }
     };
 
     static getPatentePontos(patente) {
-        return this.PATENTES[patente] || 5; // Default para Recruta (5 pontos)
+        const patenteData = this.PATENTES[patente];
+        return patenteData?.pontos || 5; // Default para Recruta (5 pontos)
+    }
+
+    static getPatenteOverdrive(patente) {
+        const patenteData = this.PATENTES[patente];
+        return patenteData?.overdrive || 0; // Default 0
     }
 
     static getPatentesList() {

@@ -1,0 +1,282 @@
+<form class="sheet actor exacom-sheet" autocomplete="off">
+  <header class="exacom-header">
+    <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" height="120" width="120" />
+    <div class="header-fields">
+      <div class="exacom-name-line">
+        <div class="name-field">
+          <label>Nome</label>
+          <input type="text" name="name" value="{{actor.name}}" placeholder="Nome do EXAcom" />
+        </div>
+        <div class="field">
+          <label>Escala</label>
+          <input type="text" name="system.identificacao.escala" value="Grande" readonly />
+        </div>
+      </div>
+      <div class="exacom-info-grid">
+        <div class="field">
+          <label>Piloto</label>
+          <div class="linked-input">
+            <input type="text" name="system.identificacao.piloto" value="{{system.identificacao.piloto}}" placeholder="Nome do piloto" {{#if linkedPilot}}readonly{{/if}} />
+            <button type="button" class="open-linked-pilot" {{#unless linkedPilot}}disabled{{/unless}}>Abrir Piloto</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Categoria</label>
+          <input type="text" name="system.identificacao.categoria" value="{{system.identificacao.categoria}}" />
+        </div>
+        <div class="field">
+          <label>Modelo</label>
+          <select name="system.modeloId" data-dtype="String">
+            <option value="">-- Selecione --</option>
+            {{#each exacomModels}}
+            <option value="{{this.id}}" {{#if (eq ../system.modeloId this.id)}}selected{{/if}}>{{this.name}}</option>
+            {{/each}}
+          </select>
+        </div>
+        <div class="field">
+          <label>MCE</label>
+          <input type="text" name="system.identificacao.mce" value="{{system.identificacao.mce}}" />
+        </div>
+        <div class="field">
+          <label>Admissão</label>
+          <input type="text" name="system.identificacao.admissao" value="{{system.identificacao.admissao}}" />
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="exacom-tabs tabs" data-group="exacom">
+    <a class="item" data-tab="sistema">Sistema</a>
+    <a class="item" data-tab="exa">EXA</a>
+  </nav>
+
+  <section class="exacom-body">
+    <div class="tab" data-group="exacom" data-tab="sistema">
+      <div class="exacom-sections">
+        <div class="card sistema-card">
+          <h3>Sistema</h3>
+          <div class="triple-grid">
+            <div class="field">
+              <label>Neuromotor</label>
+              <input type="number" name="system.sistema.neuromotor" value="{{number system.sistema.neuromotor}}" data-dtype="Number" min="0" />
+              <button type="button" class="roll-atributo-sistema" data-atributo="sistema.neuromotor" data-label="Neuromotor" title="Rolar Neuromotor">🎲</button>
+            </div>
+            <div class="field">
+              <label>Sensorial</label>
+              <input type="number" name="system.sistema.sensorial" value="{{number system.sistema.sensorial}}" data-dtype="Number" min="0" />
+              <button type="button" class="roll-atributo-sistema" data-atributo="sistema.sensorial" data-label="Sensorial" title="Rolar Sensorial">🎲</button>
+            </div>
+            <div class="field">
+              <label>Estrutural</label>
+              <input type="number" name="system.sistema.estrutural" value="{{number system.sistema.estrutural}}" data-dtype="Number" min="0" />
+              <button type="button" class="roll-atributo-sistema" data-atributo="sistema.estrutural" data-label="Estrutural" title="Rolar Estrutural">🎲</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card combate-card">
+          <h3>Atributos de Combate</h3>
+          <div class="dual-grid">
+            <div class="field">
+              <label>Esquiva</label>
+              <input type="number" name="system.combate.esquiva" value="{{calculatedEsquiva}}" readonly />
+            </div>
+            <div class="field">
+              <label>Mobilidade</label>
+              <input type="number" name="system.combate.mobilidade" value="{{calculatedMobilidade}}" readonly />
+            </div>
+          </div>
+        </div>
+
+        <div class="card limiar-section">
+          <h3>Limiar de Dano</h3>
+          <table class="limiar-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Leve</th>
+                <th>Médio</th>
+                <th>Grave</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th>Limiar</th>
+                <td><input type="number" name="system.limiarDano.leve.limiar" value="{{limiarLeve}}" readonly /></td>
+                <td><input type="number" name="system.limiarDano.moderado.limiar" value="{{limiarMedio}}" readonly /></td>
+                <td><input type="number" name="system.limiarDano.grave.limiar" value="{{limiarGrave}}" readonly /></td>
+              </tr>
+              <tr>
+                <th>Marcações</th>
+                <td><input type="number" name="system.limiarDano.leve.marcacoes" value="{{number system.limiarDano.leve.marcacoes}}" min="0" max="3" data-dtype="Number" /></td>
+                <td><input type="number" name="system.limiarDano.moderado.marcacoes" value="{{number system.limiarDano.moderado.marcacoes}}" min="0" max="3" data-dtype="Number" /></td>
+                <td><input type="number" name="system.limiarDano.grave.marcacoes" value="{{number system.limiarDano.grave.marcacoes}}" min="0" max="1" data-dtype="Number" /></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="penalidades">
+            <label>Penalidades</label>
+            <input type="number" name="system.limiarDano.penalidades" value="{{number system.limiarDano.penalidades}}" min="0" data-dtype="Number" />
+          </div>
+        </div>
+
+        <div class="card equipamentos-card">
+          <h3>Equipamentos</h3>
+
+          <section class="equipamento-bloco">
+            <div class="attack-header">
+              <h4>Armas</h4>
+              <button type="button" class="arma-create">+ Adicionar Arma</button>
+            </div>
+            <table class="attack-table">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Atributo</th>
+                  <th>Dado Base</th>
+                  <th>Dado Bônus</th>
+                  <th>Condição</th>
+                  <th>Alcance</th>
+                  <th>Dano</th>
+                  <th>Efeito</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{#if armasList.length}}
+                  {{#each armasList}}
+                  <tr>
+                    <td>{{this.nome}}</td>
+                    <td>{{this.atributoLabel}}</td>
+                    <td>{{this.atributoValor}}</td>
+                    <td>{{this.dadoBonus}}</td>
+                    <td>{{this.condicao}}</td>
+                    <td>{{this.alcance}}</td>
+                    <td>{{this.dano}}</td>
+                    <td>{{this.efeito}}</td>
+                    <td class="attack-actions">
+                      <button type="button" class="arma-roll" data-index="{{this.index}}" title="Rolar">🎲</button>
+                      <button type="button" class="arma-edit" data-index="{{this.index}}" title="Editar">✏️</button>
+                      <button type="button" class="arma-delete" data-index="{{this.index}}" title="Excluir">🗑️</button>
+                    </td>
+                  </tr>
+                  {{/each}}
+                {{else}}
+                  <tr>
+                    <td colspan="9" class="empty-row">Nenhuma arma cadastrada.</td>
+                  </tr>
+                {{/if}}
+              </tbody>
+            </table>
+          </section>
+
+          <section class="equipamento-bloco">
+            <header>
+              <h4>Blindagem</h4>
+            </header>
+            <div class="field">
+              <label>Blindagem Equipada:</label>
+              <select name="system.equipamentosExa.blindagemId" data-dtype="String" class="item-select-blindagem">
+                <option value="">-- Nenhuma --</option>
+                {{#each blindagensExacom}}
+                <option value="{{this.id}}" {{#if (eq ../system.equipamentosExa.blindagemId this.id)}}selected{{/if}}>
+                  {{this.name}} (Blindagem: {{this.system.blindagem}})
+                </option>
+                {{/each}}
+              </select>
+            </div>
+            {{#if selectedBlindagem}}
+            <div class="field">
+              <label>Valor da Blindagem:</label>
+              <input type="number" name="system.equipamentosExa.blindagem" value="{{selectedBlindagem.system.blindagem}}" readonly />
+            </div>
+            <div class="field">
+              <label>Especial:</label>
+              <textarea name="system.equipamentosExa.blindagemEspecial" readonly rows="2">{{selectedBlindagem.system.especial}}</textarea>
+            </div>
+            {{else}}
+            <div class="field">
+              <label>Valor da Blindagem:</label>
+              <input type="number" name="system.equipamentosExa.blindagem" value="0" readonly />
+            </div>
+            <div class="field">
+              <label>Especial:</label>
+              <textarea name="system.equipamentosExa.blindagemEspecial" readonly rows="2">—</textarea>
+            </div>
+            {{/if}}
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab" data-group="exacom" data-tab="exa">
+      <div class="card exa-card">
+        <header class="exa-card-header">
+          <h3>EXAlink</h3>
+        </header>
+        <div class="dual-grid">
+          <div class="field">
+            <label>Sincronia</label>
+            <input type="number" name="system.exa.sincronia" value="{{number system.exa.sincronia}}" data-dtype="Number" min="0" />
+          </div>
+          <div class="field">
+            <label>Overdrive</label>
+            <input type="number" name="system.exa.overdrive" value="{{linkedPilotOverdrive}}" readonly />
+            <small>{{#if linkedPilot}}Do Piloto ({{linkedPilot.name}}){{else}}Sem piloto vinculado{{/if}}</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="card exa-mods-card">
+        <h3>EXAmods</h3>
+
+        <section class="equipamento-bloco">
+          <header>
+            <h4>Reator</h4>
+          </header>
+          <div class="reator-display">
+            {{#if selectedModelReator}}
+              <strong>{{selectedModelReator}}</strong>
+            {{else}}
+              <span class="empty-value">—</span>
+            {{/if}}
+          </div>
+        </section>
+
+        <section class="equipamento-bloco">
+          <header>
+            <h4>Módulos</h4>
+            <button type="button" class="exacom-row-add" data-target="exa.mods.modulos" data-template="modulo">+ Adicionar Módulo</button>
+          </header>
+          <table class="exacom-table">
+            <thead>
+              <tr>
+                <th>Descrição</th>
+                <th class="acoes"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#if system.exa.mods.modulos.length}}
+                {{#each system.exa.mods.modulos}}
+                <tr>
+                  <td>
+                    <textarea name="system.exa.mods.modulos.{{@index}}.descricao" rows="2" placeholder="Descrição do módulo">{{this.descricao}}</textarea>
+                  </td>
+                  <td class="acoes">
+                    <button type="button" class="exacom-row-remove" data-target="exa.mods.modulos" data-template="modulo" data-index="{{@index}}" data-min="1" title="Remover">🗑️</button>
+                  </td>
+                </tr>
+                {{/each}}
+              {{else}}
+                <tr>
+                  <td colspan="2" class="empty-row">Adicione módulos EXA.</td>
+                </tr>
+              {{/if}}
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </div>
+  </section>
+</form>
+

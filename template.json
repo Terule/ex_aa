@@ -1,6 +1,6 @@
 {
   "Actor": {
-    "types": ["piloto", "criatura", "companion"],
+    "types": ["piloto", "criatura", "companion", "exacom"],
     "templates": {
       "base": {
         "descricao": "",
@@ -64,6 +64,7 @@
         "exacom": "",
         "admissao": ""
       },
+      "exacomId": "",
       "exapoints": {
         "maximo": 0,
         "gastos": 0,
@@ -124,10 +125,53 @@
       "vinculo": {
         "pilotoId": ""
       }
+    },
+    "exacom": {
+      "templates": ["base"],
+      "identificacao": {
+        "escala": "",
+        "piloto": "",
+        "categoria": "",
+        "modelo": "",
+        "mce": "",
+        "admissao": ""
+      },
+      "sistema": {
+        "neuromotor": 0,
+        "sensorial": 0,
+        "estrutural": 0
+      },
+      "equipamentosExa": {
+        "armas": [
+          { "nome": "", "descricao": "" },
+          { "nome": "", "descricao": "" },
+          { "nome": "", "descricao": "" }
+        ],
+        "blindagem": [
+          { "nome": "", "descricao": "" },
+          { "nome": "", "descricao": "" }
+        ]
+      },
+      "exa": {
+        "exalink": "",
+        "sincronia": 0,
+        "overdrive": 0,
+        "mods": {
+          "reator": [
+            { "descricao": "" }
+          ],
+          "modulos": [
+            { "descricao": "" }
+          ]
+        }
+      },
+      "vinculo": {
+        "pilotoId": ""
+      }
     }
   },
-  "Item": {
-    "types": ["armadura", "arma", "equipamento"],
+    "Item": {
+    "types": ["armadura", "arma", "equipamento", "exacomModel", "blindagemExacom"],
     "templates": {
       "base": {
         "description": ""
@@ -155,6 +199,21 @@
       "efeito": "",
       "peso": 0,
       "descricao": ""
+    },
+    "exacomModel": {
+      "templates": ["base"],
+      "modelo": "",
+      "neuromotor": 0,
+      "sensorial": 0,
+      "estrutural": 0,
+      "reator": ""
+    },
+    "blindagemExacom": {
+      "templates": ["base"],
+      "tipo": "",
+      "blindagem": 0,
+      "descricao": "",
+      "especial": ""
     }
   }
 }

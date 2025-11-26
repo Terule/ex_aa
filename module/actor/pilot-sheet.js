@@ -49,12 +49,14 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         context.patentes = CONFIG.RisingSteel?.getPatentesList() || [];
         context.availableCompanions = [];
         context.currentCompanion = null;
+        context.availableExacoms = [];
+        context.currentExacom = null;
         try {
             const actorsCollection = game?.actors ? (game.actors.contents ?? Array.from(game.actors)) : [];
             if (actorsCollection?.length) {
-                const allowedTypes = new Set(["companion"]);
+                const allowedCompanionTypes = new Set(["companion"]);
                 context.availableCompanions = actorsCollection
-                    .filter(actor => allowedTypes.has(actor.type) && actor.id !== this.actor.id)
+                    .filter(actor => allowedCompanionTypes.has(actor.type) && actor.id !== this.actor.id)
                     .map(actor => ({ id: actor.id, name: actor.name }))
                     .sort((a, b) => a.name.localeCompare(b.name, game.i18n?.lang || "pt-BR"));
 
@@ -84,9 +86,22 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                         };
                     }
                 }
+
+                const exacomList = actorsCollection
+                    .filter(actor => actor.type === "exacom")
+                    .map(actor => ({ id: actor.id, name: actor.name }))
+                    .sort((a, b) => a.name.localeCompare(b.name, game.i18n?.lang || "pt-BR"));
+                context.availableExacoms = exacomList;
+
+                if (context.system?.exacomId) {
+                    const exacomActor = game.actors.get(context.system.exacomId);
+                    if (exacomActor) {
+                        context.currentExacom = await this._buildLinkedExacomContext(exacomActor);
+                    }
+                }
             }
         } catch (error) {
-            console.warn("[Rising Steel] Falha ao carregar companions disponíveis:", error);
+            console.warn("[Rising Steel] Falha ao carregar companions ou EXAcoms disponíveis:", error);
         }
         
         // Organizar especializações por tipo
@@ -750,8 +765,9 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         // Botão de rolagem de iniciativa
         html.find(".roll-iniciativa").click(this._onRollIniciativa.bind(this));
 
-        // Companion
+        // Companion e EXAcom
         html.find(".open-companion-sheet").click(this._onOpenCompanionSheet.bind(this));
+        html.find(".open-exacom-sheet").click(this._onOpenExacomSheet.bind(this));
 
         // Especializações
         html.find(".especializacao-create").click(this._onCreateEspecializacao.bind(this));
@@ -787,10 +803,13 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         }
 
         const previousCompanionId = this.actor.system?.companionId || "";
+        const previousExacomId = this.actor.system?.exacomId || "";
         const result = await super._updateObject(event, cleanFormData);
         const expanded = foundry.utils.expandObject(cleanFormData);
         const newCompanionId = (foundry.utils.getProperty(expanded, "system.companionId") ?? this.actor.system?.companionId) ?? "";
+        const newExacomId = (foundry.utils.getProperty(expanded, "system.exacomId") ?? this.actor.system?.exacomId) ?? "";
         await this._syncCompanionLink(previousCompanionId, newCompanionId);
+        await this._syncExacomLink(previousExacomId, newExacomId);
         return result;
     }
 
@@ -832,6 +851,78 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
             }
 
             await newCompanion.update({ "system.vinculo.pilotoId": this.actor.id });
+        }
+    }
+
+    async _syncExacomLink(oldExacomId, newExacomId) {
+        if (oldExacomId === newExacomId) return;
+
+        if (!game?.actors) {
+            console.warn("[Rising Steel] game.actors indisponível para sincronizar EXAcom.");
+            return;
+        }
+
+        if (oldExacomId) {
+            const oldExacom = game.actors.get(oldExacomId);
+            if (oldExacom) {
+                const resetPayload = {};
+                if (oldExacom.system?.vinculo?.pilotoId === this.actor.id) {
+                    resetPayload["system.vinculo.pilotoId"] = "";
+                }
+                if (oldExacom.system?.identificacao?.piloto === this.actor.name) {
+                    resetPayload["system.identificacao.piloto"] = "";
+                }
+                if (Object.keys(resetPayload).length) {
+                    await oldExacom.update(resetPayload);
+                }
+            }
+        }
+
+        if (!newExacomId) {
+            if ((this.actor.system?.identificacao?.exacom || "") !== "") {
+                await this.actor.update({ "system.identificacao.exacom": "" });
+            }
+            return;
+        }
+
+        const exacom = game.actors.get(newExacomId);
+        if (!exacom) {
+            ui.notifications?.warn("EXAcom selecionado não foi encontrado.");
+            await this.actor.update({
+                "system.exacomId": "",
+                "system.identificacao.exacom": ""
+            });
+            return;
+        }
+
+        if (exacom.type !== "exacom") {
+            ui.notifications?.warn("Somente atores do tipo EXAcom podem ser vinculados.");
+            await this.actor.update({
+                "system.exacomId": "",
+                "system.identificacao.exacom": ""
+            });
+            return;
+        }
+
+        const previousPilotId = exacom.system?.vinculo?.pilotoId;
+        if (previousPilotId && previousPilotId !== this.actor.id) {
+            const previousPilot = game.actors.get(previousPilotId);
+            if (previousPilot) {
+                const previousUpdates = { "system.exacomId": "" };
+                if (previousPilot.system?.identificacao?.exacom) {
+                    previousUpdates["system.identificacao.exacom"] = "";
+                }
+                await previousPilot.update(previousUpdates);
+            }
+        }
+
+        await exacom.update({
+            "system.vinculo.pilotoId": this.actor.id,
+            "system.identificacao.piloto": this.actor.name
+        });
+
+        if ((this.actor.system?.identificacao?.exacom || "") !== exacom.name) {
+            await this.actor.update({ "system.identificacao.exacom": exacom.name });
         }
     }
 
@@ -1795,6 +1886,28 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         companion.sheet?.render(true, { focus: true });
     }
 
+    async _onOpenExacomSheet(event) {
+        event.preventDefault();
+        const exacomId = this.actor.system?.exacomId;
+        if (!exacomId) {
+            ui.notifications?.warn("Nenhum EXAcom vinculado a este piloto.");
+            return;
+        }
+
+        if (!game?.actors) {
+            ui.notifications?.error("Coleção de atores indisponível.");
+            return;
+        }
+
+        const exacom = game.actors.get(exacomId);
+        if (!exacom) {
+            ui.notifications?.warn("EXAcom não encontrado. Verifique se ele ainda existe.");
+            return;
+        }
+
+        exacom.sheet?.render(true, { focus: true });
+    }
+
     /**
      * Get the linked companion actor
      * @returns {Actor|null}
@@ -2374,6 +2487,70 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         }));
 
         return { ataquesList, habilidadesList };
+    }
+
+    async _buildLinkedExacomContext(exacomActor) {
+        if (!exacomActor) return null;
+        const exacomData = exacomActor.toObject(false);
+        const system = foundry.utils.duplicate(exacomData.system || {});
+        this._ensureExacomDisplayStructure(system);
+        return {
+            id: exacomActor.id,
+            name: exacomActor.name,
+            img: exacomActor.img,
+            system
+        };
+    }
+
+    _ensureExacomDisplayStructure(system) {
+        if (!system) return;
+        const coerce = (value, template = {}) => {
+            if (Array.isArray(value)) {
+                return value.map(entry => ({ ...template, ...entry }));
+            }
+            if (value && typeof value === "object") {
+                return Object.keys(value)
+                    .sort((a, b) => Number(a) - Number(b))
+                    .map(key => ({ ...template, ...value[key] }));
+            }
+            return [];
+        };
+
+        system.identificacao = system.identificacao || {};
+        ["escala", "categoria", "modelo", "mce", "admissao", "piloto"].forEach(field => {
+            if (system.identificacao[field] === undefined || system.identificacao[field] === null) {
+                system.identificacao[field] = "";
+            }
+        });
+
+        system.sistema = system.sistema || {};
+        system.sistema.neuromotor = Number(system.sistema.neuromotor ?? 0) || 0;
+        system.sistema.sensorial = Number(system.sistema.sensorial ?? 0) || 0;
+        system.sistema.estrutural = Number(system.sistema.estrutural ?? 0) || 0;
+
+        system.combate = system.combate || {};
+        system.combate.esquiva = Number(system.combate.esquiva ?? 0) || 0;
+        system.combate.mobilidade = Number(system.combate.mobilidade ?? 0) || 0;
+
+        system.equipamentosExa = system.equipamentosExa || {};
+        system.equipamentosExa.armas = coerce(system.equipamentosExa.armas, { nome: "", descricao: "" });
+        // Blindagem agora é um número, não uma lista
+        if (system.equipamentosExa.blindagem === undefined || system.equipamentosExa.blindagem === null) {
+            system.equipamentosExa.blindagem = 0;
+        } else if (Array.isArray(system.equipamentosExa.blindagem)) {
+            // Migrar de array para número
+            system.equipamentosExa.blindagem = 0;
+        } else {
+            system.equipamentosExa.blindagem = Number(system.equipamentosExa.blindagem || 0) || 0;
+        }
+
+        system.exa = system.exa || {};
+        system.exa.exalink = system.exa.exalink ?? "";
+        system.exa.sincronia = Number(system.exa.sincronia ?? 0) || 0;
+        system.exa.overdrive = Number(system.exa.overdrive ?? 0) || 0;
+        system.exa.mods = system.exa.mods || {};
+        system.exa.mods.reator = coerce(system.exa.mods.reator, { descricao: "" });
+        system.exa.mods.modulos = coerce(system.exa.mods.modulos, { descricao: "" });
     }
 
     _coerceToArray(value) {
