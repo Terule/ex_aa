@@ -4,15 +4,15 @@
 export class RisingSteel {
     static PATENTES = {
         "Recruta": { pontos: 5, overdrive: 0 },
-        "Soldado": { pontos: 5, overdrive: 0 },
-        "Cabo": { pontos: 7, overdrive: 1 },
-        "Sargento": { pontos: 9, overdrive: 1 },
-        "Tenente": { pontos: 11, overdrive: 2 },
-        "Capitão": { pontos: 13, overdrive: 2 },
-        "Major": { pontos: 15, overdrive: 3 },
-        "Coronel": { pontos: 17, overdrive: 3 },
-        "General": { pontos: 19, overdrive: 4 },
-        "Marechal": { pontos: 21, overdrive: 5 }
+        "Soldado": { pontos: 7, overdrive: 0 },
+        "Cabo": { pontos: 9, overdrive: 1 },
+        "Sargento": { pontos: 11, overdrive: 1 },
+        "Tenente": { pontos: 13, overdrive: 2 },
+        "Capitão": { pontos: 15, overdrive: 2 },
+        "Major": { pontos: 17, overdrive: 3 },
+        "Coronel": { pontos: 19, overdrive: 3 },
+        "General": { pontos: 21, overdrive: 4 },
+        "Marechal": { pontos: 23, overdrive: 5 }
     };
 
     static getPatentePontos(patente) {

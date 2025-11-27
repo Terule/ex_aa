@@ -78,6 +78,11 @@
           <h3>Atributos de Combate</h3>
           <div class="dual-grid">
             <div class="field">
+              <label>Iniciativa:</label>
+              <input type="number" name="system.combate.iniciativa" value="{{calculatedIniciativa}}" readonly />
+              <button type="button" class="roll-iniciativa" title="Rolar Iniciativa">🎲</button>
+            </div>
+            <div class="field">
               <label>Esquiva</label>
               <input type="number" name="system.combate.esquiva" value="{{calculatedEsquiva}}" readonly />
             </div>

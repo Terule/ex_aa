@@ -72,6 +72,68 @@
 .pilot-sheet .limiar-dano-table td {
   padding: 0.2rem;
 }
+
+.pilot-weight-meter {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.pilot-weight-meter__header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #3b2c55;
+}
+
+.pilot-weight-meter__bar {
+  position: relative;
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(59, 44, 85, 0.15);
+  overflow: hidden;
+}
+
+.pilot-weight-meter__fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.pilot-weight-meter__fill.is-over {
+  animation: pulse-overload 1.2s infinite;
+}
+
+.pilot-weight-meter__status {
+  font-size: 0.8rem;
+  text-align: right;
+  color: #504063;
+  font-weight: 600;
+}
+
+.pilot-weight-meter__status.alert {
+  color: #c62828;
+}
+
+@keyframes pulse-overload {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
 }
 
 @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap");
