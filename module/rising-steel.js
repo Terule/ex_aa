@@ -40,36 +40,58 @@ Hooks.once("init", async function () {
             if (!ids) ids = this.combatants.map(c => c.id);
             if (!Array.isArray(ids)) ids = [ids];
             
-            // Para cada combatant, verificar se é piloto e usar fórmula correta
             for (const id of ids) {
                 const combatant = this.combatants.get(id);
                 if (!combatant) continue;
+                const actor = combatant.actor;
+                if (!actor) continue;
                 
-                if (combatant.actor?.type === "piloto") {
-                    const iniciativa = combatant.actor.system.combate?.iniciativa || 0;
-                    if (iniciativa > 0) {
-                        // Criar rolagem com fórmula correta
-                        const roll = new Roll(`${iniciativa}d6`);
-                        await roll.roll();
-                        
-                        // Atualizar a iniciativa do combatant
-                        await combatant.update({ initiative: roll.total });
-                        
-                        // Exibir no chat
-                        await roll.toMessage({
-                            speaker: ChatMessage.getSpeaker({ actor: combatant.actor, token: combatant.token }),
-                            flavor: `Rolagem de Iniciativa: ${iniciativa}d6`
-                        });
-                        
-                        continue;
-                    }
+                const initiativeData = getActorInitiativeData(actor);
+                if (initiativeData.dice > 0) {
+                    const roll = new Roll(`${initiativeData.dice}d6`);
+                    await roll.roll();
+                    
+                    await combatant.update({ initiative: roll.total });
+                    
+                    await roll.toMessage({
+                        speaker: ChatMessage.getSpeaker({ actor, token: combatant.token }),
+                        flavor: `Rolagem de Iniciativa: ${initiativeData.flavor} = ${initiativeData.dice}d6`
+                    });
+                    
+                    continue;
                 }
                 
-                // Para não-pilotos, usar o método original
+                // Sem fórmula customizada: usar comportamento padrão
                 await originalRollInitiative.call(this, [id], options);
             }
         };
     });
+
+    /**
+     * Retorna a quantidade de dados de iniciativa e descrição baseada no tipo do ator
+     * @param {Actor} actor 
+     * @returns {{dice:number, flavor:string}}
+     */
+    function getActorInitiativeData(actor) {
+        const safeNumber = (value) => Number(value ?? 0);
+        const attr = actor.system?.atributos || {};
+        let dice = 0;
+        let flavor = "";
+        
+        if (actor.type === "piloto" || actor.type === "companion" || actor.type === "criatura") {
+            const destreza = safeNumber(attr.fisicos?.destreza);
+            const perspicacia = safeNumber(attr.mentais?.perspicacia);
+            dice = destreza + perspicacia;
+            flavor = `${destreza} (Destreza) + ${perspicacia} (Perspicácia)`;
+        } else if (actor.type === "exacom") {
+            const neuromotor = safeNumber(actor.system?.sistema?.neuromotor);
+            const sensorial = safeNumber(actor.system?.sistema?.sensorial);
+            dice = neuromotor + sensorial;
+            flavor = `${neuromotor} (Neuromotor) + ${sensorial} (Sensorial)`;
+        }
+        
+        return { dice, flavor };
+    }
 
     CONFIG.RisingSteel = RisingSteel;
     CONFIG.Actor.documentClass = RisingSteelActor;

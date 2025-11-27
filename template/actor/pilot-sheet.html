@@ -60,6 +60,20 @@
         <label>Penalidades</label>
         <input type="number" name="system.limiarDano.penalidades" value="{{number system.limiarDano.penalidades}}" min="0" step="1" data-dtype="Number" />
       </div>
+      {{#if carryWeight}}
+      <div class="pilot-weight-meter">
+        <div class="pilot-weight-meter__header">
+          <span>Peso Transportado</span>
+          <span>{{number carryWeight.total}} / {{number carryWeight.max}} kg</span>
+        </div>
+        <div class="pilot-weight-meter__bar">
+          <div class="pilot-weight-meter__fill {{#if carryWeight.overLimit}}is-over{{/if}}" style="width: {{carryWeight.percent}}%; background-color: {{carryWeight.color}};"></div>
+        </div>
+        <div class="pilot-weight-meter__status {{#if carryWeight.overLimit}}alert{{/if}}">
+          {{carryWeight.statusLabel}}
+        </div>
+      </div>
+      {{/if}}
     </div>
 
     <div class="armadura-section card">

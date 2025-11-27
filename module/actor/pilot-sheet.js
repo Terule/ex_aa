@@ -355,6 +355,8 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
             context.equipamentos = [];
             context.armas = [];
         }
+
+        context.carryWeight = this._calculateCarryWeight(context);
         
         return context;
     }
@@ -638,6 +640,150 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
             console.error(`[Rising Steel] Erro ao buscar itens do pack "${packName}":`, error);
             return [];
         }
+    }
+
+    _calculateCarryWeight(context) {
+        const system = context.system || {};
+        const fisicos = system?.atributos?.fisicos || {};
+        const forca = Number(fisicos.forca || 0);
+        const vigor = Number(fisicos.vigor || 0);
+        const baseMax = Math.max(0, (forca + vigor) * 10);
+
+        const actorItems = Array.isArray(context.items) ? context.items : [];
+        const collections = {
+            armaduras: context.armaduras || [],
+            equipamentos: context.equipamentos || [],
+            armas: context.armas || []
+        };
+
+        const addWeight = (value, total) => {
+            const num = Number(value);
+            if (!Number.isNaN(num) && num > 0) {
+                return total + num;
+            }
+            return total;
+        };
+
+        let totalWeight = 0;
+
+        // Armadura equipada
+        if (system.armadura?.equipada) {
+            totalWeight = addWeight(
+                this._resolveWeightFromCollections(
+                    {
+                        id: system.armadura.equipada,
+                        nome: system.armadura?.nome || ""
+                    },
+                    [collections.armaduras],
+                    actorItems
+                ),
+                totalWeight
+            );
+        }
+
+        // Equipamentos
+        if (Array.isArray(system?.inventario?.equipamentos)) {
+            for (const item of system.inventario.equipamentos) {
+                totalWeight = addWeight(
+                    this._resolveWeightFromCollections(item, [collections.equipamentos], actorItems),
+                    totalWeight
+                );
+            }
+        }
+
+        // Armas
+        if (Array.isArray(system?.inventario?.armas)) {
+            for (const item of system.inventario.armas) {
+                totalWeight = addWeight(
+                    this._resolveWeightFromCollections(item, [collections.armas], actorItems),
+                    totalWeight
+                );
+            }
+        }
+
+        const rawPercent = baseMax > 0 ? (totalWeight / baseMax) * 100 : 0;
+        const percent = Math.max(0, Math.min(100, rawPercent));
+        const color = this._getWeightColor(percent);
+        const overLimit = rawPercent > 100;
+        const statusLabel = overLimit ? "Acima do limite!" : this._getWeightStatusLabel(percent);
+
+        return {
+            total: Number(totalWeight.toFixed(2)),
+            max: Number(baseMax.toFixed(2)),
+            percent: Number(percent.toFixed(1)),
+            color,
+            statusLabel,
+            overLimit
+        };
+    }
+
+    _resolveWeightFromCollections(entry, collections = [], actorItems = []) {
+        if (!entry) return 0;
+
+        const directValue = entry.peso ?? entry.system?.peso;
+        if (directValue !== undefined && directValue !== null && directValue !== "") {
+            const num = Number(directValue);
+            if (!Number.isNaN(num)) return num;
+        }
+
+        const normalizedId = entry.id ? String(entry.id).trim() : "";
+        let candidate = null;
+        const lists = Array.isArray(collections) ? collections : [collections];
+
+        if (normalizedId) {
+            for (const list of lists) {
+                if (!Array.isArray(list)) continue;
+                const found = list.find(item => {
+                    const compId = item?.id ? String(item.id).trim() : "";
+                    return compId && compId === normalizedId;
+                });
+                if (found) {
+                    candidate = found;
+                    break;
+                }
+            }
+        }
+
+        if (!candidate && entry.nome) {
+            const target = entry.nome.trim().toLowerCase();
+            for (const list of lists) {
+                if (!Array.isArray(list)) continue;
+                const found = list.find(item => (item?.name || "").trim().toLowerCase() === target);
+                if (found) {
+                    candidate = found;
+                    break;
+                }
+            }
+        }
+
+        if (!candidate && entry.nome && Array.isArray(actorItems)) {
+            const target = entry.nome.trim().toLowerCase();
+            const actorItem = actorItems.find(item => (item?.name || "").trim().toLowerCase() === target);
+            if (actorItem?.system?.peso !== undefined) {
+                const num = Number(actorItem.system.peso);
+                return Number.isNaN(num) ? 0 : num;
+            }
+        }
+
+        if (candidate?.system?.peso !== undefined) {
+            const num = Number(candidate.system.peso);
+            return Number.isNaN(num) ? 0 : num;
+        }
+
+        return 0;
+    }
+
+    _getWeightColor(percent) {
+        const clamped = Math.max(0, Math.min(100, percent));
+        const hue = Math.max(0, Math.min(120, 120 - (clamped * 1.2)));
+        return `hsl(${hue}, 70%, 45%)`;
+    }
+
+    _getWeightStatusLabel(percent) {
+        if (percent < 35) return "Leve";
+        if (percent < 65) return "Carregado";
+        if (percent < 90) return "Pesado";
+        return "Quase no limite";
     }
 
     /**
