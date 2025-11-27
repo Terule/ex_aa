@@ -1,3 +1,5 @@
+import { parseTextualModifiers } from "../helpers/modifiers.mjs";
+
 /**
  * Extend the base Actor entity by defining a custom roll data structure which is ideal for the Rising Steel system.
  * @extends {Actor}
@@ -116,6 +118,8 @@ export class RisingSteelActor extends Actor {
         } else if (this.type === "exacom") {
             this._prepareExacomData();
         }
+
+        this._applyTextualModifiers();
     }
 
     /**
@@ -285,15 +289,18 @@ export class RisingSteelActor extends Actor {
         this.system.limiarDano.leve.limiar = Math.max(0, limiarLeveBase - penalidadeLimiar);
         
         // Calcular Armadura atual (total - dano)
-        if (this.system.armadura) {
-            const total = safeNumber(this.system.armadura.total);
-            const dano = safeNumber(this.system.armadura.dano);
-            this.system.armadura.atual = Math.max(0, total - dano);
-            
-            // Garantir que armadura.equipada existe
-            if (this.system.armadura.equipada === undefined) {
-                this.system.armadura.equipada = "";
-            }
+        if (!this.system.armadura) {
+            this.system.armadura = { total: 0, dano: 0, atual: 0, equipada: "" };
+        }
+        const armadura = this.system.armadura;
+        armadura.nome = armadura.nome ?? "";
+        armadura.descricao = armadura.descricao ?? "";
+        armadura.especial = armadura.especial ?? "";
+        const total = safeNumber(armadura.total);
+        const dano = safeNumber(armadura.dano);
+        armadura.atual = Math.max(0, total - dano);
+        if (armadura.equipada === undefined) {
+            armadura.equipada = "";
         }
         
         // Calcular Esquiva = máximo entre (destreza/2) - total de armadura, com mínimo de 1
@@ -346,16 +353,16 @@ export class RisingSteelActor extends Actor {
             // Se não há dados salvos e não existe inventário, criar novo
             this.system.inventario = {
                 equipamentos: [
-                    {nome: "", id: ""},
-                    {nome: "", id: ""},
-                    {nome: "", id: ""},
-                    {nome: "", id: ""},
-                    {nome: "", id: ""}
+                    {nome: "", id: "", descricao: "", efeito: ""},
+                    {nome: "", id: "", descricao: "", efeito: ""},
+                    {nome: "", id: "", descricao: "", efeito: ""},
+                    {nome: "", id: "", descricao: "", efeito: ""},
+                    {nome: "", id: "", descricao: "", efeito: ""}
                 ],
                 armas: [
-                    {nome: "", id: "", dano: 0, alcance: "", bonus: 0},
-                    {nome: "", id: "", dano: 0, alcance: "", bonus: 0},
-                    {nome: "", id: "", dano: 0, alcance: "", bonus: 0}
+                    {nome: "", id: "", dano: 0, alcance: "", bonus: 0, descricao: "", efeito: ""},
+                    {nome: "", id: "", dano: 0, alcance: "", bonus: 0, descricao: "", efeito: ""},
+                    {nome: "", id: "", dano: 0, alcance: "", bonus: 0, descricao: "", efeito: ""}
                 ]
             };
         }
@@ -363,48 +370,50 @@ export class RisingSteelActor extends Actor {
         // Garantir que equipamentos existe e tem estrutura correta
         if (!this.system.inventario.equipamentos || !Array.isArray(this.system.inventario.equipamentos)) {
             this.system.inventario.equipamentos = [
-                {nome: "", id: ""},
-                {nome: "", id: ""},
-                {nome: "", id: ""},
-                {nome: "", id: ""},
-                {nome: "", id: ""}
+                {nome: "", id: "", descricao: "", efeito: ""},
+                {nome: "", id: "", descricao: "", efeito: ""},
+                {nome: "", id: "", descricao: "", efeito: ""},
+                {nome: "", id: "", descricao: "", efeito: ""},
+                {nome: "", id: "", descricao: "", efeito: ""}
             ];
         }
         // Garantir que há exatamente 5 equipamentos
         while (this.system.inventario.equipamentos.length < 5) {
-            this.system.inventario.equipamentos.push({nome: "", id: ""});
+            this.system.inventario.equipamentos.push({nome: "", id: "", descricao: "", efeito: ""});
         }
         this.system.inventario.equipamentos = this.system.inventario.equipamentos.slice(0, 5);
         // Garantir que todos os equipamentos tenham os campos necessários
         for (let i = 0; i < this.system.inventario.equipamentos.length; i++) {
             const eq = this.system.inventario.equipamentos[i];
             if (!eq || typeof eq !== 'object') {
-                this.system.inventario.equipamentos[i] = {nome: "", id: ""};
+                this.system.inventario.equipamentos[i] = {nome: "", id: "", descricao: "", efeito: ""};
                 continue;
             }
             // Apenas adicionar campos que não existem, preservar valores existentes
             if (eq.nome === undefined || eq.nome === null) eq.nome = "";
             if (eq.id === undefined || eq.id === null) eq.id = "";
+            if (eq.descricao === undefined || eq.descricao === null) eq.descricao = "";
+            if (eq.efeito === undefined || eq.efeito === null) eq.efeito = "";
         }
         
         // Garantir que armas existe e tem estrutura correta
         if (!this.system.inventario.armas || !Array.isArray(this.system.inventario.armas)) {
             this.system.inventario.armas = [
-                {nome: "", id: "", dano: 0, alcance: "", bonus: 0},
-                {nome: "", id: "", dano: 0, alcance: "", bonus: 0},
-                {nome: "", id: "", dano: 0, alcance: "", bonus: 0}
+                {nome: "", id: "", dano: 0, alcance: "", bonus: 0, descricao: "", efeito: ""},
+                {nome: "", id: "", dano: 0, alcance: "", bonus: 0, descricao: "", efeito: ""},
+                {nome: "", id: "", dano: 0, alcance: "", bonus: 0, descricao: "", efeito: ""}
             ];
         }
         // Garantir que há exatamente 3 armas
         while (this.system.inventario.armas.length < 3) {
-            this.system.inventario.armas.push({nome: "", id: "", dano: 0, alcance: "", bonus: 0});
+            this.system.inventario.armas.push({nome: "", id: "", dano: 0, alcance: "", bonus: 0, descricao: "", efeito: ""});
         }
         this.system.inventario.armas = this.system.inventario.armas.slice(0, 3);
         // Garantir que todas as armas tenham os campos necessários
         for (let i = 0; i < this.system.inventario.armas.length; i++) {
             const arma = this.system.inventario.armas[i];
             if (!arma || typeof arma !== 'object') {
-                this.system.inventario.armas[i] = {nome: "", id: "", dano: 0, alcance: "", bonus: 0};
+                this.system.inventario.armas[i] = {nome: "", id: "", dano: 0, alcance: "", bonus: 0, descricao: "", efeito: ""};
                 continue;
             }
             // Apenas adicionar campos que não existem, preservar valores existentes
@@ -413,6 +422,8 @@ export class RisingSteelActor extends Actor {
             if (arma.dano === undefined || arma.dano === null) arma.dano = 0;
             if (arma.alcance === undefined || arma.alcance === null) arma.alcance = "";
             if (arma.bonus === undefined || arma.bonus === null) arma.bonus = 0;
+            if (arma.descricao === undefined || arma.descricao === null) arma.descricao = "";
+            if (arma.efeito === undefined || arma.efeito === null) arma.efeito = "";
         }
     }
 
@@ -670,6 +681,8 @@ export class RisingSteelActor extends Actor {
         if (!this.system.equipamentosExa) {
             this.system.equipamentosExa = {};
         }
+        this.system.equipamentosExa.blindagemDescricao = this.system.equipamentosExa.blindagemDescricao ?? "";
+        this.system.equipamentosExa.blindagemEspecial = this.system.equipamentosExa.blindagemEspecial ?? "";
 
         const ensureEntries = (entries, template, min = 1) => {
             let list = Array.isArray(entries) ? entries.map(entry => ({
@@ -750,6 +763,121 @@ export class RisingSteelActor extends Actor {
             { descricao: "" },
             1
         );
+    }
+
+    _gatherTextualModifierSources() {
+        const entries = [];
+        const addEntry = (text, source) => {
+            if (!text || typeof text !== "string") return;
+            const trimmed = text.trim();
+            if (!trimmed) return;
+            entries.push({ text: trimmed, source });
+        };
+
+        const ownedItems = Array.isArray(this.items?.contents) ? this.items.contents : Array.from(this.items ?? []);
+        for (const item of ownedItems) {
+            const label = `Item: ${item.name || item.id || "sem nome"}`;
+            addEntry(item.system?.descricao, label);
+            addEntry(item.system?.especial, label);
+            addEntry(item.system?.efeito, label);
+        }
+
+        const armaduraNome = this.system?.armadura?.nome || this.system?.armadura?.equipada || "Armadura";
+        addEntry(this.system?.armadura?.descricao, `Armadura: ${armaduraNome}`);
+        addEntry(this.system?.armadura?.especial, `Armadura: ${armaduraNome}`);
+
+        const equipamentos = this.system?.inventario?.equipamentos;
+        if (Array.isArray(equipamentos)) {
+            equipamentos.forEach((equipamento, index) => {
+                const label = `Equipamento ${equipamento?.nome || index + 1}`;
+                addEntry(equipamento?.descricao, label);
+                addEntry(equipamento?.efeito, label);
+            });
+        }
+
+        const armas = this.system?.inventario?.armas;
+        if (Array.isArray(armas)) {
+            armas.forEach((arma, index) => {
+                const label = `Arma ${arma?.nome || index + 1}`;
+                addEntry(arma?.descricao, label);
+                addEntry(arma?.efeito, label);
+            });
+        }
+
+        const habilidades = this.system?.habilidadesEspeciais;
+        if (Array.isArray(habilidades)) {
+            habilidades.forEach((habilidade, index) => {
+                addEntry(habilidade?.descricao, `Habilidade ${habilidade?.nome || index + 1}`);
+            });
+        }
+
+        const ataques = this.system?.ataques;
+        if (Array.isArray(ataques)) {
+            ataques.forEach((ataque, index) => {
+                const label = `Ataque ${ataque?.nome || index + 1}`;
+                addEntry(ataque?.descricao, label);
+                addEntry(ataque?.efeito, label);
+            });
+        }
+
+        const exaArmas = this.system?.equipamentosExa?.armas;
+        if (Array.isArray(exaArmas)) {
+            exaArmas.forEach((arma, index) => {
+                const label = `EXA Arma ${arma?.nome || index + 1}`;
+                addEntry(arma?.descricao, label);
+                addEntry(arma?.efeito, label);
+            });
+        }
+
+        const modsReator = this.system?.exa?.mods?.reator;
+        if (Array.isArray(modsReator)) {
+            modsReator.forEach((mod, index) => addEntry(mod?.descricao, `Reator ${index + 1}`));
+        }
+
+        const modsModulo = this.system?.exa?.mods?.modulos;
+        if (Array.isArray(modsModulo)) {
+            modsModulo.forEach((mod, index) => addEntry(mod?.descricao, `Modulo ${index + 1}`));
+        }
+
+        const blindagemDescricao = this.system?.equipamentosExa?.blindagemDescricao;
+        if (blindagemDescricao) {
+            addEntry(blindagemDescricao, "Blindagem EXA");
+        }
+
+        const blindagemEspecial = this.system?.equipamentosExa?.blindagemEspecial;
+        if (blindagemEspecial) {
+            addEntry(blindagemEspecial, "Blindagem EXA");
+        }
+
+        return entries;
+    }
+
+    _applyTextualModifiers() {
+        const sources = this._gatherTextualModifierSources();
+        const breakdown = [];
+
+        for (const entry of sources) {
+            breakdown.push(...parseTextualModifiers(entry.text, entry.source));
+        }
+
+        const totals = {};
+        for (const mod of breakdown) {
+            totals[mod.path] = (totals[mod.path] || 0) + mod.value;
+        }
+
+        for (const [path, total] of Object.entries(totals)) {
+            if (!total) continue;
+            const current = foundry.utils.getProperty(this.system, path);
+            if (current === undefined || current === null) continue;
+            const numericCurrent = Number(current);
+            if (Number.isNaN(numericCurrent)) continue;
+            foundry.utils.setProperty(this.system, path, numericCurrent + total);
+        }
+
+        this.system.textualModifiers = {
+            breakdown,
+            totals
+        };
     }
 }
 

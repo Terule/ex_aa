@@ -43,15 +43,21 @@ export class RisingSteelArmaduraSelectDialog {
                         event.preventDefault();
                         const button = event.currentTarget;
                         const armaduraId = button.dataset.armaduraId;
-                        const armaduraNome = button.dataset.armaduraNome;
+                        const armaduraData = armaduras.find(a => a.id === armaduraId) || null;
+                        const armaduraNome = armaduraData?.name || button.dataset.armaduraNome || "";
                         const armaduraProtecao = parseInt(button.dataset.armaduraProtecao || 0);
+                        const armaduraDescricao = armaduraData?.system?.descricao || "";
+                        const armaduraEspecial = armaduraData?.system?.especial || "";
                         
                         // Equipar a armadura
                         await actor.update({
                             "system.armadura.equipada": armaduraId,
                             "system.armadura.total": armaduraProtecao,
                             "system.armadura.dano": 0,
-                            "system.armadura.atual": armaduraProtecao
+                            "system.armadura.atual": armaduraProtecao,
+                            "system.armadura.nome": armaduraNome,
+                            "system.armadura.descricao": armaduraDescricao,
+                            "system.armadura.especial": armaduraEspecial
                         });
                         
                         ui.notifications.info(`Armadura "${armaduraNome}" equipada!`);
@@ -68,7 +74,10 @@ export class RisingSteelArmaduraSelectDialog {
                                 "system.armadura.equipada": "",
                                 "system.armadura.total": 0,
                                 "system.armadura.dano": 0,
-                                "system.armadura.atual": 0
+                                "system.armadura.atual": 0,
+                                "system.armadura.nome": "",
+                                "system.armadura.descricao": "",
+                                "system.armadura.especial": ""
                             });
                             ui.notifications.info("Armadura removida!");
                             resolve(null);

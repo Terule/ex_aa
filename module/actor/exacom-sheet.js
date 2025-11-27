@@ -97,6 +97,8 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
                     // Atualizar o valor da blindagem baseado no item selecionado
                     if (context.selectedBlindagem) {
                         context.system.equipamentosExa.blindagem = Number(context.selectedBlindagem.system?.blindagem || 0);
+                        context.system.equipamentosExa.blindagemDescricao = context.selectedBlindagem.system?.descricao || "";
+                        context.system.equipamentosExa.blindagemEspecial = context.selectedBlindagem.system?.especial || "";
                     }
                 }
             } catch (error) {
@@ -491,6 +493,8 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
         const blindagemId = select.value;
         
         let blindagemValue = 0;
+        let blindagemDescricao = "";
+        let blindagemEspecial = "";
         if (blindagemId) {
             try {
                 const pack = game.packs.get("rising-steel.blindagemExacom");
@@ -499,6 +503,8 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
                     const blindagemDoc = docs.find(d => d.id === blindagemId);
                     if (blindagemDoc) {
                         blindagemValue = Number(blindagemDoc.system?.blindagem || 0);
+                        blindagemDescricao = blindagemDoc.system?.descricao || "";
+                        blindagemEspecial = blindagemDoc.system?.especial || "";
                     }
                 }
             } catch (error) {
@@ -509,7 +515,9 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
         // Atualizar a blindagem no actor
         await this.actor.update({
             "system.equipamentosExa.blindagemId": blindagemId,
-            "system.equipamentosExa.blindagem": blindagemValue
+            "system.equipamentosExa.blindagem": blindagemValue,
+            "system.equipamentosExa.blindagemDescricao": blindagemId ? blindagemDescricao : "",
+            "system.equipamentosExa.blindagemEspecial": blindagemId ? blindagemEspecial : ""
         });
         
         // Recalcular atributos de combate
