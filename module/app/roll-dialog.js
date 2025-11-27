@@ -277,10 +277,15 @@ export class RisingSteelRollDialog {
                             
                             // Separar dados por tipo: normais (base + atributo + atributo piloto), bonus, exapoints próprio piloto, exapoints piloto vinculado
                             const dadosNormais = baseDice + atributoBonus + linkedPilotAtributoBonus;
-                            const dadosBonus = bonusDice;
+                            const dadosBonus = bonusDice; // Pode ser negativo
                             const dadosExapointsActor = actorExapointsUsar;
                             const dadosExapointsPiloto = linkedPilotExapointsUsar;
                             const totalDice = dadosNormais + dadosBonus + dadosExapointsActor + dadosExapointsPiloto;
+                            
+                            if (totalDice <= 0) {
+                                ui.notifications.warn("O total de dados precisa ser pelo menos 1 para rolar!");
+                                return;
+                            }
                             
                             if (dadosNormais <= 0) {
                                 ui.notifications.warn("Você precisa de pelo menos 1 dado base para rolar!");
@@ -291,21 +296,25 @@ export class RisingSteelRollDialog {
                             const rolls = [];
                             const rollResults = [];
                             
-                            // Rolagem de dados normais
-                            if (dadosNormais > 0) {
-                                const rollNormais = new Roll(`${dadosNormais}d6`);
+                            // Calcular quantos dados normais realmente vamos rolar (considerando redução do bonus negativo)
+                            const dadosNormaisARolar = Math.max(1, dadosNormais + Math.min(0, dadosBonus));
+                            
+                            // Rolagem de dados normais (já considerando redução se bonus for negativo)
+                            if (dadosNormaisARolar > 0) {
+                                const rollNormais = new Roll(`${dadosNormaisARolar}d6`);
                                 await rollNormais.roll();
-                                rolls.push({ roll: rollNormais, type: "normal", count: dadosNormais });
+                                rolls.push({ roll: rollNormais, type: "normal", count: dadosNormaisARolar });
                                 rollResults.push(...rollNormais.terms[0].results);
                             }
                             
-                            // Rolagem de dados bonus
+                            // Rolagem de dados bonus (só se for positivo)
                             if (dadosBonus > 0) {
                                 const rollBonus = new Roll(`${dadosBonus}d6`);
                                 await rollBonus.roll();
                                 rolls.push({ roll: rollBonus, type: "bonus", count: dadosBonus });
                                 rollResults.push(...rollBonus.terms[0].results);
                             }
+                            // Se dadosBonus for negativo, já foi considerado na redução dos dados normais
                             
                             // Rolagem de dados EXApoints do próprio piloto
                             let resultadosExapointsActor = [];
@@ -313,8 +322,13 @@ export class RisingSteelRollDialog {
                                 const rollExaActor = new Roll(`${actorExapointsUsar}d6`);
                                 await rollExaActor.roll();
                                 rolls.push({ roll: rollExaActor, type: "exapoint", count: actorExapointsUsar, source: "actor" });
-                                resultadosExapointsActor = rollExaActor.terms[0].results;
-                                rollResults.push(...resultadosExapointsActor);
+                                resultadosExapointsActor = rollExaActor.terms[0].results || [];
+                                // Garantir que os resultados sejam adicionados corretamente
+                                if (Array.isArray(resultadosExapointsActor)) {
+                                    rollResults.push(...resultadosExapointsActor);
+                                } else {
+                                    rollResults.push(resultadosExapointsActor);
+                                }
                             }
                             
                             // Rolagem de dados EXApoints (piloto vinculado)
@@ -323,8 +337,13 @@ export class RisingSteelRollDialog {
                                 const rollExaPiloto = new Roll(`${linkedPilotExapointsUsar}d6`);
                                 await rollExaPiloto.roll();
                                 rolls.push({ roll: rollExaPiloto, type: "exapoint", count: linkedPilotExapointsUsar, source: "pilot" });
-                                resultadosExapointsPiloto = rollExaPiloto.terms[0].results;
-                                rollResults.push(...resultadosExapointsPiloto);
+                                resultadosExapointsPiloto = rollExaPiloto.terms[0].results || [];
+                                // Garantir que os resultados sejam adicionados corretamente
+                                if (Array.isArray(resultadosExapointsPiloto)) {
+                                    rollResults.push(...resultadosExapointsPiloto);
+                                } else {
+                                    rollResults.push(resultadosExapointsPiloto);
+                                }
                             }
                             
                             // Combinar todas as rolagens em uma fórmula composta para exibição
@@ -356,14 +375,30 @@ export class RisingSteelRollDialog {
                             
                             // Separar resultados por tipo para processamento
                             let resultIndex = 0;
-                            const resultadosNormais = rollResults.slice(resultIndex, resultIndex + dadosNormais);
-                            resultIndex += dadosNormais;
-                            const resultadosBonus = rollResults.slice(resultIndex, resultIndex + dadosBonus);
-                            resultIndex += dadosBonus;
+                            const resultadosNormais = rollResults.slice(resultIndex, resultIndex + dadosNormaisARolar);
+                            resultIndex += dadosNormaisARolar;
+                            // Se dadosBonus for negativo, não há dados bonus rolados
+                            const resultadosBonus = dadosBonus > 0 ? rollResults.slice(resultIndex, resultIndex + dadosBonus) : [];
+                            if (dadosBonus > 0) {
+                                resultIndex += dadosBonus;
+                            }
                             // resultadosExapointsActor e resultadosExapointsPiloto já foram definidos acima durante a rolagem
                             
                             // Contar sucessos (6) em todos os dados
-                            const sucessos = rollResults.filter(d => (d.result ?? d.total) === 6).length;
+                            // Verificar tanto 'result' quanto 'total' e também verificar se é um número
+                            // Incluir todos os resultados: normais, bonus e EXApoints
+                            const todosResultados = [
+                                ...resultadosNormais,
+                                ...(dadosBonus > 0 ? resultadosBonus : []),
+                                ...resultadosExapointsActor,
+                                ...resultadosExapointsPiloto
+                            ];
+                            
+                            const sucessos = todosResultados.filter(d => {
+                                const value = d.result ?? d.total ?? d;
+                                const numValue = Number(value);
+                                return !isNaN(numValue) && numValue === 6;
+                            }).length;
                             
                             // Contar falhas (1) apenas nos dados normais
                             const unsNormais = resultadosNormais.filter(d => (d.result ?? d.total) === 1).length;
@@ -404,8 +439,12 @@ export class RisingSteelRollDialog {
                             let flavor = `<strong>${label || rollName}</strong><br/>`;
                             flavor += `<div style="margin-top: 5px;">`;
                             flavor += `<strong>Dados Base:</strong> ${baseDice}`;
-                            if (bonusDice > 0) {
-                                flavor += ` | <strong>Dados Bônus:</strong> ${bonusDice}`;
+                            if (bonusDice !== 0) {
+                                if (bonusDice > 0) {
+                                    flavor += ` | <strong>Dados Bônus:</strong> +${bonusDice}`;
+                                } else {
+                                    flavor += ` | <strong>Dados Bônus:</strong> ${bonusDice}`;
+                                }
                             }
                             if (atributoBonus > 0) {
                                 flavor += ` | <strong>Dados do Atributo:</strong> ${atributoBonus}`;
@@ -455,8 +494,8 @@ export class RisingSteelRollDialog {
                             
                             // Preparar flags com informações sobre os tipos de dados
                             const diceInfo = [];
-                            if (dadosNormais > 0) {
-                                diceInfo.push({ type: "normal", count: dadosNormais, results: resultadosNormais });
+                            if (dadosNormaisARolar > 0) {
+                                diceInfo.push({ type: "normal", count: dadosNormaisARolar, results: resultadosNormais });
                             }
                             if (dadosBonus > 0) {
                                 diceInfo.push({ type: "bonus", count: dadosBonus, results: resultadosBonus });

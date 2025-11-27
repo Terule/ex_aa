@@ -111,6 +111,7 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
             
             // Calcular atributos de combate
             const neuromotor = Number(context.system.sistema?.neuromotor || 0);
+            const sensorial = Number(context.system.sistema?.sensorial || 0);
             // Blindagem agora vem do item selecionado
             let blindagem = 0;
             if (context.selectedBlindagem) {
@@ -119,6 +120,9 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
                 blindagem = Number(context.system.equipamentosExa?.blindagem || 0);
             }
             const sincronia = Number(context.system.exa?.sincronia || 0);
+            
+            // Iniciativa = Neuromotor + Sensorial (similar a Destreza + Perspicácia do piloto)
+            context.calculatedIniciativa = neuromotor + sensorial;
             
             // Esquiva = (Neuromotor - Blindagem) + Sincronia
             context.calculatedEsquiva = Math.max(0, (neuromotor - blindagem) + sincronia);
@@ -193,6 +197,7 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
                 limiarLeve: 0,
                 limiarMedio: 0,
                 limiarGrave: 0,
+                calculatedIniciativa: 0,
                 calculatedEsquiva: 0,
                 calculatedMobilidade: 0,
                 linkedPilot: null,
@@ -225,6 +230,9 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
         
         // Listeners para rolagem de atributos de sistema
         html.find(".roll-atributo-sistema").click(this._onRollAtributoSistema.bind(this));
+        
+        // Botão de rolagem de iniciativa
+        html.find(".roll-iniciativa").click(this._onRollIniciativa.bind(this));
     }
     
     _getAttributeOptions() {
@@ -798,6 +806,107 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
             allowAttributeSelection: false, // EXAcom não tem atributos físicos/mentais/sociais, apenas sistema
             linkedPilot: linkedPilot // O piloto vinculado já permite selecionar atributo e usar EXApoints
         });
+    }
+
+    async _onRollIniciativa(event) {
+        event.preventDefault();
+        
+        try {
+            const { FoundryCompatibility } = await import("../utils/compatibility.js");
+            
+            // Verificar se há um combate ativo
+            let combat = game.combat;
+            
+            // Se não houver combate, criar um novo
+            if (!combat) {
+                if (FoundryCompatibility.isV13()) {
+                    // v13: criar combate usando foundry.documents
+                    const combatData = {
+                        scene: canvas.scene?.id || null,
+                        combatants: []
+                    };
+                    combat = await foundry.documents.BaseCombat.create(combatData, { temporary: false });
+                } else {
+                    // v12: criar combate usando Combat.create
+                    combat = await Combat.create({
+                        scene: canvas.scene?.id || null,
+                        combatants: []
+                    });
+                }
+                
+                if (!combat) {
+                    ui.notifications.warn("Não foi possível criar um combate. Certifique-se de estar em uma cena.");
+                    return;
+                }
+            }
+            
+            // Verificar se o actor já está no combate
+            let combatant = combat.combatants.find(c => c.actor?.id === this.actor.id);
+            
+            // Se não estiver no combate, adicionar
+            if (!combatant) {
+                // Adicionar o token ao combate
+                const tokens = this.actor.getActiveTokens(true);
+                if (tokens.length === 0) {
+                    ui.notifications.warn("Nenhum token ativo encontrado para este EXAcom. Coloque o token na cena primeiro.");
+                    return;
+                }
+                
+                const token = tokens[0];
+                
+                // Criar combatant
+                const combatantData = {
+                    tokenId: token.id,
+                    actorId: this.actor.id
+                };
+                
+                if (FoundryCompatibility.isV13()) {
+                    combatantData.sceneId = canvas.scene?.id;
+                }
+                
+                await combat.createEmbeddedDocuments("Combatant", [combatantData]);
+                
+                // Atualizar a referência do combate e encontrar o combatant
+                combat = game.combat;
+                combatant = combat.combatants.find(c => c.actor?.id === this.actor.id);
+            }
+            
+            if (!combatant) {
+                ui.notifications.error("Não foi possível encontrar o combatente no combate.");
+                return;
+            }
+            
+            // Calcular o valor de iniciativa (neuromotor + sensorial)
+            const neuromotor = this.actor.system.sistema?.neuromotor || 0;
+            const sensorial = this.actor.system.sistema?.sensorial || 0;
+            const iniciativaBase = neuromotor + sensorial;
+            
+            // Rolar Xd6 onde X é o valor de iniciativa
+            const roll = new Roll(`${iniciativaBase}d6`);
+            await roll.roll();
+            
+            // Atualizar a iniciativa do combatant
+            const rollTotal = Number(roll.total ?? roll._total ?? 0);
+            if (FoundryCompatibility.isV13()) {
+                // v13: usar rollInitiative do combatant
+                await combatant.rollInitiative({ formula: `${iniciativaBase}d6` });
+            } else {
+                // v12: atualizar diretamente
+                await combatant.update({ initiative: rollTotal });
+            }
+            
+            // Exibir a rolagem no chat
+            await roll.toMessage({
+                speaker: ChatMessage.getSpeaker({ actor: this.actor, token: combatant.token }),
+                flavor: `Rolagem de Iniciativa: ${neuromotor} (Neuromotor) + ${sensorial} (Sensorial) = ${iniciativaBase}d6`
+            });
+            
+            ui.notifications.info(`Iniciativa rolada: ${rollTotal}`);
+            
+        } catch (error) {
+            console.error("[Rising Steel] Erro ao rolar iniciativa do EXAcom:", error);
+            ui.notifications.error("Erro ao rolar iniciativa. Verifique o console.");
+        }
     }
 }
 

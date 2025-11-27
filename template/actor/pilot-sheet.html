@@ -217,7 +217,10 @@
       </div>
       <div class="form-group">
         <label>EXApoints Gastos:</label>
-        <input type="number" name="system.exapoints.gastos" value="{{number system.exapoints.gastos}}" min="0" step="1" data-dtype="Number" />
+        <div style="display: flex; align-items: center; gap: 5px;">
+          <input type="number" name="system.exapoints.gastos" value="{{number system.exapoints.gastos}}" min="0" step="1" data-dtype="Number" readonly style="flex: 1;" />
+          <button type="button" class="reset-exapoints" title="Zerar EXApoints Gastos">🔄</button>
+        </div>
       </div>
       <div class="form-group">
         <label>EXApoints Atual:</label>

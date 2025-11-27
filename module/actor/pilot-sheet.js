@@ -56,7 +56,12 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
             if (actorsCollection?.length) {
                 const allowedCompanionTypes = new Set(["companion"]);
                 context.availableCompanions = actorsCollection
-                    .filter(actor => allowedCompanionTypes.has(actor.type) && actor.id !== this.actor.id)
+                    .filter(actor => {
+                        // Filtrar apenas companions que o piloto é proprietário
+                        return allowedCompanionTypes.has(actor.type) && 
+                               actor.id !== this.actor.id &&
+                               actor.isOwner; // Verificar se o usuário atual é proprietário do companion
+                    })
                     .map(actor => ({ id: actor.id, name: actor.name }))
                     .sort((a, b) => a.name.localeCompare(b.name, game.i18n?.lang || "pt-BR"));
 
@@ -88,7 +93,10 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                 }
 
                 const exacomList = actorsCollection
-                    .filter(actor => actor.type === "exacom")
+                    .filter(actor => {
+                        // Filtrar apenas EXAcoms que o piloto é proprietário
+                        return actor.type === "exacom" && actor.isOwner; // Verificar se o usuário atual é proprietário do EXAcom
+                    })
                     .map(actor => ({ id: actor.id, name: actor.name }))
                     .sort((a, b) => a.name.localeCompare(b.name, game.i18n?.lang || "pt-BR"));
                 context.availableExacoms = exacomList;
@@ -740,8 +748,8 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         // Atualizar EXApoints quando Resiliência mudar
         html.find("input[name='system.atributos.mentais.resiliencia']").on("change", this._onResilienciaChange.bind(this));
         
-        // Atualizar EXApoints atual quando gastos mudarem
-        html.find("input[name='system.exapoints.gastos']").on("change", this._onExapointsGastosChange.bind(this));
+        // Botão para resetar EXApoints gastos
+        html.find(".reset-exapoints").click(this._onResetExapoints.bind(this));
         
         // Atualizar Armadura atual quando total ou dano mudarem
         html.find("input[name='system.armadura.total'], input[name='system.armadura.dano']").on("change", this._onArmaduraChange.bind(this));
@@ -842,6 +850,13 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                 return;
             }
 
+            // Verificar se o piloto é proprietário do companion
+            if (!newCompanion.isOwner) {
+                ui.notifications?.error("Você só pode vincular Companions dos quais você é proprietário.");
+                await this.actor.update({ "system.companionId": "" });
+                return;
+            }
+
             const previousPilotId = newCompanion.system?.vinculo?.pilotoId;
             if (previousPilotId && previousPilotId !== this.actor.id) {
                 const previousPilot = game.actors.get(previousPilotId);
@@ -897,6 +912,16 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
 
         if (exacom.type !== "exacom") {
             ui.notifications?.warn("Somente atores do tipo EXAcom podem ser vinculados.");
+            await this.actor.update({
+                "system.exacomId": "",
+                "system.identificacao.exacom": ""
+            });
+            return;
+        }
+
+        // Verificar se o piloto é proprietário do EXAcom
+        if (!exacom.isOwner) {
+            ui.notifications?.error("Você só pode vincular EXAcoms dos quais você é proprietário.");
             await this.actor.update({
                 "system.exacomId": "",
                 "system.identificacao.exacom": ""
@@ -1179,6 +1204,56 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
             console.error("Erro ao atualizar EXApoints gastos:", error);
             ui.notifications.error("Erro ao atualizar EXApoints gastos");
         }
+    }
+
+    async _onResetExapoints(event) {
+        event.preventDefault();
+        
+        const exaGastos = Number(this.actor.system.exapoints?.gastos || 0);
+        if (exaGastos === 0) {
+            ui.notifications.info("Os EXApoints gastos já estão zerados.");
+            return;
+        }
+        
+        new Dialog({
+            title: "Zerar EXApoints Gastos",
+            content: `<p>Tem certeza que deseja zerar os EXApoints gastos de <strong>${this.actor.name}</strong>?</p>
+                      <p>Isso irá resetar os EXApoints gastos de <strong>${exaGastos}</strong> para <strong>0</strong>.</p>`,
+            buttons: {
+                confirm: {
+                    icon: '<i class="fas fa-check"></i>',
+                    label: "Confirmar",
+                    callback: async () => {
+                        const exaMaximo = Number(this.actor.system.exapoints?.maximo || 0);
+                        const exaAtual = exaMaximo; // Atual = máximo quando gastos = 0
+                        
+                        await this.actor.update({
+                            "system.exapoints.gastos": 0,
+                            "system.exapoints.atual": exaAtual
+                        });
+                        
+                        // Enviar mensagem ao chat
+                        const messageContent = `<div class="rising-steel-chat-message">
+                            <p><strong>${this.actor.name}</strong> resetou os EXApoints gastos.</p>
+                            <p>EXApoints disponíveis: <strong>${exaAtual}</strong> / ${exaMaximo}</p>
+                        </div>`;
+                        
+                        await ChatMessage.create({
+                            content: messageContent,
+                            speaker: ChatMessage.getSpeaker({ actor: this.actor }),
+                            type: CONST.CHAT_MESSAGE_TYPES.OTHER
+                        });
+                        
+                        this.render(false);
+                    }
+                },
+                cancel: {
+                    icon: '<i class="fas fa-times"></i>',
+                    label: "Cancelar"
+                }
+            },
+            default: "cancel"
+        }).render(true);
     }
 
     async _onArmaduraChange(event) {
@@ -1978,23 +2053,15 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         };
 
         const label = labelMap[cleanPath] || "Atributo";
-        const roll = await new Roll(`${numValue}d6`).roll();
-        const dice = roll.dice?.[0];
-        let successes = 0;
-        if (dice?.results) {
-            successes = dice.results.filter(r => (r.result ?? r.total) === 6).length;
-        }
-
-        await roll.toMessage({
-            speaker: ChatMessage.getSpeaker({ actor: companion }),
-            flavor: `Rolagem de ${label} do Companion (${numValue}d6)`,
-            flags: {
-                "rising-steel": {
-                    rollType: "success-pool",
-                    totalDice: numValue,
-                    successes
-                }
-            }
+        
+        // Usar o modal de rolagem para permitir usar EXApoints do piloto
+        const { RisingSteelRollDialog } = await import("../app/roll-dialog.js");
+        await RisingSteelRollDialog.prepareRollDialog({
+            rollName: `${label} do Companion`,
+            baseDice: numValue,
+            actor: companion,
+            label: `${label} do Companion`,
+            linkedPilot: this.actor // Passar o piloto vinculado para que os EXApoints apareçam
         });
     }
 
@@ -2077,10 +2144,11 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
 
             await roll.toMessage({
                 speaker: ChatMessage.getSpeaker({ actor: companion, token: combatant.token }),
-                flavor: `Rolagem de Iniciativa do Companion (${destreza} + ${perspicacia})`
+                flavor: `Rolagem de Iniciativa: ${destreza} (Destreza) + ${perspicacia} (Perspicácia) = ${iniciativaBase}d6`
             });
 
-            ui.notifications.info(`Iniciativa rolada: ${roll.total ?? 0}`);
+            const rollTotal = Number(roll.total ?? roll._total ?? 0);
+            ui.notifications.info(`Iniciativa rolada: ${rollTotal}`);
         } catch (error) {
             console.error("[Rising Steel] Erro ao rolar iniciativa do companion:", error);
             ui.notifications.error("Erro ao rolar iniciativa. Verifique o console.");
@@ -2137,12 +2205,14 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         const dadoBonus = Math.max(0, normalizeNumber(ataque.dadoBonus) || 0);
         const totalDados = atributoValor + dadoBonus;
 
+        // Passar o próprio piloto como linkedPilot para que os EXApoints apareçam no modal
         const { RisingSteelRollDialog } = await import("../app/roll-dialog.js");
         await RisingSteelRollDialog.prepareRollDialog({
             rollName: ataque.nome || `Ataque do Companion ${index + 1}`,
             baseDice: totalDados,
             actor: companion,
-            label: ataque.nome || `Ataque do Companion ${index + 1}`
+            label: ataque.nome || `Ataque do Companion ${index + 1}`,
+            linkedPilot: this.actor // Passar o piloto vinculado ao Companion
         });
     }
 

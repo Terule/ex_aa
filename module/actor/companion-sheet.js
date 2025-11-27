@@ -97,6 +97,13 @@ export class RisingSteelCompanionSheet extends RisingSteelCreatureSheet {
                 return;
             }
 
+            // Verificar se o piloto é proprietário deste companion
+            if (!this.actor.isOwner) {
+                ui.notifications?.error("Apenas o proprietário deste Companion pode vincular um piloto.");
+                await this.actor.update({ "system.vinculo.pilotoId": "" });
+                return;
+            }
+
             const existingCompanionId = pilot.system?.companionId;
             if (existingCompanionId && existingCompanionId !== this.actor.id) {
                 const existingCompanion = game.actors.get(existingCompanionId);

@@ -281,7 +281,7 @@ export class RisingSteelCreatureSheet extends FoundryCompatibility.getActorSheet
 
             await roll.toMessage({
                 speaker: ChatMessage.getSpeaker({ actor: this.actor, token: combatant.token }),
-                flavor: `Rolagem de Iniciativa da criatura (${destreza} + ${perspicacia})`
+                flavor: `Rolagem de Iniciativa: ${destreza} (Destreza) + ${perspicacia} (Perspicácia) = ${iniciativaBase}d6`
             });
 
             ui.notifications.info(`Iniciativa rolada: ${rollTotal}`);
