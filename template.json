@@ -30,7 +30,10 @@
           "total": 0,
           "dano": 0,
           "atual": 0,
-          "equipada": ""
+          "equipada": "",
+          "nome": "",
+          "descricao": "",
+          "especial": ""
         },
         "limiarDano": {
           "leve": {
@@ -78,16 +81,16 @@
       },
       "inventario": {
         "equipamentos": [
-          { "nome": "", "id": "" },
-          { "nome": "", "id": "" },
-          { "nome": "", "id": "" },
-          { "nome": "", "id": "" },
-          { "nome": "", "id": "" }
+          { "nome": "", "id": "", "descricao": "", "efeito": "" },
+          { "nome": "", "id": "", "descricao": "", "efeito": "" },
+          { "nome": "", "id": "", "descricao": "", "efeito": "" },
+          { "nome": "", "id": "", "descricao": "", "efeito": "" },
+          { "nome": "", "id": "", "descricao": "", "efeito": "" }
         ],
         "armas": [
-          { "nome": "", "id": "", "dano": 0, "alcance": "", "bonus": 0 },
-          { "nome": "", "id": "", "dano": 0, "alcance": "", "bonus": 0 },
-          { "nome": "", "id": "", "dano": 0, "alcance": "", "bonus": 0 }
+          { "nome": "", "id": "", "dano": 0, "alcance": "", "bonus": 0, "descricao": "", "efeito": "" },
+          { "nome": "", "id": "", "dano": 0, "alcance": "", "bonus": 0, "descricao": "", "efeito": "" },
+          { "nome": "", "id": "", "dano": 0, "alcance": "", "bonus": 0, "descricao": "", "efeito": "" }
         ]
       },
     "companionId": ""
@@ -143,9 +146,9 @@
       },
       "equipamentosExa": {
         "armas": [
-          { "nome": "", "descricao": "" },
-          { "nome": "", "descricao": "" },
-          { "nome": "", "descricao": "" }
+          { "nome": "", "descricao": "", "efeito": "" },
+          { "nome": "", "descricao": "", "efeito": "" },
+          { "nome": "", "descricao": "", "efeito": "" }
         ],
         "blindagem": [
           { "nome": "", "descricao": "" },
