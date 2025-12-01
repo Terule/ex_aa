@@ -18,16 +18,19 @@ export class RisingSteelItemSheet extends FoundryCompatibility.getItemSheetBase(
     /** @override */
     get template() {
         const path = "systems/rising-steel/template/item";
-        // Templates HTML existem para: armadura, arma, equipamento, exacomModel, blindagemExacom
-        const htmlTypes = ["armadura", "arma", "equipamento", "exacommodel", "blindagemexacom"];
+        // Templates HTML existem para: armadura, arma, equipamento, exacomModel, blindagemExacom, exacomModulo
+        const htmlTypes = ["armadura", "arma", "equipamento", "exacommodel", "blindagemexacom", "exacommodulo"];
         const itemType = this.item.type?.toLowerCase() || "item";
 
         // Para tipos especiais sem template próprio, usamos o template genérico item-sheet.hbs
         if (!htmlTypes.includes(itemType)) {
+            console.log(`[Rising Steel] Tipo ${itemType} não encontrado em htmlTypes, usando template genérico`);
             return `${path}/item-sheet.hbs`;
         }
 
-        return `${path}/item-${itemType}-sheet.html`;
+        const templatePath = `${path}/item-${itemType}-sheet.html`;
+        console.log(`[Rising Steel] Carregando template: ${templatePath} para tipo: ${itemType}`);
+        return templatePath;
     }
 
     /** @override */
@@ -39,6 +42,12 @@ export class RisingSteelItemSheet extends FoundryCompatibility.getItemSheetBase(
         // Verificar se o item está bloqueado (por padrão, itens do compendium estão bloqueados)
         const isLocked = item.getFlag("rising-steel", "locked") ?? (item.isInCompendium ? true : false);
 
+        // Preparar descriptionHTML baseado no tipo de item
+        let descriptionField = "description";
+        if (["arma", "equipamento", "exacomModulo"].includes(item.type)) {
+            descriptionField = "descricao";
+        }
+        
         foundry.utils.mergeObject(context, {
             source: source.system,
             system: item.system,      
@@ -46,7 +55,7 @@ export class RisingSteelItemSheet extends FoundryCompatibility.getItemSheetBase(
             type: item.type,      
             flags: item.flags,
             isLocked: isLocked,
-            descriptionHTML: await FoundryCompatibility.enrichHTML(item.system.description || "", {
+            descriptionHTML: await FoundryCompatibility.enrichHTML(item.system[descriptionField] || "", {
               secrets: item.isOwner,
               async: true
             })

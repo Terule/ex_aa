@@ -27,30 +27,6 @@
     </select>
   </div>
   {{/if}}
-
-  {{#if linkedPilot}}
-  <div class="form-group linked-pilot-section" style="border-top: 1px solid #ddd; padding-top: 10px; margin-top: 10px;">
-    <label style="font-weight: bold; color: #5a2b91;">Atributo do Piloto Vinculado ({{linkedPilot.name}}) - Opcional:</label>
-    <select id="linked-pilot-atributo-select">
-      <option value="">-- Nenhum --</option>
-      <optgroup label="Atributos Físicos">
-        <option value="atributos.fisicos.forca">Força ({{linkedPilot.attributes.fisicos.forca}})</option>
-        <option value="atributos.fisicos.destreza">Destreza ({{linkedPilot.attributes.fisicos.destreza}})</option>
-        <option value="atributos.fisicos.vigor">Vigor ({{linkedPilot.attributes.fisicos.vigor}})</option>
-      </optgroup>
-      <optgroup label="Atributos Mentais">
-        <option value="atributos.mentais.conhecimento">Conhecimento ({{linkedPilot.attributes.mentais.conhecimento}})</option>
-        <option value="atributos.mentais.perspicacia">Perspicácia ({{linkedPilot.attributes.mentais.perspicacia}})</option>
-        <option value="atributos.mentais.resiliencia">Resiliência ({{linkedPilot.attributes.mentais.resiliencia}})</option>
-      </optgroup>
-      <optgroup label="Atributos Sociais">
-        <option value="atributos.sociais.eloquencia">Eloquência ({{linkedPilot.attributes.sociais.eloquencia}})</option>
-        <option value="atributos.sociais.dissimulacao">Dissimulação ({{linkedPilot.attributes.sociais.dissimulacao}})</option>
-        <option value="atributos.sociais.presenca">Presença ({{linkedPilot.attributes.sociais.presenca}})</option>
-      </optgroup>
-    </select>
-  </div>
-  {{/if}}
   
   <div class="form-group">
     <label>Dados Bônus (opcional):</label>

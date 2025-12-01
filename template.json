@@ -142,7 +142,8 @@
       "sistema": {
         "neuromotor": 0,
         "sensorial": 0,
-        "estrutural": 0
+        "estrutural": 0,
+        "energetico": 0
       },
       "equipamentosExa": {
         "armas": [
@@ -174,7 +175,7 @@
     }
   },
     "Item": {
-    "types": ["armadura", "arma", "equipamento", "exacomModel", "blindagemExacom"],
+    "types": ["armadura", "arma", "equipamento", "exacomModel", "blindagemExacom", "exacomModulo"],
     "templates": {
       "base": {
         "description": ""
@@ -209,7 +210,7 @@
       "neuromotor": 0,
       "sensorial": 0,
       "estrutural": 0,
-      "reator": ""
+      "reator": 0
     },
     "blindagemExacom": {
       "templates": ["base"],
@@ -217,6 +218,14 @@
       "blindagem": 0,
       "descricao": "",
       "especial": ""
+    },
+    "exacomModulo": {
+      "templates": ["base"],
+      "consumo": 0,
+      "descricao": "",
+      "custo": 0,
+      "duracao": "",
+      "tipo": ""
     }
   }
 }

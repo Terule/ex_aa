@@ -1,0 +1,58 @@
+<form class="{{cssClass}} flexcol" autocomplete="off">
+    {{!-- Sheet Header --}}
+    <header class="sheet-header">
+        <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}" height="64" width="64"/>
+        <div class="header-fields">
+            <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Nome do Módulo EXA" {{#if isLocked}}disabled{{/if}}/></h1>
+        </div>
+        <div class="header-actions">
+            <button type="button" class="item-lock-toggle" title="{{#if isLocked}}Desbloquear para editar{{else}}Bloquear edição{{/if}}">
+                {{#if isLocked}}🔒{{else}}🔓{{/if}}
+            </button>
+        </div>
+    </header>
+
+    {{!-- Sheet Tab Navigation --}}
+    <nav class="sheet-tabs tabs" data-group="primary">
+        <a class="item" data-tab="description">Descrição</a>
+        <a class="item" data-tab="details">Detalhes</a>
+    </nav>
+
+    {{!-- Sheet Body --}}
+    <section class="sheet-body">
+        {{!-- Description Tab --}}
+        <div class="tab" data-group="primary" data-tab="description">
+            {{editor descriptionHTML target="system.descricao" button=true owner=owner editable=(and editable (not isLocked))}}
+        </div>
+
+        {{!-- Details Tab --}}
+        <div class="tab" data-group="primary" data-tab="details">
+            <div class="form-group">
+                <label>Consumo (Reator Necessário):</label>
+                <input type="number" name="system.consumo" value="{{system.consumo}}" min="0" step="1" data-dtype="Number" placeholder="Ex: 1" {{#if isLocked}}disabled{{/if}} />
+                <p class="hint" style="font-size: 0.85em; color: #666; margin-top: 4px;">
+                    Quantos pontos de Reator são necessários para equipar este módulo.
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label>Custo de Ativação (Dados):</label>
+                <input type="number" name="system.custo" value="{{system.custo}}" min="0" step="1" data-dtype="Number" placeholder="Ex: 1" {{#if isLocked}}disabled{{/if}} />
+                <p class="hint" style="font-size: 0.85em; color: #666; margin-top: 4px;">
+                    Quantos dados serão rolados ao ativar. Cada <strong>1</strong> rolado = 1 EXApoint gasto. O módulo sempre ativa com sucesso.
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label>Duração:</label>
+                <input type="text" name="system.duracao" value="{{system.duracao}}" placeholder="Ex: Ativo até absorver 2 sucessos" {{#if isLocked}}disabled{{/if}} />
+            </div>
+
+            <div class="form-group">
+                <label>Tipo:</label>
+                <input type="text" name="system.tipo" value="{{system.tipo}}" placeholder="Ex: Ação/Defensivo, Reação, Passivo" {{#if isLocked}}disabled{{/if}} />
+            </div>
+        </div>
+    </section>
+</form>
+

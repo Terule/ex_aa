@@ -2870,6 +2870,7 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         system.sistema.neuromotor = Number(system.sistema.neuromotor ?? 0) || 0;
         system.sistema.sensorial = Number(system.sistema.sensorial ?? 0) || 0;
         system.sistema.estrutural = Number(system.sistema.estrutural ?? 0) || 0;
+        system.sistema.energetico = Number(system.sistema.energetico ?? 0) || 0;
 
         system.combate = system.combate || {};
         system.combate.esquiva = Number(system.combate.esquiva ?? 0) || 0;

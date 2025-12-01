@@ -636,26 +636,70 @@ export class RisingSteelActor extends Actor {
         }
 
         if (!this.system.sistema) {
-            this.system.sistema = { neuromotor: 0, sensorial: 0, estrutural: 0 };
+            this.system.sistema = { neuromotor: 0, sensorial: 0, estrutural: 0, energetico: 0 };
         }
-        ["neuromotor", "sensorial", "estrutural"].forEach(attr => {
-            this.system.sistema[attr] = safeNumber(this.system.sistema[attr]);
-        });
+        
+        // Se não houver modelo selecionado, zerar todos os atributos de sistema
+        if (!this.system.modeloId || this.system.modeloId === "") {
+            this.system.sistema.neuromotor = 0;
+            this.system.sistema.sensorial = 0;
+            this.system.sistema.estrutural = 0;
+            this.system.sistema.energetico = 0;
+        } else {
+            // Apenas normalizar se houver modelo (valores podem ter sido definidos pelo modelo)
+            ["neuromotor", "sensorial", "estrutural", "energetico"].forEach(attr => {
+                this.system.sistema[attr] = safeNumber(this.system.sistema[attr]);
+            });
+        }
+        
+        // Inicializar penalidades dos atributos de sistema
+        if (!this.system.sistema.penalidades) {
+            this.system.sistema.penalidades = {
+                neuromotor: 0,
+                sensorial: 0,
+                estrutural: 0,
+                energetico: 0
+            };
+        }
+        this.system.sistema.penalidades.neuromotor = safeNumber(this.system.sistema.penalidades.neuromotor);
+        this.system.sistema.penalidades.sensorial = safeNumber(this.system.sistema.penalidades.sensorial);
+        this.system.sistema.penalidades.estrutural = safeNumber(this.system.sistema.penalidades.estrutural);
+        this.system.sistema.penalidades.energetico = safeNumber(this.system.sistema.penalidades.energetico);
 
         if (!this.system.combate) {
             this.system.combate = {};
         }
-        // Calcular atributos de combate automaticamente
-        const neuromotor = safeNumber(this.system.sistema.neuromotor);
-        const blindagem = safeNumber(this.system.equipamentosExa?.blindagem || 0);
+        
+        // Buscar piloto vinculado para obter seus atributos de combate
+        let pilotoEsquiva = 0;
+        let pilotoMobilidade = 0;
+        let pilotoIniciativa = 0;
+        
+        try {
+            const pilotoId = this.system.vinculo?.pilotoId;
+            if (pilotoId && game?.actors) {
+                const pilotoActor = game.actors.get(pilotoId);
+                if (pilotoActor && pilotoActor.type === "piloto") {
+                    pilotoEsquiva = safeNumber(pilotoActor.system?.combate?.esquiva || 0);
+                    pilotoMobilidade = safeNumber(pilotoActor.system?.combate?.mobilidade || 0);
+                    pilotoIniciativa = safeNumber(pilotoActor.system?.combate?.iniciativa || 0);
+                }
+            }
+        } catch (error) {
+            console.warn("[Rising Steel] Erro ao buscar atributos de combate do piloto vinculado:", error);
+        }
+        
+        // Calcular atributos de combate: Sincronia + atributo do piloto
         const sincronia = safeNumber(this.system.exa?.sincronia || 0);
-        const estrutural = safeNumber(this.system.sistema.estrutural);
         
-        // Esquiva = (Neuromotor - Blindagem) + Sincronia
-        this.system.combate.esquiva = Math.max(0, (neuromotor - blindagem) + sincronia);
+        // Esquiva = Sincronia + Esquiva do piloto
+        this.system.combate.esquiva = sincronia + pilotoEsquiva;
         
-        // Mobilidade = (2 + Neuromotor) - Estrutural
-        this.system.combate.mobilidade = Math.max(0, (2 + neuromotor) - estrutural);
+        // Mobilidade = Sincronia + Mobilidade do piloto
+        this.system.combate.mobilidade = sincronia + pilotoMobilidade;
+        
+        // Iniciativa = Sincronia + Iniciativa do piloto
+        this.system.combate.iniciativa = sincronia + pilotoIniciativa;
 
         // Inicializar limiar de dano
         if (!this.system.limiarDano) {
@@ -667,10 +711,29 @@ export class RisingSteelActor extends Actor {
             };
         }
         
-        // Calcular limiares baseados no estrutural (já declarado acima)
-        this.system.limiarDano.leve.limiar = estrutural * 10;
-        this.system.limiarDano.moderado.limiar = estrutural * 20;
-        this.system.limiarDano.grave.limiar = estrutural * 40;
+        // Buscar piloto vinculado para obter o Vigor
+        let vigorPiloto = 0;
+        try {
+            const pilotoId = this.system.vinculo?.pilotoId;
+            if (pilotoId && game?.actors) {
+                const pilotoActor = game.actors.get(pilotoId);
+                if (pilotoActor && pilotoActor.type === "piloto") {
+                    vigorPiloto = safeNumber(pilotoActor.system?.atributos?.fisicos?.vigor || 0);
+                }
+            }
+        } catch (error) {
+            console.warn("[Rising Steel] Erro ao buscar Vigor do piloto vinculado:", error);
+        }
+        
+        // Calcular limiares baseados em (Vigor do piloto + Estrutural do EXACOM)
+        // Garantir que o valor estrutural esteja definido e normalizado
+        const estruturalBase = safeNumber(this.system.sistema?.estrutural || 0);
+        const penalidadeEstrutural = safeNumber(this.system.sistema?.penalidades?.estrutural || 0);
+        const estrutural = Math.max(0, estruturalBase - penalidadeEstrutural);
+        const baseLimiar = vigorPiloto + estrutural;
+        this.system.limiarDano.leve.limiar = baseLimiar * 1;
+        this.system.limiarDano.moderado.limiar = baseLimiar * 2;
+        this.system.limiarDano.grave.limiar = baseLimiar * 4;
         
         // Garantir que marcações e penalidades existam
         this.system.limiarDano.leve.marcacoes = safeNumber(this.system.limiarDano.leve.marcacoes);
@@ -699,14 +762,20 @@ export class RisingSteelActor extends Actor {
         if (!Array.isArray(this.system.equipamentosExa.armas)) {
             this.system.equipamentosExa.armas = [];
         }
+        
+        // Calcular dadoBase automaticamente: Neuromotor + Sincronia (aplicando penalidades)
+        // (sincronia já foi declarada acima na linha 669)
+        const penalidadeNeuromotor = safeNumber(this.system.sistema?.penalidades?.neuromotor || 0);
+        const neuromotor = Math.max(0, safeNumber(this.system.sistema?.neuromotor || 0) - penalidadeNeuromotor);
+        const dadoBaseCalculado = neuromotor + sincronia;
+        
         this.system.equipamentosExa.armas = this.system.equipamentosExa.armas.map(arma => {
             // Migrar de estrutura antiga (nome, descricao) para nova (ataque)
             if (arma.descricao && !arma.atributo) {
                 return {
                     nome: arma.nome || "",
                     atributo: "",
-                    dadoBonus: 0,
-                    condicao: "",
+                    dadoBase: dadoBaseCalculado,
                     alcance: "",
                     dano: "",
                     efeito: arma.descricao || ""
@@ -715,9 +784,7 @@ export class RisingSteelActor extends Actor {
             return {
                 nome: arma?.nome ?? "",
                 atributo: arma?.atributo ?? "",
-                dadoBase: safeNumber(arma?.dadoBase, 1) || 1,
-                dadoBonus: safeNumber(arma?.dadoBonus, 0),
-                condicao: arma?.condicao ?? "",
+                dadoBase: dadoBaseCalculado, // Sempre recalcular
                 alcance: arma?.alcance ?? "",
                 dano: arma?.dano ?? "",
                 efeito: arma?.efeito ?? ""

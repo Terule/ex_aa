@@ -8,27 +8,17 @@
     <label>Atributo Relacionado:</label>
     <select id="ataque-atributo">
       <option value="">-- Selecione --</option>
-      {{#each atributos}}
-      <option value="{{this.path}}" {{#if (eq ../ataque.atributo this.path)}}selected{{/if}}>{{this.label}}</option>
+      {{#each atributosPiloto}}
+      <option value="{{this.path}}" {{#if (eq ../ataque.atributo this.path)}}selected{{/if}}>{{this.label}} ({{this.valor}})</option>
       {{/each}}
     </select>
+    <small>Atributo do piloto vinculado</small>
   </div>
 
   <div class="form-group">
     <label>Dado Base:</label>
-    <input type="number" id="ataque-dado-base" value="{{ataque.dadoBase}}" min="0" step="1" />
-    <small>Dados base da arma (além do atributo)</small>
-  </div>
-
-  <div class="form-group">
-    <label>Dado Bônus:</label>
-    <input type="number" id="ataque-dado-bonus" value="{{ataque.dadoBonus}}" min="0" step="1" />
-    <small>Dados extras aplicados além do atributo (opcional)</small>
-  </div>
-
-  <div class="form-group">
-    <label>Condição:</label>
-    <input type="text" id="ataque-condicao" value="{{ataque.condicao}}" placeholder="Quando pode ser usado" />
+    <input type="number" id="ataque-dado-base" value="{{dadoBaseCalculado}}" min="0" step="1" readonly />
+    <small>Neuromotor ({{neuromotor}}) + Sincronia ({{sincronia}}) = {{dadoBaseCalculado}}</small>
   </div>
 
   <div class="form-group">
