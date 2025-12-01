@@ -36,12 +36,18 @@ export class RisingSteelItem extends Item {
             if (this.system.neuromotor === undefined) this.system.neuromotor = 0;
             if (this.system.sensorial === undefined) this.system.sensorial = 0;
             if (this.system.estrutural === undefined) this.system.estrutural = 0;
-            if (this.system.reator === undefined) this.system.reator = "";
+            if (this.system.reator === undefined) this.system.reator = 0;
         } else if (itemType === "blindagemExacom") {
             if (this.system.tipo === undefined) this.system.tipo = "";
             if (this.system.blindagem === undefined) this.system.blindagem = 0;
             if (this.system.descricao === undefined) this.system.descricao = "";
             if (this.system.especial === undefined) this.system.especial = "";
+        } else if (itemType === "exacomModulo") {
+            if (this.system.consumo === undefined) this.system.consumo = 0;
+            if (this.system.descricao === undefined) this.system.descricao = "";
+            if (this.system.custo === undefined) this.system.custo = 0;
+            if (this.system.duracao === undefined) this.system.duracao = "";
+            if (this.system.tipo === undefined) this.system.tipo = "";
         }
     }
 
@@ -52,7 +58,7 @@ export class RisingSteelItem extends Item {
     static async createDialog(data = {}, options = {}) {
         // Garantir que CONFIG.Item.types está correto antes de criar o diálogo
         const originalTypes = Array.isArray(CONFIG.Item.types) ? [...CONFIG.Item.types] : null;
-        const allowedTypes = ["armadura", "arma", "equipamento", "exacomModel", "blindagemExacom"];
+        const allowedTypes = ["armadura", "arma", "equipamento", "exacomModel", "blindagemExacom", "exacomModulo"];
         CONFIG.Item.types = [...allowedTypes];
         
         console.log("[Rising Steel] createDialog chamado - CONFIG.Item.types definido:", CONFIG.Item.types);
@@ -77,7 +83,7 @@ export class RisingSteelItem extends Item {
     static getCreateDialogData(data = {}, options = {}) {
         // Garantir que CONFIG.Item.types está correto antes de preparar os dados
         const originalTypes = Array.isArray(CONFIG.Item.types) ? [...CONFIG.Item.types] : null;
-        const allowedTypes = ["armadura", "arma", "equipamento", "exacomModel", "blindagemExacom"];
+        const allowedTypes = ["armadura", "arma", "equipamento", "exacomModel", "blindagemExacom", "exacomModulo"];
         CONFIG.Item.types = [...allowedTypes];
         
         console.log("[Rising Steel] getCreateDialogData chamado - CONFIG.Item.types definido:", CONFIG.Item.types);

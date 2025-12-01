@@ -55,24 +55,79 @@
       <div class="exacom-sections">
         <div class="card sistema-card">
           <h3>Sistema</h3>
-          <div class="triple-grid">
-            <div class="field">
-              <label>Neuromotor</label>
+          <div class="sistema-grid">
+            <!-- Linha 1: Labels -->
+            <div class="sistema-label">Neuromotor</div>
+            <div class="sistema-label">Sensorial</div>
+            <div class="sistema-label">Estrutural</div>
+            <div class="sistema-label">Reator</div>
+            
+            <!-- Linha 2: Valores Base (editáveis) -->
+            <div class="sistema-value">
               <input type="number" name="system.sistema.neuromotor" value="{{number system.sistema.neuromotor}}" data-dtype="Number" min="0" />
+              <small style="display: block; font-size: 0.7rem; color: #666; margin-top: 2px;">Efetivo: <strong>{{number sistemaEfetivo.neuromotor}}</strong></small>
+            </div>
+            <div class="sistema-value">
+              <input type="number" name="system.sistema.sensorial" value="{{number system.sistema.sensorial}}" data-dtype="Number" min="0" />
+              <small style="display: block; font-size: 0.7rem; color: #666; margin-top: 2px;">Efetivo: <strong>{{number sistemaEfetivo.sensorial}}</strong></small>
+            </div>
+            <div class="sistema-value">
+              <input type="number" name="system.sistema.estrutural" value="{{number system.sistema.estrutural}}" data-dtype="Number" min="0" />
+              <small style="display: block; font-size: 0.7rem; color: #666; margin-top: 2px;">Efetivo: <strong>{{number sistemaEfetivo.estrutural}}</strong></small>
+            </div>
+            <div class="sistema-value">
+              <input type="number" name="system.sistema.energetico" value="{{number system.sistema.energetico}}" data-dtype="Number" min="0" />
+              <small style="display: block; font-size: 0.7rem; color: #666; margin-top: 2px;">Efetivo: <strong>{{number sistemaEfetivo.energetico}}</strong></small>
+            </div>
+            
+            <!-- Linha 3: Botões de rolagem -->
+            <div class="sistema-roll">
               <button type="button" class="roll-atributo-sistema" data-atributo="sistema.neuromotor" data-label="Neuromotor" title="Rolar Neuromotor">🎲</button>
             </div>
-            <div class="field">
-              <label>Sensorial</label>
-              <input type="number" name="system.sistema.sensorial" value="{{number system.sistema.sensorial}}" data-dtype="Number" min="0" />
+            <div class="sistema-roll">
               <button type="button" class="roll-atributo-sistema" data-atributo="sistema.sensorial" data-label="Sensorial" title="Rolar Sensorial">🎲</button>
             </div>
-            <div class="field">
-              <label>Estrutural</label>
-              <input type="number" name="system.sistema.estrutural" value="{{number system.sistema.estrutural}}" data-dtype="Number" min="0" />
+            <div class="sistema-roll">
               <button type="button" class="roll-atributo-sistema" data-atributo="sistema.estrutural" data-label="Estrutural" title="Rolar Estrutural">🎲</button>
+            </div>
+            <div class="sistema-roll">
+              <button type="button" class="roll-atributo-sistema" data-atributo="sistema.energetico" data-label="Reator" title="Rolar Reator">🎲</button>
+            </div>
+            
+            <!-- Linha 4: Penalidades -->
+            <div class="sistema-penalidade">
+              <label>Penalidade:</label>
+              <input type="number" name="system.sistema.penalidades.neuromotor" value="{{number system.sistema.penalidades.neuromotor}}" min="0" data-dtype="Number" />
+            </div>
+            <div class="sistema-penalidade">
+              <label>Penalidade:</label>
+              <input type="number" name="system.sistema.penalidades.sensorial" value="{{number system.sistema.penalidades.sensorial}}" min="0" data-dtype="Number" />
+            </div>
+            <div class="sistema-penalidade">
+              <label>Penalidade:</label>
+              <input type="number" name="system.sistema.penalidades.estrutural" value="{{number system.sistema.penalidades.estrutural}}" min="0" data-dtype="Number" />
+            </div>
+            <div class="sistema-penalidade">
+              <label>Penalidade:</label>
+              <input type="number" name="system.sistema.penalidades.energetico" value="{{number system.sistema.penalidades.energetico}}" min="0" data-dtype="Number" />
             </div>
           </div>
         </div>
+
+        {{#if capacity}}
+        <div class="exacom-capacity-meter">
+          <div class="exacom-capacity-meter__header">
+            <span>Capacidade</span>
+            <span>{{number capacity.total}} / {{number capacity.max}} kg</span>
+          </div>
+          <div class="exacom-capacity-meter__bar">
+            <div class="exacom-capacity-meter__fill {{#if capacity.overLimit}}is-over{{/if}}" style="width: {{capacity.percent}}%; background-color: {{capacity.color}};"></div>
+          </div>
+          <div class="exacom-capacity-meter__status {{#if capacity.overLimit}}alert{{/if}}">
+            {{capacity.statusLabel}}
+          </div>
+        </div>
+        {{/if}}
 
         <div class="card combate-card">
           <h3>Atributos de Combate</h3>
@@ -139,8 +194,6 @@
                   <th>Nome</th>
                   <th>Atributo</th>
                   <th>Dado Base</th>
-                  <th>Dado Bônus</th>
-                  <th>Condição</th>
                   <th>Alcance</th>
                   <th>Dano</th>
                   <th>Efeito</th>
@@ -154,8 +207,6 @@
                     <td>{{this.nome}}</td>
                     <td>{{this.atributoLabel}}</td>
                     <td>{{this.dadoBase}}</td>
-                    <td>{{this.dadoBonus}}</td>
-                    <td>{{this.condicao}}</td>
                     <td>{{this.alcance}}</td>
                     <td>{{this.dano}}</td>
                     <td>{{this.efeito}}</td>
@@ -168,7 +219,7 @@
                   {{/each}}
                 {{else}}
                   <tr>
-                    <td colspan="9" class="empty-row">Nenhuma arma cadastrada.</td>
+                    <td colspan="7" class="empty-row">Nenhuma arma cadastrada.</td>
                   </tr>
                 {{/if}}
               </tbody>
@@ -223,6 +274,7 @@
           <div class="field">
             <label>Sincronia</label>
             <input type="number" name="system.exa.sincronia" value="{{number system.exa.sincronia}}" data-dtype="Number" min="0" />
+            <button type="button" class="roll-sincronia" title="Rolar Sincronia">🎲</button>
           </div>
           <div class="field">
             <label>Overdrive</label>
@@ -250,35 +302,72 @@
 
         <section class="equipamento-bloco">
           <header>
-            <h4>Módulos</h4>
-            <button type="button" class="exacom-row-add" data-target="exa.mods.modulos" data-template="modulo">+ Adicionar Módulo</button>
-          </header>
-          <table class="exacom-table">
-            <thead>
-              <tr>
-                <th>Descrição</th>
-                <th class="acoes"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {{#if system.exa.mods.modulos.length}}
-                {{#each system.exa.mods.modulos}}
-                <tr>
-                  <td>
-                    <textarea name="system.exa.mods.modulos.{{@index}}.descricao" rows="2" placeholder="Descrição do módulo">{{this.descricao}}</textarea>
-                  </td>
-                  <td class="acoes">
-                    <button type="button" class="exacom-row-remove" data-target="exa.mods.modulos" data-template="modulo" data-index="{{@index}}" data-min="1" title="Remover">🗑️</button>
-                  </td>
-                </tr>
-                {{/each}}
+            <h4>Módulos EXA</h4>
+            <div style="font-size: 0.9em; color: #666; margin-top: 4px;">
+              <strong>Consumo Total: {{totalConsumoEquipado}} / {{reatorDisponivel}}</strong>
+              {{#if modulosDisponiveis}}
+                <span style="color: #4a9;">✓ Espaço disponível</span>
               {{else}}
-                <tr>
-                  <td colspan="2" class="empty-row">Adicione módulos EXA.</td>
-                </tr>
+                <span style="color: #a44;">⚠ Limite atingido</span>
               {{/if}}
-            </tbody>
-          </table>
+            </div>
+          </header>
+          
+          <div style="margin-bottom: 8px;">
+            <a class="item-control modulo-create" 
+               title="Adicionar Novo Módulo"
+               style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background: rgba(0, 0, 0, 0.1); border-radius: 3px; text-decoration: none;">
+              <i class="fas fa-plus"></i>
+              Adicionar Módulo
+            </a>
+          </div>
+          
+          <ol class="items-list">
+            {{#if modulosOrdenados.length}}
+              {{#each modulosOrdenados as |modulo id|}}
+              <li class="item flexrow" 
+                  data-item-id="{{modulo._id}}">
+                <div class="item-name flexrow">
+                  <div class="item-image">
+                    <img src="{{modulo.img}}" title="{{modulo.name}}" 
+                         width="24" height="24" />
+                  </div>
+                  <h4>{{modulo.name}}</h4>
+                </div>
+                <div class="item-details" style="flex: 1; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                  <span style="display: inline-block; padding: 2px 6px; background: rgba(0, 0, 0, 0.1); border-radius: 3px; font-size: 0.85em; font-weight: bold;">Consumo: {{modulo.system.consumo}}</span>
+                  {{#if modulo.system.custo}}
+                  <span style="display: inline-block; padding: 2px 6px; background: rgba(0, 0, 0, 0.1); border-radius: 3px; font-size: 0.85em;">Custo: {{modulo.system.custo}}d6</span>
+                  {{/if}}
+                  {{#if modulo.system.tipo}}
+                  <span style="display: inline-block; padding: 2px 6px; background: rgba(0, 0, 0, 0.1); border-radius: 3px; font-size: 0.85em;">{{modulo.system.tipo}}</span>
+                  {{/if}}
+                </div>
+                <div class="item-controls">
+                  <a class="item-control modulo-use" 
+                     title="Ativar/Usar Módulo"
+                     data-item-id="{{modulo._id}}">
+                    <i class="fas fa-dice"></i>
+                  </a>
+                  <a class="item-control item-edit" 
+                     title="Editar Módulo">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  <a class="item-control item-delete" 
+                     title="Deletar Módulo">
+                    <i class="fas fa-trash"></i>
+                  </a>
+                </div>
+              </li>
+              {{/each}}
+            {{else}}
+              <li class="item flexrow">
+                <div class="item-name">
+                  <em>Nenhum módulo equipado.</em>
+                </div>
+              </li>
+            {{/if}}
+          </ol>
         </section>
       </div>
     </div>

@@ -208,9 +208,34 @@ export class RisingSteelCompanionSheet extends RisingSteelCreatureSheet {
         const label = labelMap[cleanPath] || "Atributo";
         const roll = await new Roll(`${numValue}d6`).roll();
 
+        // Contar sucessos (resultados 6) para exibir no chat
+        const dice = roll.dice?.[0];
+        let successes = 0;
+        let diceResults = [];
+        if (dice?.results) {
+            diceResults = dice.results;
+            successes = dice.results.filter(r => (r.result ?? r.total) === 6).length;
+        }
+
+        // Preparar informações de dados para o hook de "success-pool"
+        const diceInfo = [{
+            type: "normal",
+            count: numValue,
+            results: diceResults
+        }];
+
         await roll.toMessage({
             speaker: ChatMessage.getSpeaker({ actor: pilot }),
-            flavor: `Rolagem de ${label} do Piloto (${numValue}d6)`
+            flavor: `Rolagem de ${label} do Piloto (${numValue}d6)`,
+            flags: {
+                "rising-steel": {
+                    rollType: "success-pool",
+                    totalDice: numValue,
+                    successes,
+                    diceInfo,
+                    formula: `${numValue}d6`
+                }
+            }
         });
     }
 

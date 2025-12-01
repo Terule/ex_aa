@@ -122,6 +122,129 @@
   color: #c62828;
 }
 
+.exacom-capacity-meter {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.exacom-capacity-meter__header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #3b2c55;
+}
+
+.exacom-capacity-meter__bar {
+  position: relative;
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(59, 44, 85, 0.15);
+  overflow: hidden;
+}
+
+.exacom-capacity-meter__fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.exacom-capacity-meter__fill.is-over {
+  animation: pulse-overload 1.2s infinite;
+}
+
+.exacom-capacity-meter__status {
+  font-size: 0.8rem;
+  text-align: right;
+  color: #504063;
+  font-weight: 600;
+}
+
+.exacom-capacity-meter__status.alert {
+  color: #c62828;
+}
+
+.sistema-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.sistema-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #3b2c55;
+  text-align: center;
+}
+
+.sistema-value {
+  display: flex;
+  justify-content: center;
+}
+
+.sistema-value input {
+  width: 100%;
+  max-width: 80px;
+  text-align: center;
+  padding: 0.4rem;
+  border: 1px solid rgba(59, 44, 85, 0.3);
+  border-radius: 4px;
+  background: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.sistema-roll {
+  display: flex;
+  justify-content: center;
+}
+
+.sistema-roll button {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid rgba(59, 44, 85, 0.3);
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.sistema-roll button:hover {
+  background: rgba(59, 44, 85, 0.1);
+}
+
+.sistema-penalidade {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.sistema-penalidade label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #504063;
+}
+
+.sistema-penalidade input {
+  width: 100%;
+  max-width: 80px;
+  text-align: center;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid rgba(59, 44, 85, 0.3);
+  border-radius: 4px;
+  background: #fff;
+  font-size: 0.9rem;
+}
+
 @keyframes pulse-overload {
   0% {
     opacity: 1;
@@ -1460,6 +1583,18 @@
   color: #9b59b6 !important;
   border-color: #9b59b6 !important;
   box-shadow: 0 0 4px rgba(155, 89, 182, 0.6);
+}
+
+/* Estilos para módulos EXAcom */
+.exacom-sheet .item-warning {
+  background-color: rgba(255, 200, 200, 0.3) !important;
+  border-left: 3px solid #ff4444 !important;
+}
+
+.exacom-sheet .warning-icon {
+  color: #ff4444;
+  margin-left: 5px;
+  font-size: 1.1em;
 }
 
 

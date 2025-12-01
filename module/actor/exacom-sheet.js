@@ -105,32 +105,37 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
                 console.warn("[Rising Steel] Erro ao buscar blindagem selecionada:", error);
             }
 
-            // Calcular limiares de dano baseados no estrutural
-            const estrutural = Number(context.system.sistema?.estrutural || 0);
-            context.limiarLeve = estrutural * 10;
-            context.limiarMedio = estrutural * 20;
-            context.limiarGrave = estrutural * 40;
+            // Calcular valores efetivos dos atributos (aplicando penalidades)
+            const penalidades = context.system.sistema?.penalidades || {};
+            context.sistemaEfetivo = {
+                neuromotor: Math.max(0, Number(context.system.sistema?.neuromotor || 0) - Number(penalidades.neuromotor || 0)),
+                sensorial: Math.max(0, Number(context.system.sistema?.sensorial || 0) - Number(penalidades.sensorial || 0)),
+                estrutural: Math.max(0, Number(context.system.sistema?.estrutural || 0) - Number(penalidades.estrutural || 0)),
+                energetico: Math.max(0, Number(context.system.sistema?.energetico || 0) - Number(penalidades.energetico || 0))
+            };
             
-            // Calcular atributos de combate
-            const neuromotor = Number(context.system.sistema?.neuromotor || 0);
-            const sensorial = Number(context.system.sistema?.sensorial || 0);
-            // Blindagem agora vem do item selecionado
-            let blindagem = 0;
-            if (context.selectedBlindagem) {
-                blindagem = Number(context.selectedBlindagem.system?.blindagem || 0);
-            } else {
-                blindagem = Number(context.system.equipamentosExa?.blindagem || 0);
+            // Calcular limiares de dano baseados em (Vigor do piloto + Estrutural com penalidade aplicada)
+            const estrutural = context.sistemaEfetivo.estrutural;
+            
+            // Buscar Vigor do piloto vinculado
+            let vigorPiloto = 0;
+            try {
+                const pilotoId = context.system?.vinculo?.pilotoId;
+                if (pilotoId && game?.actors) {
+                    const pilotoActor = game.actors.get(pilotoId);
+                    if (pilotoActor && pilotoActor.type === "piloto") {
+                        vigorPiloto = Number(pilotoActor.system?.atributos?.fisicos?.vigor || 0);
+                    }
+                }
+            } catch (error) {
+                console.warn("[Rising Steel] Erro ao buscar Vigor do piloto vinculado:", error);
             }
-            const sincronia = Number(context.system.exa?.sincronia || 0);
             
-            // Iniciativa = Neuromotor + Sensorial (similar a Destreza + Perspicácia do piloto)
-            context.calculatedIniciativa = neuromotor + sensorial;
-            
-            // Esquiva = (Neuromotor - Blindagem) + Sincronia
-            context.calculatedEsquiva = Math.max(0, (neuromotor - blindagem) + sincronia);
-            
-            // Mobilidade = (2 + Neuromotor) - Estrutural
-            context.calculatedMobilidade = Math.max(0, (2 + neuromotor) - estrutural);
+            // Calcular base do limiar: Vigor do piloto + Estrutural do EXACOM (com penalidade aplicada)
+            const baseLimiar = vigorPiloto + estrutural;
+            context.limiarLeve = baseLimiar * 1;
+            context.limiarMedio = baseLimiar * 2;
+            context.limiarGrave = baseLimiar * 4;
             
             // Atualizar os limiares calculados
             context.system.limiarDano.leve.limiar = context.limiarLeve;
@@ -143,23 +148,62 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
             }
             context.system.identificacao.escala = "Grande";
 
-            // Preparar armas como ataquesList (igual ao companion)
-            const attributeOptions = this._getAttributeOptions();
-            context.atributosAtaque = attributeOptions;
+            // Preparar armas como ataquesList
             const armas = context.system.equipamentosExa?.armas || [];
+            
+            // Buscar piloto vinculado para obter labels dos atributos
+            let linkedPilot = null;
+            try {
+                const linkedPilotId = context.system?.vinculo?.pilotoId;
+                if (linkedPilotId && game?.actors) {
+                    const pilotActor = game.actors.get(linkedPilotId);
+                    if (pilotActor) {
+                        linkedPilot = pilotActor;
+                    }
+                }
+            } catch (error) {
+                console.warn("[Rising Steel] Erro ao buscar piloto vinculado:", error);
+            }
+
+            // Calcular dadoBase: Neuromotor + Sincronia (usando valor efetivo já calculado)
+            const neuromotor = context.sistemaEfetivo.neuromotor;
+            const sincronia = Number(context.system.exa?.sincronia || 0);
+            const dadoBaseCalculado = neuromotor + sincronia;
+
             context.armasList = armas.map((arma, index) => {
-                const atributoLabel = attributeOptions.find(opt => opt.path === arma.atributo)?.label || "—";
-                const atributoValor = this._getAttributeValue(arma.atributo);
+                // Obter label do atributo do piloto
+                let atributoLabel = "—";
+                let atributoValor = 0;
+                
+                if (linkedPilot && arma.atributo) {
+                    if (arma.atributo === "atributos.fisicos.forca") {
+                        atributoLabel = "Força";
+                        atributoValor = Number(linkedPilot.system?.atributos?.fisicos?.forca || 0);
+                    } else if (arma.atributo === "atributos.fisicos.destreza") {
+                        atributoLabel = "Destreza";
+                        atributoValor = Number(linkedPilot.system?.atributos?.fisicos?.destreza || 0);
+                    }
+                }
+
+                // Recalcular dadoBase para cada arma (pode ter mudado desde a última atualização)
+                const dadoBaseAtual = dadoBaseCalculado;
+
                 return {
                     ...arma,
                     index,
                     atributoLabel,
-                    atributoValor
+                    atributoValor,
+                    dadoBase: dadoBaseAtual
                 };
             });
 
+            // Buscar piloto vinculado primeiro para calcular atributos de combate
             context.linkedPilot = null;
             context.linkedPilotOverdrive = 0;
+            let pilotoEsquiva = 0;
+            let pilotoMobilidade = 0;
+            let pilotoIniciativa = 0;
+            
             try {
                 const linkedPilotId = context.system?.vinculo?.pilotoId;
                 if (linkedPilotId && game?.actors) {
@@ -168,6 +212,12 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
                         context.linkedPilot = { id: pilotActor.id, name: pilotActor.name };
                         // Buscar overdrive do piloto vinculado
                         context.linkedPilotOverdrive = Number(pilotActor.system?.exapoints?.overdrive || 0);
+                        
+                        // Buscar atributos de combate do piloto vinculado
+                        pilotoEsquiva = Number(pilotActor.system?.combate?.esquiva || 0);
+                        pilotoMobilidade = Number(pilotActor.system?.combate?.mobilidade || 0);
+                        pilotoIniciativa = Number(pilotActor.system?.combate?.iniciativa || 0);
+                        
                         if (!context.system.identificacao) {
                             context.system.identificacao = {};
                         }
@@ -179,6 +229,52 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
             } catch (error) {
                 console.warn("[Rising Steel] Não foi possível carregar piloto vinculado ao EXAcom:", error);
             }
+            
+            // Calcular atributos de combate baseados no piloto vinculado + sincronia
+            // (sincronia já foi declarada acima na linha 161)
+            
+            // Iniciativa = Sincronia + Iniciativa do piloto
+            context.calculatedIniciativa = sincronia + pilotoIniciativa;
+            
+            // Esquiva = Sincronia + Esquiva do piloto
+            context.calculatedEsquiva = sincronia + pilotoEsquiva;
+            
+            // Mobilidade = Sincronia + Mobilidade do piloto
+            context.calculatedMobilidade = sincronia + pilotoMobilidade;
+
+            // Calcular capacidade: (Neuromotor + Estrutural) * 100
+            context.capacity = this._calculateCapacity(context);
+
+            // Organizar módulos em uma lista única, ordenada por consumo
+            const modulos = this.actor.items.filter(item => item.type === "exacomModulo");
+            const reatorDisponivel = context.selectedModelReator || 0;
+            
+            // Calcular total de consumo dos módulos equipados (soma dos consumos)
+            let totalConsumoEquipado = 0;
+            modulos.forEach(modulo => {
+                const consumo = Number(modulo.system?.consumo || 0);
+                totalConsumoEquipado += consumo;
+            });
+            
+            // Criar lista única de módulos ordenada por consumo
+            const modulosOrdenados = modulos
+                .map(modulo => ({
+                    ...modulo.toObject(),
+                    consumo: Number(modulo.system?.consumo || 0)
+                }))
+                .sort((a, b) => {
+                    // Ordenar primeiro por consumo (menor para maior)
+                    if (a.consumo !== b.consumo) {
+                        return a.consumo - b.consumo;
+                    }
+                    // Se consumo igual, ordenar por nome
+                    return (a.name || "").localeCompare(b.name || "");
+                });
+
+            context.modulosOrdenados = modulosOrdenados;
+            context.reatorDisponivel = reatorDisponivel;
+            context.totalConsumoEquipado = totalConsumoEquipado;
+            context.modulosDisponiveis = totalConsumoEquipado < reatorDisponivel;
 
             return context;
         } catch (error) {
@@ -203,7 +299,17 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
                 calculatedEsquiva: 0,
                 calculatedMobilidade: 0,
                 linkedPilot: null,
-                linkedPilotOverdrive: 0
+                linkedPilotOverdrive: 0,
+                sistemaEfetivo: {
+                    neuromotor: 0,
+                    sensorial: 0,
+                    estrutural: 0,
+                    energetico: 0
+                },
+                modulosPorConsumo: null,
+                reatorDisponivel: 0,
+                totalConsumoEquipado: 0,
+                consumosPadrao: [1, 2, 3, 4, 5]
             };
         }
     }
@@ -221,8 +327,16 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
         // Atualizar limiares e atributos de combate quando valores mudarem
         html.find("input[name='system.sistema.estrutural']").on("change", this._onEstruturalChange.bind(this));
         html.find("input[name='system.sistema.neuromotor']").on("change", this._onCombatStatsChange.bind(this));
+        html.find("input[name='system.sistema.sensorial']").on("change", this.render.bind(this));
+        html.find("input[name='system.sistema.energetico']").on("change", this.render.bind(this));
         html.find("select[name='system.equipamentosExa.blindagemId']").on("change", this._onBlindagemChange.bind(this));
         html.find("input[name='system.exa.sincronia']").on("change", this._onCombatStatsChange.bind(this));
+        // Listeners para penalidades dos atributos de sistema (recalcular tudo)
+        html.find("input[name='system.sistema.penalidades.neuromotor']").on("change", this._onCombatStatsChange.bind(this));
+        html.find("input[name='system.sistema.penalidades.estrutural']").on("change", this._onEstruturalChange.bind(this));
+        html.find("input[name='system.sistema.penalidades.sensorial']").on("change", this.render.bind(this));
+        html.find("input[name='system.sistema.penalidades.energetico']").on("change", this.render.bind(this));
+        html.find(".roll-sincronia").click(this._onRollSincronia.bind(this));
         
         // Listeners para armas (ataques)
         html.find(".arma-create").click(this._onCreateArma.bind(this));
@@ -235,20 +349,73 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
         
         // Botão de rolagem de iniciativa
         html.find(".roll-iniciativa").click(this._onRollIniciativa.bind(this));
+        
+        // Listeners para módulos EXA
+        html.find(".modulo-create").click(this._onCreateModulo.bind(this));
+        html.find(".modulo-use").click(this._onUseModulo.bind(this));
+        
+        // Listeners para editar e deletar módulos (apenas dentro da seção de módulos)
+        html.find(".exa-mods-card .item-edit").click((ev) => {
+            const li = $(ev.currentTarget).closest("li[data-item-id]");
+            const itemId = li.data("item-id");
+            const item = this.actor.items.get(itemId);
+            if (item && item.type === "exacomModulo") {
+                item.sheet.render(true);
+            }
+        });
+        
+        html.find(".exa-mods-card .item-delete").click((ev) => {
+            const li = $(ev.currentTarget).closest("li[data-item-id]");
+            const itemId = li.data("item-id");
+            if (itemId) {
+                this._onDeleteModulo(itemId);
+            }
+        });
+    }
+    
+    async _onDeleteModulo(itemId) {
+        const item = this.actor.items.get(itemId);
+        if (!item || item.type !== "exacomModulo") {
+            return;
+        }
+        
+        const confirmar = await Dialog.confirm({
+            title: "Confirmar Exclusão",
+            content: `<p>Deseja realmente deletar o módulo <strong>${item.name}</strong>?</p>`,
+            yes: () => true,
+            no: () => false,
+            defaultYes: false
+        });
+        
+        if (confirmar) {
+            await item.delete();
+            ui.notifications.info(`Módulo "${item.name}" deletado.`);
+        }
     }
     
     _getAttributeOptions() {
         return [
             { label: "Neuromotor", path: "sistema.neuromotor" },
             { label: "Sensorial", path: "sistema.sensorial" },
-            { label: "Estrutural", path: "sistema.estrutural" }
+            { label: "Estrutural", path: "sistema.estrutural" },
+            { label: "Reator", path: "sistema.energetico" }
         ];
     }
     
     _getAttributeValue(path) {
         if (!path) return 0;
         const value = foundry.utils.getProperty(this.actor.system, path);
-        return Number(value || 0) || 0;
+        let valorBase = Number(value || 0) || 0;
+        
+        // Aplicar penalidades se for um atributo de sistema
+        if (path.startsWith("sistema.")) {
+            const atributoNome = path.replace("sistema.", "");
+            const penalidades = this.actor.system.sistema?.penalidades || {};
+            const penalidade = Number(penalidades[atributoNome] || 0);
+            valorBase = Math.max(0, valorBase - penalidade);
+        }
+        
+        return valorBase;
     }
     
     _normalizeNumber(value) {
@@ -414,7 +581,7 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
             if (!doc) return null;
 
             const sys = doc.system || {};
-            return sys.reator || null;
+            return Number(sys.reator ?? 0) || 0;
         } catch (error) {
             console.warn("[Rising Steel] Erro ao buscar reator do modelo:", error);
             return null;
@@ -441,48 +608,130 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
         }
     }
 
+    async _getModulosExacom() {
+        try {
+            let pack = game.packs.get("rising-steel.modulosExacom");
+            if (!pack) {
+                // Tentar encontrar por nome alternativo
+                pack = Array.from(game.packs.values()).find(p => 
+                    p.metadata?.name === "modulosExacom" || 
+                    p.metadata?.label === "Módulos EXAcom" ||
+                    (p.metadata?.name && p.metadata.name.toLowerCase().includes("modulo"))
+                );
+            }
+            
+            if (!pack) {
+                console.warn("[Rising Steel] Pack de módulos EXAcom não encontrado");
+                return [];
+            }
+            
+            const docs = await pack.getDocuments();
+            return docs.map(doc => ({
+                id: doc.id,
+                name: doc.name,
+                system: doc.system || {},
+                img: doc.img || "icons/svg/item-bag.svg"
+            }));
+        } catch (error) {
+            console.warn("[Rising Steel] Erro ao carregar módulos EXAcom:", error);
+            return [];
+        }
+    }
+
     async _onEstruturalChange(event) {
         event.preventDefault();
         const input = event.currentTarget;
-        const estrutural = Number(input.value || 0);
+        const estruturalBase = Number(input.value || 0);
         
-        // Calcular novos limiares
-        const limiarLeve = estrutural * 10;
-        const limiarMedio = estrutural * 20;
-        const limiarGrave = estrutural * 40;
+        // Aplicar penalidade do estrutural
+        const penalidades = this.actor.system.sistema?.penalidades || {};
+        const estrutural = Math.max(0, estruturalBase - Number(penalidades.estrutural || 0));
         
-        // Calcular mobilidade (Esquiva não depende de estrutural, então não precisa recalcular)
-        const neuromotor = Number(this.actor.system.sistema?.neuromotor || 0);
-        const calculatedMobilidade = Math.max(0, (2 + neuromotor) - estrutural);
+        // Buscar Vigor do piloto vinculado
+        let vigorPiloto = 0;
+        try {
+            const pilotoId = this.actor.system?.vinculo?.pilotoId;
+            if (pilotoId && game?.actors) {
+                const pilotoActor = game.actors.get(pilotoId);
+                if (pilotoActor && pilotoActor.type === "piloto") {
+                    vigorPiloto = Number(pilotoActor.system?.atributos?.fisicos?.vigor || 0);
+                }
+            }
+        } catch (error) {
+            console.warn("[Rising Steel] Erro ao buscar Vigor do piloto vinculado:", error);
+        }
         
-        // Atualizar os limiares e mobilidade no banco de dados
+        // Calcular novos limiares baseados em (Vigor do piloto + Estrutural com penalidade aplicada)
+        const baseLimiar = vigorPiloto + estrutural;
+        const limiarLeve = baseLimiar * 1;
+        const limiarMedio = baseLimiar * 2;
+        const limiarGrave = baseLimiar * 4;
+        
+        // Atualizar apenas os limiares (atributos de combate não dependem mais de estrutural)
         await this.actor.update({
             "system.limiarDano.leve.limiar": limiarLeve,
             "system.limiarDano.moderado.limiar": limiarMedio,
-            "system.limiarDano.grave.limiar": limiarGrave,
-            "system.combate.mobilidade": calculatedMobilidade
+            "system.limiarDano.grave.limiar": limiarGrave
         });
         
         this.render(false);
     }
 
     async _onCombatStatsChange(event) {
-        event.preventDefault();
+        // Prevenir default apenas se o evento existir
+        if (event) {
+            event.preventDefault();
+        }
         
-        const neuromotor = Number(this.actor.system.sistema?.neuromotor || 0);
-        const blindagem = Number(this.actor.system.equipamentosExa?.blindagem || 0);
+        // Buscar piloto vinculado para obter seus atributos de combate
+        let pilotoEsquiva = 0;
+        let pilotoMobilidade = 0;
+        let pilotoIniciativa = 0;
+        
+        try {
+            const linkedPilotId = this.actor.system?.vinculo?.pilotoId;
+            if (linkedPilotId && game?.actors) {
+                const pilotActor = game.actors.get(linkedPilotId);
+                if (pilotActor && pilotActor.type === "piloto") {
+                    pilotoEsquiva = Number(pilotActor.system?.combate?.esquiva || 0);
+                    pilotoMobilidade = Number(pilotActor.system?.combate?.mobilidade || 0);
+                    pilotoIniciativa = Number(pilotActor.system?.combate?.iniciativa || 0);
+                }
+            }
+        } catch (error) {
+            console.warn("[Rising Steel] Erro ao buscar atributos de combate do piloto vinculado:", error);
+        }
+        
         const sincronia = Number(this.actor.system.exa?.sincronia || 0);
-        const estrutural = Number(this.actor.system.sistema?.estrutural || 0);
+        const penalidades = this.actor.system.sistema?.penalidades || {};
+        const neuromotor = Math.max(0, Number(this.actor.system.sistema?.neuromotor || 0) - Number(penalidades.neuromotor || 0));
         
-        // Calcular Esquiva e Mobilidade
-        const calculatedEsquiva = Math.max(0, (neuromotor - blindagem) + sincronia);
-        const calculatedMobilidade = Math.max(0, (2 + neuromotor) - estrutural);
+        // Calcular atributos de combate: Sincronia + atributo do piloto
+        const calculatedEsquiva = sincronia + pilotoEsquiva;
+        const calculatedMobilidade = sincronia + pilotoMobilidade;
+        const calculatedIniciativa = sincronia + pilotoIniciativa;
         
-        // Atualizar os atributos de combate no banco de dados
-        await this.actor.update({
+        // Recalcular dadoBase das armas: Neuromotor + Sincronia (com penalidade aplicada)
+        const novoDadoBase = neuromotor + sincronia;
+        const armas = this.actor.system.equipamentosExa?.armas || [];
+        const armasAtualizadas = armas.map(arma => ({
+            ...arma,
+            dadoBase: novoDadoBase
+        }));
+        
+        // Atualizar os atributos de combate e armas no banco de dados
+        const updateData = {
             "system.combate.esquiva": calculatedEsquiva,
-            "system.combate.mobilidade": calculatedMobilidade
-        });
+            "system.combate.mobilidade": calculatedMobilidade,
+            "system.combate.iniciativa": calculatedIniciativa
+        };
+        
+        // Só atualizar armas se houver armas e se o dadoBase mudou
+        if (armasAtualizadas.length > 0) {
+            updateData["system.equipamentosExa.armas"] = armasAtualizadas;
+        }
+        
+        await this.actor.update(updateData);
         
         this.render(false);
     }
@@ -520,20 +769,67 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
             "system.equipamentosExa.blindagemEspecial": blindagemId ? blindagemEspecial : ""
         });
         
-        // Recalcular atributos de combate
-        const neuromotor = Number(this.actor.system.sistema?.neuromotor || 0);
-        const sincronia = Number(this.actor.system.exa?.sincronia || 0);
-        const estrutural = Number(this.actor.system.sistema?.estrutural || 0);
-        
-        const calculatedEsquiva = Math.max(0, (neuromotor - blindagemValue) + sincronia);
-        const calculatedMobilidade = Math.max(0, (2 + neuromotor) - estrutural);
-        
-        await this.actor.update({
-            "system.combate.esquiva": calculatedEsquiva,
-            "system.combate.mobilidade": calculatedMobilidade
-        });
-        
-        this.render(false);
+        // Recalcular atributos de combate (não depende mais de blindagem, mas pode haver outras mudanças)
+        await this._onCombatStatsChange();
+    }
+
+    _calculateCapacity(context) {
+        const system = context.system || {};
+        const penalidades = system.sistema?.penalidades || {};
+        const neuromotor = Math.max(0, Number(system.sistema?.neuromotor || 0) - Number(penalidades.neuromotor || 0));
+        const estrutural = Math.max(0, Number(system.sistema?.estrutural || 0) - Number(penalidades.estrutural || 0));
+        const baseMax = Math.max(0, (neuromotor + estrutural) * 100);
+
+        const addWeight = (value, total) => {
+            const num = Number(value);
+            if (!Number.isNaN(num) && num > 0) {
+                return total + num;
+            }
+            return total;
+        };
+
+        let totalWeight = 0;
+
+        // Blindagem equipada
+        if (system.equipamentosExa?.blindagemId) {
+            const blindagemId = system.equipamentosExa.blindagemId;
+            if (context.blindagensExacom) {
+                const blindagem = context.blindagensExacom.find(b => b.id === blindagemId);
+                if (blindagem && blindagem.system?.peso !== undefined) {
+                    totalWeight = addWeight(blindagem.system.peso, totalWeight);
+                }
+            }
+        }
+
+        // TODO: Adicionar peso de outros equipamentos quando necessário
+
+        const rawPercent = baseMax > 0 ? (totalWeight / baseMax) * 100 : 0;
+        const percent = Math.max(0, Math.min(100, rawPercent));
+        const color = this._getCapacityColor(percent);
+        const overLimit = rawPercent > 100;
+        const statusLabel = overLimit ? "Acima do limite!" : this._getCapacityStatusLabel(percent);
+
+        return {
+            total: Number(totalWeight.toFixed(2)),
+            max: Number(baseMax.toFixed(2)),
+            percent: Number(percent.toFixed(1)),
+            color,
+            statusLabel,
+            overLimit
+        };
+    }
+
+    _getCapacityColor(percent) {
+        const clamped = Math.max(0, Math.min(100, percent));
+        const hue = Math.max(0, Math.min(120, 120 - (clamped * 1.2)));
+        return `hsl(${hue}, 70%, 45%)`;
+    }
+
+    _getCapacityStatusLabel(percent) {
+        if (percent < 35) return "Leve";
+        if (percent < 65) return "Carregado";
+        if (percent < 90) return "Pesado";
+        return "Quase no limite";
     }
 
     async _onModeloChange(event) {
@@ -559,8 +855,15 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
         }
 
         if (!modelId) {
-            // Limpar apenas o ID do modelo; não alteramos valores manuais
-            await this.actor.update({ "system.modeloId": "" });
+            // Limpar modelo e zerar todos os atributos de sistema
+            await this.actor.update({ 
+                "system.modeloId": "",
+                "system.identificacao.modelo": "",
+                "system.sistema.neuromotor": 0,
+                "system.sistema.sensorial": 0,
+                "system.sistema.estrutural": 0,
+                "system.sistema.energetico": 0
+            });
             this.render(false);
             return;
         }
@@ -576,12 +879,7 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
 
             const neuromotor = Number(sys.neuromotor ?? 0) || 0;
             const estrutural = Number(sys.estrutural ?? 0) || 0;
-            const blindagem = Number(this.actor.system.equipamentosExa?.blindagem || 0);
-            const sincronia = Number(this.actor.system.exa?.sincronia || 0);
-            
-            // Calcular atributos de combate
-            const calculatedEsquiva = Math.max(0, (neuromotor - blindagem) + sincronia);
-            const calculatedMobilidade = Math.max(0, (2 + neuromotor) - estrutural);
+            const reator = Number(sys.reator ?? 0) || 0;
             
             const updateData = {
                 "system.modeloId": modelId,
@@ -589,12 +887,13 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
                 "system.sistema.neuromotor": neuromotor,
                 "system.sistema.sensorial": Number(sys.sensorial ?? 0) || 0,
                 "system.sistema.estrutural": estrutural,
-                "system.combate.esquiva": calculatedEsquiva,
-                "system.combate.mobilidade": calculatedMobilidade
+                "system.sistema.energetico": reator
             };
 
             await this.actor.update(updateData);
-            this.render(false);
+            
+            // Recalcular atributos de combate com a nova lógica
+            await this._onCombatStatsChange();
         } catch (error) {
             console.error("[Rising Steel] Erro ao aplicar modelo de EXAcom na ficha:", error);
             ui.notifications?.error("Erro ao aplicar modelo de EXAcom. Verifique o console.");
@@ -649,19 +948,46 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
         const arma = index !== undefined ? foundry.utils.duplicate(armas[index]) : {
             nome: "",
             atributo: "",
-            dadoBase: 0,
-            dadoBonus: 0,
-            condicao: "",
             alcance: "",
             dano: "",
             efeito: ""
         };
 
+        // Buscar piloto vinculado para obter Força e Destreza
+        let atributosPiloto = [];
+        let linkedPilotId = this.actor.system?.vinculo?.pilotoId;
+        
+        if (linkedPilotId && game?.actors) {
+            const pilotActor = game.actors.get(linkedPilotId);
+            if (pilotActor) {
+                const forca = Number(pilotActor.system?.atributos?.fisicos?.forca || 0);
+                const destreza = Number(pilotActor.system?.atributos?.fisicos?.destreza || 0);
+                
+                atributosPiloto = [
+                    { label: "Força", path: "atributos.fisicos.forca", valor: forca },
+                    { label: "Destreza", path: "atributos.fisicos.destreza", valor: destreza }
+                ];
+            }
+        }
+
+        if (atributosPiloto.length === 0) {
+            ui.notifications.warn("Este EXAcom não possui um piloto vinculado. É necessário vincular um piloto para adicionar armas.");
+            return;
+        }
+
+        // Calcular dadoBase automaticamente: Neuromotor + Sincronia
+        const neuromotor = Number(this.actor.system?.sistema?.neuromotor || 0);
+        const sincronia = Number(this.actor.system?.exa?.sincronia || 0);
+        const dadoBaseCalculado = neuromotor + sincronia;
+
         const htmlContent = await FoundryCompatibility.renderTemplate(
             "systems/rising-steel/template/app/ataque-dialog.html",
             {
                 ataque: arma,
-                atributos: this._getAttributeOptions()
+                atributosPiloto: atributosPiloto,
+                neuromotor: neuromotor,
+                sincronia: sincronia,
+                dadoBaseCalculado: dadoBaseCalculado
             }
         );
 
@@ -675,9 +1001,6 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
                     callback: async (html) => {
                         const nome = html.find("#ataque-nome").val().trim();
                         const atributo = html.find("#ataque-atributo").val();
-                        const dadoBase = parseInt(html.find("#ataque-dado-base").val()) || 0;
-                        const dadoBonus = parseInt(html.find("#ataque-dado-bonus").val()) || 0;
-                        const condicao = html.find("#ataque-condicao").val().trim();
                         const alcance = html.find("#ataque-alcance").val().trim();
                         const dano = html.find("#ataque-dano").val().trim();
                         const efeito = html.find("#ataque-efeito").val().trim();
@@ -691,12 +1014,15 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
                             return false;
                         }
 
+                        // Recalcular dadoBase no momento do salvamento (pode ter mudado)
+                        const neuromotorAtual = Number(this.actor.system?.sistema?.neuromotor || 0);
+                        const sincroniaAtual = Number(this.actor.system?.exa?.sincronia || 0);
+                        const dadoBaseAtual = neuromotorAtual + sincroniaAtual;
+
                         const novaArma = {
                             nome,
                             atributo,
-                            dadoBase: Math.max(0, dadoBase),
-                            dadoBonus: Math.max(0, dadoBonus),
-                            condicao,
+                            dadoBase: dadoBaseAtual,
                             alcance,
                             dano,
                             efeito
@@ -739,15 +1065,34 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
             return;
         }
 
-        const atributoValor = this._getAttributeValue(arma.atributo);
+        // Obter valor do atributo do piloto vinculado
+        let atributoValor = 0;
+        try {
+            const linkedPilotId = this.actor.system?.vinculo?.pilotoId;
+            if (linkedPilotId && game?.actors) {
+                const pilotActor = game.actors.get(linkedPilotId);
+                if (pilotActor) {
+                    // O atributo está no formato "atributos.fisicos.forca" ou "atributos.fisicos.destreza"
+                    atributoValor = foundry.utils.getProperty(pilotActor.system, arma.atributo) || 0;
+                    atributoValor = Number(atributoValor) || 0;
+                }
+            }
+        } catch (error) {
+            console.warn("[Rising Steel] Erro ao buscar atributo do piloto:", error);
+        }
+
         if (atributoValor <= 0) {
             ui.notifications.warn("O atributo selecionado não possui valor.");
             return;
         }
 
-        const dadoBase = Math.max(0, this._normalizeNumber(arma.dadoBase) || 0);
-        const dadoBonus = Math.max(0, this._normalizeNumber(arma.dadoBonus) || 0);
-        const totalDados = atributoValor + dadoBase + dadoBonus;
+        // Recalcular dadoBase: Neuromotor + Sincronia (aplicando penalidades)
+        const penalidades = this.actor.system.sistema?.penalidades || {};
+        const neuromotor = Math.max(0, Number(this.actor.system?.sistema?.neuromotor || 0) - Number(penalidades.neuromotor || 0));
+        const sincronia = Number(this.actor.system?.exa?.sincronia || 0);
+        const dadoBase = neuromotor + sincronia;
+
+        const totalDados = atributoValor + dadoBase;
 
         // Obter piloto vinculado se houver
         let linkedPilot = null;
@@ -814,6 +1159,100 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
             allowAttributeSelection: false, // EXAcom não tem atributos físicos/mentais/sociais, apenas sistema
             linkedPilot: linkedPilot // O piloto vinculado já permite selecionar atributo e usar EXApoints
         });
+    }
+
+    async _onRollSincronia(event) {
+        event.preventDefault();
+        
+        try {
+            // Buscar piloto vinculado
+            const linkedPilotId = this.actor.system?.vinculo?.pilotoId;
+            if (!linkedPilotId) {
+                ui.notifications.warn("Este EXAcom não possui um piloto vinculado. É necessário vincular um piloto para rolar Sincronia.");
+                return;
+            }
+            
+            const linkedPilot = game.actors?.get(linkedPilotId);
+            if (!linkedPilot) {
+                ui.notifications.warn("Piloto vinculado não encontrado.");
+                return;
+            }
+            
+            // Obter exapoints atual do piloto
+            const exapointsAtual = Number(linkedPilot.system?.exapoints?.atual || 0);
+            if (exapointsAtual <= 0) {
+                ui.notifications.warn(`O piloto ${linkedPilot.name} não possui EXApoints disponíveis (atual: ${exapointsAtual}).`);
+                return;
+            }
+            
+            // Rolar dados baseado no exapoints atual
+            const roll = new Roll(`${exapointsAtual}d6`);
+            await roll.roll();
+            
+            // Obter resultados dos dados
+            const diceResults = roll.terms?.[0]?.results || [];
+            
+            // Contar sucessos (valores 6)
+            const sucessos = diceResults.filter(result => {
+                const value = result.result ?? result.total ?? result;
+                return Number(value) === 6;
+            }).length;
+            
+            // Calcular Sincronia = 1 + sucessos
+            const sincronia = 1 + sucessos;
+            
+            // Atualizar o campo Sincronia
+            await this.actor.update({
+                "system.exa.sincronia": sincronia
+            });
+            
+            // Atualizar a interface imediatamente
+            const html = $(this.element);
+            const sincroniaInput = html.find("input[name='system.exa.sincronia']");
+            if (sincroniaInput.length) {
+                sincroniaInput.val(sincronia);
+            }
+            
+            // Recalcular atributos de combate que dependem de Sincronia
+            this._onCombatStatsChange();
+            
+            // Criar mensagem de chat com informações detalhadas
+            const rollResultsText = diceResults.map(r => {
+                const val = r.result ?? r.total ?? r;
+                return Number(val) === 6 ? `<strong>${val}</strong>` : val;
+            }).join(", ");
+            
+            // Preparar flags para usar o mesmo hook de "success-pool" das outras rolagens
+            const diceInfo = [{
+                type: "normal",
+                count: exapointsAtual,
+                results: diceResults
+            }];
+            
+            // Exibir rolagem no chat
+            await roll.toMessage({
+                speaker: ChatMessage.getSpeaker({ actor: this.actor }),
+                flavor: `Rolagem de Sincronia: ${exapointsAtual}d6 (EXApoints Atual do Piloto ${linkedPilot.name})<br>` +
+                        `Resultados: [${rollResultsText}]<br>` +
+                        `Sucessos (6): ${sucessos}<br>` +
+                        `<strong>Sincronia = 1 + ${sucessos} = ${sincronia}</strong>`,
+                flags: {
+                    "rising-steel": {
+                        rollType: "success-pool",
+                        totalDice: exapointsAtual,
+                        successes: sucessos,
+                        diceInfo: diceInfo,
+                        formula: `${exapointsAtual}d6`
+                    }
+                }
+            });
+            
+            ui.notifications.info(`Sincronia atualizada: ${sincronia} (${sucessos} sucesso${sucessos !== 1 ? 's' : ''} em ${exapointsAtual}d6)`);
+            
+        } catch (error) {
+            console.error("[Rising Steel] Erro ao rolar Sincronia:", error);
+            ui.notifications.error("Erro ao rolar Sincronia. Verifique o console.");
+        }
     }
 
     async _onRollIniciativa(event) {
@@ -884,10 +1323,24 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
                 return;
             }
             
-            // Calcular o valor de iniciativa (neuromotor + sensorial)
-            const neuromotor = this.actor.system.sistema?.neuromotor || 0;
-            const sensorial = this.actor.system.sistema?.sensorial || 0;
-            const iniciativaBase = neuromotor + sensorial;
+            // Buscar iniciativa do piloto vinculado e sincronia
+            let pilotoIniciativa = 0;
+            let pilotoName = "Sem piloto";
+            try {
+                const linkedPilotId = this.actor.system?.vinculo?.pilotoId;
+                if (linkedPilotId && game?.actors) {
+                    const pilotActor = game.actors.get(linkedPilotId);
+                    if (pilotActor && pilotActor.type === "piloto") {
+                        pilotoIniciativa = Number(pilotActor.system?.combate?.iniciativa || 0);
+                        pilotoName = pilotActor.name;
+                    }
+                }
+            } catch (error) {
+                console.warn("[Rising Steel] Erro ao buscar iniciativa do piloto vinculado:", error);
+            }
+            
+            const sincronia = Number(this.actor.system.exa?.sincronia || 0);
+            const iniciativaBase = sincronia + pilotoIniciativa;
             
             // Rolar Xd6 onde X é o valor de iniciativa
             const roll = new Roll(`${iniciativaBase}d6`);
@@ -906,7 +1359,7 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
             // Exibir a rolagem no chat
             await roll.toMessage({
                 speaker: ChatMessage.getSpeaker({ actor: this.actor, token: combatant.token }),
-                flavor: `Rolagem de Iniciativa: ${neuromotor} (Neuromotor) + ${sensorial} (Sensorial) = ${iniciativaBase}d6`
+                flavor: `Rolagem de Iniciativa: ${sincronia} (Sincronia) + ${pilotoIniciativa} (Iniciativa do Piloto ${pilotoName}) = ${iniciativaBase}d6`
             });
             
             ui.notifications.info(`Iniciativa rolada: ${rollTotal}`);
@@ -914,6 +1367,309 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
         } catch (error) {
             console.error("[Rising Steel] Erro ao rolar iniciativa do EXAcom:", error);
             ui.notifications.error("Erro ao rolar iniciativa. Verifique o console.");
+        }
+    }
+
+    async _onCreateModulo(event) {
+        event.preventDefault();
+        // Se não tiver data-consumo, mostrar diálogo para escolher o consumo
+        let consumo = Number(event.currentTarget.dataset.consumo);
+        
+        if (!consumo || isNaN(consumo)) {
+            // Mostrar diálogo para escolher o consumo
+            const content = `
+                <form>
+                    <div class="form-group">
+                        <label>Selecione o consumo do módulo:</label>
+                        <select name="consumo" style="width: 100%;">
+                            <option value="1">Consumo 1</option>
+                            <option value="2">Consumo 2</option>
+                            <option value="3">Consumo 3</option>
+                            <option value="4">Consumo 4</option>
+                            <option value="5">Consumo 5</option>
+                        </select>
+                    </div>
+                </form>
+            `;
+            
+            return new Promise((resolve) => {
+                new Dialog({
+                    title: "Adicionar Novo Módulo",
+                    content: content,
+                    buttons: {
+                        ok: {
+                            icon: '<i class="fas fa-check"></i>',
+                            label: "Continuar",
+                            callback: async (html) => {
+                                const select = html.find('select[name="consumo"]')[0];
+                                consumo = select ? Number(select.value) : 1;
+                                if (consumo) {
+                                    await this._processarAdicaoModulo(consumo);
+                                }
+                                resolve();
+                            }
+                        },
+                        cancel: {
+                            icon: '<i class="fas fa-times"></i>',
+                            label: "Cancelar",
+                            callback: () => resolve()
+                        }
+                    },
+                    default: "ok"
+                }).render(true);
+            });
+        } else {
+            await this._processarAdicaoModulo(consumo);
+        }
+    }
+
+    async _processarAdicaoModulo(consumo) {
+        // Verificar Reator disponível
+        const reatorDisponivel = this.actor.system.sistema?.energetico || 
+                                await this._getSelectedModelReator(this.actor.system.modeloId) || 0;
+        
+        // Calcular total de consumo dos módulos já equipados (soma dos consumos)
+        const modulosAtuais = this.actor.items.filter(item => item.type === "exacomModulo");
+        let totalConsumoEquipado = 0;
+        modulosAtuais.forEach(modulo => {
+            const consumoModulo = Number(modulo.system?.consumo || 0);
+            totalConsumoEquipado += consumoModulo;
+        });
+        
+        // Verificar se há espaço disponível (soma dos consumos não pode exceder o Reator)
+        const espacoDisponivel = reatorDisponivel - totalConsumoEquipado;
+        
+        if (espacoDisponivel <= 0) {
+            ui.notifications.warn(`Não é possível adicionar mais módulos. Consumo total equipado (${totalConsumoEquipado}) já atingiu o limite do Reator (${reatorDisponivel}).`);
+            return;
+        }
+        
+        if (consumo > espacoDisponivel) {
+            const confirmar = await Dialog.confirm({
+                title: "Aviso de Reator Insuficiente",
+                content: `<p>Este módulo requer <strong>Consumo ${consumo}</strong>, mas há apenas <strong>${espacoDisponivel} ponto(s)</strong> de Reator disponível.</p>
+                         <p>Consumo total equipado: ${totalConsumoEquipado} / ${reatorDisponivel}</p>
+                         <p>Deseja adicionar mesmo assim?</p>`,
+                yes: () => true,
+                no: () => false,
+                defaultYes: false
+            });
+            
+            if (!confirmar) {
+                return;
+            }
+        }
+        
+        // Buscar módulos do compendium
+        const modulosDisponiveis = await this._getModulosExacom();
+        const modulosFiltrados = modulosDisponiveis.filter(m => Number(m.system?.consumo || 0) === consumo);
+        
+        // Se houver módulos no compendium, mostrar diálogo de seleção
+        if (modulosFiltrados.length > 0) {
+            const options = modulosFiltrados.map(m => {
+                const nome = m.name;
+                const tipo = m.system?.tipo || "";
+                return `<option value="${m.id}">${nome}${tipo ? ` (${tipo})` : ""}</option>`;
+            }).join("");
+            
+            const content = `
+                <form>
+                    <div class="form-group">
+                        <label>Selecione um módulo do compendium:</label>
+                        <select name="moduloId" style="width: 100%;">
+                            <option value="">-- Criar novo módulo --</option>
+                            ${options}
+                        </select>
+                    </div>
+                </form>
+            `;
+            
+            return new Promise((resolve) => {
+                new Dialog({
+                    title: `Adicionar Módulo - Consumo ${consumo}`,
+                    content: content,
+                    buttons: {
+                        ok: {
+                            icon: '<i class="fas fa-check"></i>',
+                            label: "Adicionar",
+                            callback: async (html) => {
+                                const select = html.find('select[name="moduloId"]')[0];
+                                const moduloId = select ? select.value : "";
+                                
+                                if (moduloId && moduloId !== "") {
+                                    // Adicionar módulo do compendium
+                                    const pack = game.packs.get("rising-steel.modulosExacom");
+                                    if (pack) {
+                                        try {
+                                            const moduloDoc = await pack.getDocument(moduloId);
+                                            if (moduloDoc) {
+                                                const itemData = moduloDoc.toObject();
+                                                await this.actor.createEmbeddedDocuments("Item", [itemData]);
+                                                resolve();
+                                                return;
+                                            }
+                                        } catch (error) {
+                                            console.error("[Rising Steel] Erro ao adicionar módulo do compendium:", error);
+                                            ui.notifications.error("Erro ao adicionar módulo do compendium.");
+                                        }
+                                    }
+                                } else {
+                                    // Criar novo módulo vazio
+                                    const itemData = {
+                                        name: `Novo Módulo Consumo ${consumo}`,
+                                        type: "exacomModulo",
+                                        system: {
+                                            consumo: consumo,
+                                            descricao: "",
+                                            custo: 0,
+                                            duracao: "",
+                                            tipo: ""
+                                        }
+                                    };
+                                    await this.actor.createEmbeddedDocuments("Item", [itemData]);
+                                }
+                                resolve();
+                            }
+                        },
+                        cancel: {
+                            icon: '<i class="fas fa-times"></i>',
+                            label: "Cancelar",
+                            callback: () => resolve()
+                        }
+                    },
+                    default: "ok"
+                }).render(true);
+            });
+        }
+        
+        // Criar novo módulo vazio
+        const itemData = {
+            name: `Novo Módulo Consumo ${consumo}`,
+            type: "exacomModulo",
+            system: {
+                consumo: consumo,
+                descricao: "",
+                custo: 0,
+                duracao: "",
+                tipo: ""
+            }
+        };
+        
+        await this.actor.createEmbeddedDocuments("Item", [itemData]);
+    }
+
+    async _onUseModulo(event) {
+        event.preventDefault();
+        const itemId = event.currentTarget.dataset.itemId;
+        const modulo = this.actor.items.get(itemId);
+        
+        if (!modulo || modulo.type !== "exacomModulo") {
+            ui.notifications.warn("Módulo não encontrado.");
+            return;
+        }
+        
+        const custo = Number(modulo.system?.custo || 0);
+        const nomeModulo = modulo.name;
+        const tipoModulo = modulo.system?.tipo || "—";
+        const duracaoModulo = modulo.system?.duracao || "—";
+        const descricaoModulo = modulo.system?.descricao || "";
+        
+        // Buscar piloto vinculado para obter EXApoints
+        let linkedPilot = null;
+        let exapointsAtual = 0;
+        
+        try {
+            const linkedPilotId = this.actor.system?.vinculo?.pilotoId;
+            if (linkedPilotId && game?.actors) {
+                linkedPilot = game.actors.get(linkedPilotId);
+                if (linkedPilot) {
+                    exapointsAtual = Number(linkedPilot.system?.exapoints?.atual || 0);
+                }
+            }
+        } catch (error) {
+            console.warn("[Rising Steel] Erro ao buscar piloto vinculado:", error);
+        }
+        
+        // Enriquecer descrição HTML se necessário
+        let descricaoHTML = "";
+        if (descricaoModulo) {
+            try {
+                descricaoHTML = await FoundryCompatibility.enrichHTML(descricaoModulo, {
+                    secrets: this.actor.isOwner,
+                    async: true
+                });
+            } catch (error) {
+                console.warn("[Rising Steel] Erro ao enriquecer descrição do módulo:", error);
+                descricaoHTML = descricaoModulo;
+            }
+        }
+        
+        // Módulo sempre ativa com sucesso
+        let mensagemFlavor = `<strong>Módulo Ativado: ${nomeModulo}</strong><br>`;
+        mensagemFlavor += `Tipo: ${tipoModulo}<br>`;
+        mensagemFlavor += `Duração: ${duracaoModulo}<br>`;
+        if (descricaoHTML) {
+            mensagemFlavor += `<br><div style="margin-top: 8px; padding: 8px; background: rgba(0, 0, 0, 0.05); border-left: 3px solid #4a9; border-radius: 3px;">`;
+            mensagemFlavor += `<strong>Descrição:</strong><br>${descricaoHTML}`;
+            mensagemFlavor += `</div>`;
+        }
+        
+        if (custo > 0) {
+            // Rolar dados para verificar gasto de EXApoints
+            const roll = new Roll(`${custo}d6`);
+            await roll.roll();
+            
+            const diceResults = roll.terms?.[0]?.results || [];
+            // Contar quantos 1 saíram (cada 1 = 1 EXApoint gasto)
+            const uns = diceResults.filter(r => {
+                const val = r.result ?? r.total ?? r;
+                return Number(val) === 1;
+            }).length;
+            
+            // Criar mensagem no chat
+            const rollResultsText = diceResults.map(r => {
+                const val = r.result ?? r.total ?? r;
+                return Number(val) === 1 ? `<strong style="color: #ff4444;">${val}</strong>` : val;
+            }).join(", ");
+            
+            mensagemFlavor += `<br><strong>Rolagem de Custo: ${custo}d6</strong><br>`;
+            mensagemFlavor += `Resultados: [${rollResultsText}]<br>`;
+            mensagemFlavor += `Uns (1) rolados: <strong>${uns}</strong><br>`;
+            mensagemFlavor += `EXApoints gastos: <strong>${uns}</strong>`;
+            
+            await roll.toMessage({
+                speaker: ChatMessage.getSpeaker({ actor: this.actor }),
+                flavor: mensagemFlavor,
+                flags: {
+                    "rising-steel": {
+                        rollType: "modulo-ativacao",
+                        moduloId: itemId,
+                        uns: uns,
+                        exapointsGastos: uns
+                    }
+                }
+            });
+            
+            // Atualizar EXApoints do piloto (se houver)
+            if (linkedPilot && uns > 0) {
+                const novoExapoints = Math.max(0, exapointsAtual - uns);
+                await linkedPilot.update({
+                    "system.exapoints.atual": novoExapoints
+                });
+                ui.notifications.info(
+                    `Módulo ${nomeModulo} ativado! ${uns} EXApoint${uns !== 1 ? 's' : ''} gasto${uns !== 1 ? 's' : ''}.`
+                );
+            } else if (uns === 0) {
+                ui.notifications.info(`Módulo ${nomeModulo} ativado! Nenhum EXApoint gasto.`);
+            }
+        } else {
+            // Módulo sem custo, apenas ativar
+            await ChatMessage.create({
+                speaker: ChatMessage.getSpeaker({ actor: this.actor }),
+                content: mensagemFlavor
+            });
+            
+            ui.notifications.info(`Módulo ${nomeModulo} ativado!`);
         }
     }
 }

@@ -186,13 +186,8 @@ export class RisingSteelRollDialog {
                         }
                     }
                     
-                    // Atualizar total quando atributo ou EXApoints do piloto vinculado mudar
+                    // Atualizar total quando EXApoints do piloto vinculado mudar
                     if (linkedPilot) {
-                        const linkedPilotAtributoSelect = html.find("#linked-pilot-atributo-select");
-                        if (linkedPilotAtributoSelect.length) {
-                            linkedPilotAtributoSelect.on("change", updateTotalDice);
-                        }
-                        
                         const linkedPilotExaInput = html.find("#linked-pilot-exapoints-gastar")[0];
                         if (linkedPilotExaInput) {
                             $(linkedPilotExaInput).on("input", function() {
@@ -252,16 +247,9 @@ export class RisingSteelRollDialog {
                                 }
                             }
                             
-                            // Obter atributo e EXApoints do piloto vinculado (se houver)
-                            let linkedPilotAtributoBonus = 0;
+                            // Obter EXApoints do piloto vinculado (se houver)
                             let linkedPilotExapointsUsar = 0;
                             if (linkedPilot) {
-                                const linkedPilotAtributoSelect = html.find("#linked-pilot-atributo-select")[0];
-                                if (linkedPilotAtributoSelect && linkedPilotAtributoSelect.value) {
-                                    const atributoPath = linkedPilotAtributoSelect.value;
-                                    linkedPilotAtributoBonus = foundry.utils.getProperty(linkedPilot.system, atributoPath) || 0;
-                                }
-                                
                                 linkedPilotExapointsUsar = parseInt(html.find("#linked-pilot-exapoints-gastar")[0]?.value || 0) || 0;
                                 
                                 // Validar EXApoints do piloto vinculado
@@ -275,8 +263,8 @@ export class RisingSteelRollDialog {
                                 }
                             }
                             
-                            // Separar dados por tipo: normais (base + atributo + atributo piloto), bonus, exapoints próprio piloto, exapoints piloto vinculado
-                            const dadosNormais = baseDice + atributoBonus + linkedPilotAtributoBonus;
+                            // Separar dados por tipo: normais (base + atributo), bonus, exapoints próprio piloto, exapoints piloto vinculado
+                            const dadosNormais = baseDice + atributoBonus;
                             const dadosBonus = bonusDice; // Pode ser negativo
                             const dadosExapointsActor = actorExapointsUsar;
                             const dadosExapointsPiloto = linkedPilotExapointsUsar;
@@ -451,9 +439,6 @@ export class RisingSteelRollDialog {
                             }
                             if (actorExapointsUsar > 0) {
                                 flavor += ` | <strong>Dados EXApoints:</strong> ${actorExapointsUsar}`;
-                            }
-                            if (linkedPilotAtributoBonus > 0) {
-                                flavor += ` | <strong>Dados do Atributo do Piloto (${linkedPilot.name}):</strong> ${linkedPilotAtributoBonus}`;
                             }
                             if (linkedPilotExapointsUsar > 0) {
                                 flavor += ` | <strong>Dados EXApoints do Piloto (${linkedPilot.name}):</strong> ${linkedPilotExapointsUsar}`;

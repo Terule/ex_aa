@@ -113,11 +113,12 @@ Hooks.once("init", async function () {
     CONFIG.Item.typeLabels.equipamento = "Equipamento";
     CONFIG.Item.typeLabels.exacomModel = "Modelo EXAcom";
     CONFIG.Item.typeLabels.blindagemExacom = "Blindagem EXAcom";
+    CONFIG.Item.typeLabels.exacomModulo = "Módulo EXAcom";
     
     // Modificar CONFIG.Item.types para ter apenas os tipos relevantes do sistema
     // Isso afeta todos os lugares onde os tipos são listados, incluindo compendiums
     // IMPORTANTE: Isso deve ser feito ANTES de qualquer outro sistema carregar
-    const systemItemTypes = ["armadura", "arma", "equipamento", "exacomModel", "blindagemExacom"];
+    const systemItemTypes = ["armadura", "arma", "equipamento", "exacomModel", "blindagemExacom", "exacomModulo"];
     CONFIG.Item.types = [...systemItemTypes];
     
     // Salvar tipos originais de itens (caso precise restaurar)
@@ -142,6 +143,7 @@ Hooks.once("init", async function () {
                 await ensurePackFilled("rising-steel.equipamentos", window.RisingSteel.importEquipamentos, "equipamentos");
                 await ensurePackFilled("rising-steel.exacom", window.RisingSteel.importExacomModels, "exacom");
                 await ensurePackFilled("rising-steel.blindagemExacom", window.RisingSteel.importBlindagensExacom, "blindagemExacom");
+                await ensurePackFilled("rising-steel.modulosExacom", window.RisingSteel.importModulosExacom, "modulosExacom");
             } catch (error) {
                 console.warn("[Rising Steel] Erro ao verificar/importar packs:", error);
             }
@@ -149,7 +151,7 @@ Hooks.once("init", async function () {
         
         // Garantir que CONFIG.Item.types está correto
         // Mantemos também o tipo "exacomModel" para permitir criação de modelos de EXAcom
-        CONFIG.Item.types = ["armadura", "arma", "equipamento", "exacomModel", "blindagemExacom"];
+        CONFIG.Item.types = ["armadura", "arma", "equipamento", "exacomModel", "blindagemExacom", "exacomModulo"];
         
         // Registrar hook renderDialog aqui para garantir que seja executado
         console.log("[Rising Steel] Registrando hook renderDialog no ready");
@@ -214,6 +216,90 @@ Hooks.once("init", async function () {
 
 });
 
+// Hook para recalcular limiares de dano e atributos de combate do EXACOM quando o piloto vinculado mudar
+Hooks.on("updateActor", async (actor, updateData, options, userId) => {
+    // Verificar se é um piloto
+    if (actor.type === "piloto") {
+        const oldVigor = actor.system?.atributos?.fisicos?.vigor;
+        const newVigor = updateData.system?.atributos?.fisicos?.vigor;
+        
+        // Verificar se o Vigor foi alterado (para recalcular limiares)
+        const vigorChanged = newVigor !== undefined && newVigor !== oldVigor;
+        
+        // Verificar se os atributos de combate foram alterados (para recalcular atributos de combate do EXACOM)
+        const oldEsquiva = actor.system?.combate?.esquiva;
+        const oldMobilidade = actor.system?.combate?.mobilidade;
+        const oldIniciativa = actor.system?.combate?.iniciativa;
+        const newEsquiva = updateData.system?.combate?.esquiva;
+        const newMobilidade = updateData.system?.combate?.mobilidade;
+        const newIniciativa = updateData.system?.combate?.iniciativa;
+        
+        const esquivaChanged = newEsquiva !== undefined && newEsquiva !== oldEsquiva;
+        const mobilidadeChanged = newMobilidade !== undefined && newMobilidade !== oldMobilidade;
+        const iniciativaChanged = newIniciativa !== undefined && newIniciativa !== oldIniciativa;
+        const combatStatsChanged = esquivaChanged || mobilidadeChanged || iniciativaChanged;
+        
+        // Se nada mudou, não fazer nada
+        if (!vigorChanged && !combatStatsChanged) return;
+        
+        // Buscar todos os EXACOMs vinculados a este piloto
+        try {
+            const exacoms = game.actors?.filter(a => 
+                a.type === "exacom" && 
+                a.system?.vinculo?.pilotoId === actor.id
+            ) || [];
+            
+            if (exacoms.length === 0) return;
+            
+            // Para cada EXACOM vinculado, recalcular limiares e/ou atributos de combate
+            for (const exacom of exacoms) {
+                const exacomUpdateData = {};
+                
+                // Recalcular limiares se o Vigor mudou
+                if (vigorChanged) {
+                    const estrutural = Number(exacom.system?.sistema?.estrutural || 0);
+                    const vigorPiloto = Number(newVigor || 0);
+                    
+                    // Calcular novos limiares baseados em (Vigor do piloto + Estrutural)
+                    const baseLimiar = vigorPiloto + estrutural;
+                    exacomUpdateData["system.limiarDano.leve.limiar"] = baseLimiar * 1;
+                    exacomUpdateData["system.limiarDano.moderado.limiar"] = baseLimiar * 2;
+                    exacomUpdateData["system.limiarDano.grave.limiar"] = baseLimiar * 4;
+                }
+                
+                // Recalcular atributos de combate se mudaram
+                if (combatStatsChanged) {
+                    const sincronia = Number(exacom.system?.exa?.sincronia || 0);
+                    
+                    // Usar os novos valores do piloto (ou os antigos se não foram alterados)
+                    const pilotoEsquiva = newEsquiva !== undefined ? Number(newEsquiva) : Number(oldEsquiva || 0);
+                    const pilotoMobilidade = newMobilidade !== undefined ? Number(newMobilidade) : Number(oldMobilidade || 0);
+                    const pilotoIniciativa = newIniciativa !== undefined ? Number(newIniciativa) : Number(oldIniciativa || 0);
+                    
+                    exacomUpdateData["system.combate.esquiva"] = sincronia + pilotoEsquiva;
+                    exacomUpdateData["system.combate.mobilidade"] = sincronia + pilotoMobilidade;
+                    exacomUpdateData["system.combate.iniciativa"] = sincronia + pilotoIniciativa;
+                }
+                
+                // Atualizar o EXACOM se houver algo para atualizar
+                if (Object.keys(exacomUpdateData).length > 0) {
+                    await exacom.update(exacomUpdateData, { render: false });
+                }
+            }
+            
+            // Renderizar todas as sheets abertas de EXACOMs afetados
+            Object.values(ui.windows || {}).forEach(app => {
+                if (app.actor && exacoms.some(e => e.id === app.actor.id)) {
+                    app.render(false);
+                }
+            });
+            
+        } catch (error) {
+            console.error("[Rising Steel] Erro ao recalcular limiares dos EXACOMs vinculados:", error);
+        }
+    }
+}); // Hook updateActor - v2
+
 // Hook para garantir que os atributos do template.json sejam aplicados quando um item é criado
 // Usamos uma abordagem direta sem depender da API deprecada
 Hooks.on("preCreateItem", (item, data, options, userId) => {
@@ -258,7 +344,7 @@ Hooks.on("preCreateItem", (item, data, options, userId) => {
             if (data.system.neuromotor === undefined) data.system.neuromotor = 0;
             if (data.system.sensorial === undefined) data.system.sensorial = 0;
             if (data.system.estrutural === undefined) data.system.estrutural = 0;
-            if (data.system.reator === undefined) data.system.reator = "";
+            if (data.system.reator === undefined) data.system.reator = 0;
             if (data.system.description === undefined) data.system.description = "";
         } else if (itemType === "blindagemExacom") {
             if (data.system.tipo === undefined) data.system.tipo = "";
@@ -1014,6 +1100,7 @@ window.RisingSteel.recriarTodosPacks = async function() {
         // Recriar modelos EXAcom
         await window.RisingSteel.importExacomModels();
         await window.RisingSteel.importBlindagensExacom();
+        await window.RisingSteel.importModulosExacom();
         
         ui.notifications.info("Todos os packs foram recriados com sucesso! Recarregue a página para aplicar as mudanças.");
         console.log("[Rising Steel] Todos os packs foram recriados com IDs explícitos!");
@@ -1059,6 +1146,112 @@ window.RisingSteel.importBlindagensExacom = async function() {
     } catch (error) {
         console.error("[Rising Steel] Erro ao importar blindagens EXAcom:", error);
         ui.notifications.error("Erro ao importar blindagens EXAcom. Verifique o console.");
+    }
+};
+
+window.RisingSteel.importModulosExacom = async function() {
+    const modulosData = [
+        {
+            "name": "Escudo de Energia Primário",
+            "type": "exacomModulo",
+            "img": "icons/svg/shield.svg",
+            "system": {
+                "consumo": 1,
+                "descricao": "Cria uma barreira protetora ao redor do EXA que absorve automaticamente (sem necessidade de teste de blindagem) até 2 sucessos em uma rolagem de ataque inimiga.",
+                "custo": 1,
+                "duracao": "Ativo até absorver 2 sucessos.",
+                "tipo": "Ação/Defensivo"
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "Sistema de Reparo Automático",
+            "type": "exacomModulo",
+            "img": "icons/svg/gear.svg",
+            "system": {
+                "consumo": 2,
+                "descricao": "Sistema que repara automaticamente danos estruturais do EXAcom durante o combate. Restaura 1 ponto de dano estrutural a cada rodada.",
+                "custo": 2,
+                "duracao": "Ativo por 3 rodadas.",
+                "tipo": "Ação/Passivo"
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "Amplificador de Sincronia",
+            "type": "exacomModulo",
+            "img": "icons/svg/lightning.svg",
+            "system": {
+                "consumo": 3,
+                "descricao": "Aumenta temporariamente a sincronia entre piloto e EXAcom, concedendo +2 em todas as rolagens de atributos de sistema.",
+                "custo": 1,
+                "duracao": "Ativo por 1 cena.",
+                "tipo": "Ação/Buff"
+            },
+            "flags": {},
+            "effects": []
+        }
+    ];
+    
+    // Tentar encontrar o pack de diferentes formas
+    let pack = game.packs.get("rising-steel.modulosExacom");
+    if (!pack) {
+        // Tentar encontrar por nome alternativo
+        pack = Array.from(game.packs.values()).find(p => 
+            p.metadata?.name === "modulosExacom" || 
+            p.metadata?.label === "Módulos EXAcom" ||
+            (p.metadata?.name && p.metadata.name.toLowerCase().includes("modulo"))
+        );
+    }
+    
+    if (!pack) {
+        ui.notifications.error("Pack de módulos EXAcom não encontrado! Certifique-se de que o sistema foi recarregado (F5) após a atualização.");
+        console.error("[Rising Steel] Pack não encontrado. Packs disponíveis:", Array.from(game.packs.keys()));
+        return;
+    }
+    
+    try {
+        // Desbloquear o pack se estiver bloqueado
+        if (pack.locked) {
+            await pack.configure({ locked: false });
+        }
+        
+        // Limpar itens existentes
+        try {
+            const existingItems = await pack.getDocuments();
+            if (existingItems && existingItems.length > 0) {
+                const validItemIds = existingItems
+                    .filter(item => item && (item.id || item._id))
+                    .map(item => item.id || item._id);
+                
+                if (validItemIds.length > 0) {
+                    await Item.deleteDocuments(validItemIds, { pack: pack.collection });
+                    console.log(`[Rising Steel] Removidos ${validItemIds.length} módulos antigos`);
+                }
+            }
+        } catch (error) {
+            console.warn(`[Rising Steel] Erro ao remover módulos antigos (continuando mesmo assim):`, error);
+        }
+        
+        // Adicionar IDs aos itens
+        const itemsWithIds = addIdsToItems(modulosData);
+        
+        // Criar os itens no pack
+        const created = await Item.createDocuments(itemsWithIds, { pack: pack.collection });
+        
+        // Bloquear o pack novamente após a importação
+        await pack.configure({ locked: true });
+        
+        ui.notifications.info(`Módulos EXAcom importados com sucesso! (${created.length} itens)`);
+        console.log(`[Rising Steel] Importados ${created.length} módulos EXAcom`);
+        
+        // Recarregar o índice do pack para atualizar a lista
+        await pack.getIndex({ force: true });
+    } catch (error) {
+        console.error("[Rising Steel] Erro ao importar módulos EXAcom:", error);
+        ui.notifications.error("Erro ao importar módulos EXAcom. Verifique o console.");
     }
 };
 
