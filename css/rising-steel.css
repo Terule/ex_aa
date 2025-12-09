@@ -1597,4 +1597,9 @@
   font-size: 1.1em;
 }
 
+/* Estilos para texto de sucessos na parte inferior do chat */
+.chat-message h4.dice-total {
+  font-size: 16px !important;
+}
+
 

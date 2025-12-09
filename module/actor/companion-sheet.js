@@ -227,6 +227,7 @@ export class RisingSteelCompanionSheet extends RisingSteelCreatureSheet {
         await roll.toMessage({
             speaker: ChatMessage.getSpeaker({ actor: pilot }),
             flavor: `Rolagem de ${label} do Piloto (${numValue}d6)`,
+            rollMode: game.settings.get('core', 'rollMode'),
             flags: {
                 "rising-steel": {
                     rollType: "success-pool",
@@ -318,7 +319,8 @@ export class RisingSteelCompanionSheet extends RisingSteelCreatureSheet {
 
             await roll.toMessage({
                 speaker: ChatMessage.getSpeaker({ actor: pilot, token: combatant.token }),
-                flavor: `Rolagem de Iniciativa do Piloto: ${destreza} (Destreza) + ${perspicacia} (Perspicácia) = ${iniciativaBase}d6`
+                flavor: `Rolagem de Iniciativa do Piloto: ${destreza} (Destreza) + ${perspicacia} (Perspicácia) = ${iniciativaBase}d6`,
+                rollMode: game.settings.get('core', 'rollMode')
             });
 
             ui.notifications.info(`Iniciativa rolada: ${roll.total ?? 0}`);

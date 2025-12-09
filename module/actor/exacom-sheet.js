@@ -1236,6 +1236,7 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
                         `Resultados: [${rollResultsText}]<br>` +
                         `Sucessos (6): ${sucessos}<br>` +
                         `<strong>Sincronia = 1 + ${sucessos} = ${sincronia}</strong>`,
+                rollMode: game.settings.get('core', 'rollMode'),
                 flags: {
                     "rising-steel": {
                         rollType: "success-pool",
@@ -1359,7 +1360,8 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
             // Exibir a rolagem no chat
             await roll.toMessage({
                 speaker: ChatMessage.getSpeaker({ actor: this.actor, token: combatant.token }),
-                flavor: `Rolagem de Iniciativa: ${sincronia} (Sincronia) + ${pilotoIniciativa} (Iniciativa do Piloto ${pilotoName}) = ${iniciativaBase}d6`
+                flavor: `Rolagem de Iniciativa: ${sincronia} (Sincronia) + ${pilotoIniciativa} (Iniciativa do Piloto ${pilotoName}) = ${iniciativaBase}d6`,
+                rollMode: game.settings.get('core', 'rollMode')
             });
             
             ui.notifications.info(`Iniciativa rolada: ${rollTotal}`);
@@ -1640,6 +1642,7 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
             await roll.toMessage({
                 speaker: ChatMessage.getSpeaker({ actor: this.actor }),
                 flavor: mensagemFlavor,
+                rollMode: game.settings.get('core', 'rollMode'),
                 flags: {
                     "rising-steel": {
                         rollType: "modulo-ativacao",
