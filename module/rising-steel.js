@@ -54,6 +54,7 @@ Hooks.once("init", async function () {
                     await combatant.update({ initiative: roll.total });
                     
                     await roll.toMessage({
+                        rollMode: game.settings.get('core', 'rollMode'),
                         speaker: ChatMessage.getSpeaker({ actor, token: combatant.token }),
                         flavor: `Rolagem de Iniciativa: ${initiativeData.flavor} = ${initiativeData.dice}d6`
                     });
@@ -362,46 +363,102 @@ Hooks.on("renderChatMessage", (message, html) => {
     const rsFlags = message.flags?.["rising-steel"];
     if (!rsFlags || rsFlags.rollType !== "success-pool") return;
 
-    const successes = Number(rsFlags.successes ?? 0);
-    const label = successes === 1 ? "1 Sucesso" : `${successes} Sucessos`;
-    const totalEl = html.find("h4.dice-total");
-    if (totalEl.length) {
-        totalEl.text(label);
+    // Verificar se é um blind roll ou GM roll
+    // Se for blind roll e o usuário não for GM, não exibir informações
+    const rollMode = message.flags?.core?.rollMode || message.rollMode || message.getFlag?.("core", "rollMode");
+    const isBlindRoll = rollMode === "blindroll" || rollMode === "gmroll";
+    const isGM = game.user.isGM;
+    
+    // Verificar também se o HTML contém elementos ocultos (indicando blind roll)
+    // O FoundryVTT oculta os dados em blind rolls mostrando "???"
+    const diceRollElement = html.find(".dice-roll");
+    const hasHiddenRoll = diceRollElement.length > 0 && (
+        diceRollElement.text().includes("???") || 
+        diceRollElement.find(".dice-result").text().includes("???") ||
+        diceRollElement.find(".dice-total").text().includes("???")
+    );
+    
+    // Se for blind roll e o usuário não for GM, não processar
+    if ((isBlindRoll || hasHiddenRoll) && !isGM) {
+        return;
     }
-    
-    // Aplicar cores e atualizar detalhamento com sucessos
+
     const diceInfo = rsFlags.diceInfo || [];
-    if (diceInfo.length === 0) return;
-    
-    // Aguardar um pouco para garantir que o DOM está totalmente renderizado
-    setTimeout(() => {
+    const totalSuccesses = Number(rsFlags.successes ?? 0);
+
+    const updateSuccessLabel = () => {
         const rollBlocks = html.find(".dice-roll");
         if (rollBlocks.length === 0) return;
-        
-        diceInfo.forEach((info, index) => {
-            const block = $(rollBlocks[index]);
-            if (!block?.length) return;
-            
-            const totalEl = block.find(".dice-total, h4.dice-total");
-            
-            // Atualizar texto do total para mostrar sucessos
+
+        const firstBlock = $(rollBlocks[0]);
+        if (firstBlock.length && firstBlock.text().includes("???") && !isGM) {
+            return;
+        }
+
+        // Calcular sucessos por tipo (normal, bonus, exapoint)
+        let sucessosPadrao = 0;
+        let sucessosBonus = 0;
+        let sucessosExa = 0;
+
+        diceInfo.forEach(info => {
             const resultados = info.results || [];
             const successesPerBlock = resultados.filter(r => (r.result ?? r.total) === 6).length;
-            if (totalEl.length) {
-                const labelPerBlock = successesPerBlock === 1 ? "1 Sucesso" : `${successesPerBlock} Sucessos`;
-                totalEl.text(labelPerBlock);
-            }
-            
-            const diceFaces = block.find(".dice .die, .dice .result");
-            if (!diceFaces.length) return;
-            
-            if (info.type === "bonus") {
-                diceFaces.addClass("rising-steel-dice-bonus");
-            } else if (info.type === "exapoint") {
-                diceFaces.addClass("rising-steel-dice-exapoint");
-            }
+            if (info.type === "normal") sucessosPadrao += successesPerBlock;
+            else if (info.type === "bonus") sucessosBonus += successesPerBlock;
+            else if (info.type === "exapoint") sucessosExa += successesPerBlock;
         });
-    }, 75);
+
+        const partes = [];
+        if (sucessosPadrao > 0) partes.push(`Padrão (${sucessosPadrao})`);
+        if (sucessosBonus > 0) partes.push(`Bônus (${sucessosBonus})`);
+        if (sucessosExa > 0) partes.push(`EXApoints (${sucessosExa})`);
+
+        let label = "";
+        if (partes.length > 0) {
+            label = `Sucessos: ${partes.join(" | ")} | Total: ${totalSuccesses}`;
+        } else {
+            label = totalSuccesses === 1 ? "1 Sucesso" : `${totalSuccesses} Sucessos`;
+        }
+
+        // Limpar mensagens antigas para evitar repetições
+        html.find(".rs-success-label").remove();
+
+        // Substituir o total geral (mesmo dentro do bloco) pela mensagem de sucessos
+        let applied = false;
+        const allTotals = html.find("h4.dice-total, .dice-total");
+        for (let i = allTotals.length - 1; i >= 0; i--) {
+            const $el = $(allTotals[i]);
+            const text = $el.text().trim();
+            if (text.includes("???")) continue;
+            // Só uma aplicação
+            $el.text(label)
+               .css({ "font-size": "16px", "font-weight": "bold" })
+               .addClass("rs-success-label");
+            // Remover textos numéricos de outros totais para não duplicar
+            for (let j = 0; j < i; j++) {
+                const $prev = $(allTotals[j]);
+                if (!$prev.text().includes("???")) {
+                    $prev.text("");
+                }
+            }
+            applied = true;
+            break;
+        }
+
+        // Se não encontrou nenhum total, insere abaixo do último bloco
+        if (!applied) {
+            const lastRoll = html.find(".dice-roll").last();
+            if (lastRoll.length) {
+                const newDiv = $(`<div class="rs-success-label" style="font-size: 16px; font-weight: bold; margin-top: 6px;">${label}</div>`);
+                lastRoll.after(newDiv);
+            }
+        }
+    };
+
+    // Rodar após render e novamente para pegarmos expansões
+    setTimeout(updateSuccessLabel, 120);
+    setTimeout(updateSuccessLabel, 400);
+    setTimeout(updateSuccessLabel, 800);
 });
 
 // Customizar visualização dos itens do compendium em formato de tabela

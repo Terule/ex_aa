@@ -94,6 +94,7 @@ export class RisingSteelCreatureSheet extends FoundryCompatibility.getActorSheet
         html.find(".habilidade-delete").click(this._onDeleteHabilidade.bind(this));
         html.find(".habilidade-roll").click(this._onRollHabilidade.bind(this));
         html.find(".roll-iniciativa").click(this._onRollIniciativa.bind(this));
+        html.find(".roll-armadura").click(this._onRollArmadura.bind(this));
     }
 
     _normalizeNumericValues(systemData) {
@@ -204,6 +205,7 @@ export class RisingSteelCreatureSheet extends FoundryCompatibility.getActorSheet
         await roll.toMessage({
             speaker: ChatMessage.getSpeaker({ actor: this.actor }),
             flavor: `Rolagem de ${label} (${value}d6)`,
+            rollMode: game.settings.get('core', 'rollMode'),
             flags: {
                 "rising-steel": {
                     rollType: "success-pool",
@@ -281,7 +283,8 @@ export class RisingSteelCreatureSheet extends FoundryCompatibility.getActorSheet
 
             await roll.toMessage({
                 speaker: ChatMessage.getSpeaker({ actor: this.actor, token: combatant.token }),
-                flavor: `Rolagem de Iniciativa: ${destreza} (Destreza) + ${perspicacia} (Perspicácia) = ${iniciativaBase}d6`
+                flavor: `Rolagem de Iniciativa: ${destreza} (Destreza) + ${perspicacia} (Perspicácia) = ${iniciativaBase}d6`,
+                rollMode: game.settings.get('core', 'rollMode')
             });
 
             ui.notifications.info(`Iniciativa rolada: ${rollTotal}`);
@@ -690,6 +693,27 @@ export class RisingSteelCreatureSheet extends FoundryCompatibility.getActorSheet
             user: game.user.id,
             speaker: ChatMessage.getSpeaker({ actor: this.actor }),
             content
+        });
+    }
+
+    async _onRollArmadura(event) {
+        event.preventDefault();
+        const armaduraAtual = Number(this.actor.system.armadura?.atual || 0);
+        
+        if (armaduraAtual <= 0) {
+            ui.notifications.warn("Armadura atual é 0 ou inválida!");
+            return;
+        }
+
+        // Importar o RollDialog
+        const { RisingSteelRollDialog } = await import("../app/roll-dialog.js");
+        
+        // Abrir modal de rolagem usando a Armadura atual como base
+        await RisingSteelRollDialog.prepareRollDialog({
+            rollName: "Teste de Armadura",
+            baseDice: armaduraAtual,
+            actor: this.actor,
+            label: "Armadura"
         });
     }
 }

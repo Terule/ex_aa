@@ -2196,7 +2196,8 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
             // Exibir a rolagem no chat
             await roll.toMessage({
                 speaker: ChatMessage.getSpeaker({ actor: this.actor, token: combatant.token }),
-                flavor: `Rolagem de Iniciativa: ${destreza} (Destreza) + ${perspicacia} (Perspicácia) = ${iniciativaBase}d6`
+                flavor: `Rolagem de Iniciativa: ${destreza} (Destreza) + ${perspicacia} (Perspicácia) = ${iniciativaBase}d6`,
+                rollMode: game.settings.get('core', 'rollMode')
             });
             
             ui.notifications.info(`Iniciativa rolada: ${rollTotal}`);
@@ -2417,7 +2418,8 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
 
             await roll.toMessage({
                 speaker: ChatMessage.getSpeaker({ actor: companion, token: combatant.token }),
-                flavor: `Rolagem de Iniciativa: ${destreza} (Destreza) + ${perspicacia} (Perspicácia) = ${iniciativaBase}d6`
+                flavor: `Rolagem de Iniciativa: ${destreza} (Destreza) + ${perspicacia} (Perspicácia) = ${iniciativaBase}d6`,
+                rollMode: game.settings.get('core', 'rollMode')
             });
 
             const rollTotal = Number(roll.total ?? roll._total ?? 0);
