@@ -409,10 +409,11 @@ export class RisingSteelCreatureSheet extends FoundryCompatibility.getActorSheet
         };
 
         const htmlContent = await FoundryCompatibility.renderTemplate(
-            "systems/rising-steel/template/app/ataque-dialog.html",
+            "systems/rising-steel/template/app/ataque-criatura-dialog.html",
             {
                 ataque,
-                atributos: this._getAttributeOptions()
+                atributos: this._getAttributeOptions(),
+                atributoSourceLabel: "Atributo da criatura"
             }
         );
 
