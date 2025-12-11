@@ -1,0 +1,231 @@
+{
+  "Actor": {
+    "types": ["piloto", "criatura", "companion", "exacom"],
+    "templates": {
+      "base": {
+        "descricao": "",
+        "atributos": {
+          "fisicos": {
+            "forca": 1,
+            "destreza": 1,
+            "vigor": 1
+          },
+          "mentais": {
+            "conhecimento": 1,
+            "perspicacia": 1,
+            "resiliencia": 1
+          },
+          "sociais": {
+            "eloquencia": 1,
+            "dissimulacao": 1,
+            "presenca": 1
+          }
+        },
+        "combate": {
+          "iniciativa": 0,
+          "mobilidade": 0,
+          "esquiva": 0
+        },
+        "armadura": {
+          "total": 0,
+          "dano": 0,
+          "atual": 0,
+          "equipada": "",
+          "nome": "",
+          "descricao": "",
+          "especial": ""
+        },
+        "limiarDano": {
+          "leve": {
+            "limiar": 0,
+            "marcacoes": 0
+          },
+          "moderado": {
+            "limiar": 0,
+            "marcacoes": 0
+          },
+          "grave": {
+            "limiar": 0,
+            "marcacoes": 0
+          },
+          "penalidades": 0
+        },
+        "pontosAtributo": {
+          "total": 5,
+          "distribuidos": 0,
+          "restantes": 5
+        }
+      }
+    },
+    "piloto": {
+      "templates": ["base"],
+      "identificacao": {
+        "nome": "",
+        "codinome": "",
+        "patente": "",
+        "escala": "Médio",
+        "exacom": "",
+        "admissao": ""
+      },
+      "exacomId": "",
+      "exapoints": {
+        "maximo": 0,
+        "gastos": 0,
+        "atual": 0,
+        "overdrive": 1
+      },
+      "especializacoes": {
+        "fisicos": [],
+        "mentais": [],
+        "sociais": []
+      },
+      "inventario": {
+        "equipamentos": [
+          { "nome": "", "id": "", "descricao": "", "efeito": "" },
+          { "nome": "", "id": "", "descricao": "", "efeito": "" },
+          { "nome": "", "id": "", "descricao": "", "efeito": "" },
+          { "nome": "", "id": "", "descricao": "", "efeito": "" },
+          { "nome": "", "id": "", "descricao": "", "efeito": "" }
+        ],
+        "armas": [
+          { "nome": "", "id": "", "dano": 0, "alcance": "", "bonus": 0, "descricao": "", "efeito": "" },
+          { "nome": "", "id": "", "dano": 0, "alcance": "", "bonus": 0, "descricao": "", "efeito": "" },
+          { "nome": "", "id": "", "dano": 0, "alcance": "", "bonus": 0, "descricao": "", "efeito": "" }
+        ]
+      },
+    "companionId": ""
+    },
+    "criatura": {
+      "templates": ["base"],
+      "informacoes": {
+        "tipo": "",
+        "categoria": "Delta",
+        "escala": "Médio"
+      },
+      "ataques": [],
+      "habilidadesEspeciais": [
+        {"nome": "", "descricao": ""},
+        {"nome": "", "descricao": ""},
+        {"nome": "", "descricao": ""}
+      ],
+      "vinculo": {
+        "pilotoId": ""
+      }
+    },
+    "companion": {
+      "templates": ["base"],
+      "informacoes": {
+        "tipo": "",
+        "categoria": "Delta",
+        "escala": "Médio"
+      },
+      "ataques": [],
+      "habilidadesEspeciais": [
+        {"nome": "", "descricao": ""},
+        {"nome": "", "descricao": ""},
+        {"nome": "", "descricao": ""}
+      ],
+      "vinculo": {
+        "pilotoId": ""
+      }
+    },
+    "exacom": {
+      "templates": ["base"],
+      "identificacao": {
+        "escala": "",
+        "piloto": "",
+        "categoria": "",
+        "modelo": "",
+        "mce": "",
+        "admissao": ""
+      },
+      "sistema": {
+        "neuromotor": 0,
+        "sensorial": 0,
+        "estrutural": 0,
+        "energetico": 0
+      },
+      "equipamentosExa": {
+        "armas": [
+          { "nome": "", "descricao": "", "efeito": "" },
+          { "nome": "", "descricao": "", "efeito": "" },
+          { "nome": "", "descricao": "", "efeito": "" }
+        ],
+        "blindagem": [
+          { "nome": "", "descricao": "" },
+          { "nome": "", "descricao": "" }
+        ]
+      },
+      "exa": {
+        "exalink": "",
+        "sincronia": 0,
+        "overdrive": 0,
+        "mods": {
+          "reator": [
+            { "descricao": "" }
+          ],
+          "modulos": [
+            { "descricao": "" }
+          ]
+        }
+      },
+      "vinculo": {
+        "pilotoId": ""
+      }
+    }
+  },
+    "Item": {
+    "types": ["armadura", "arma", "equipamento", "exacomModel", "blindagemExacom", "exacomModulo"],
+    "templates": {
+      "base": {
+        "description": ""
+      }
+    },
+    "armadura": {
+      "templates": ["base"],
+      "tipo": "",
+      "protecao": 0,
+      "peso": 0,
+      "descricao": "",
+      "especial": ""
+    },
+    "arma": {
+      "templates": ["base"],
+      "tipo": "",
+      "dano": 0,
+      "alcance": "",
+      "bonus": 0,
+      "descricao": ""
+    },
+    "equipamento": {
+      "templates": ["base"],
+      "tipo": "",
+      "efeito": "",
+      "peso": 0,
+      "descricao": ""
+    },
+    "exacomModel": {
+      "templates": ["base"],
+      "modelo": "",
+      "neuromotor": 0,
+      "sensorial": 0,
+      "estrutural": 0,
+      "reator": 0
+    },
+    "blindagemExacom": {
+      "templates": ["base"],
+      "tipo": "",
+      "blindagem": 0,
+      "descricao": "",
+      "especial": ""
+    },
+    "exacomModulo": {
+      "templates": ["base"],
+      "consumo": 0,
+      "descricao": "",
+      "custo": 0,
+      "duracao": "",
+      "tipo": ""
+    }
+  }
+}

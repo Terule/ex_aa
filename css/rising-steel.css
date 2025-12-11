@@ -1,0 +1,1605 @@
+.pilot-sheet .especializacoes-table td:last-child {
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.pilot-sheet .especializacoes-table td:last-child button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #c4bdd6;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+}
+
+.pilot-sheet .especializacoes-table td:last-child button:hover {
+  background: #f0e6ff;
+  border-color: #7a3cc2;
+}
+.combat-stats-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.limiar-dano-section,
+.armadura-section {
+  flex: 1 1 0;
+  min-width: 320px;
+}
+
+.attributes-tab .card,
+.pilot-sheet .card {
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid #c4bdd6;
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.atributos-tab .combat-stats-section,
+.especializacao-tab .combat-stats-section,
+.identificacao-tab .combat-stats-section,
+.inventario-tab .combat-stats-section,
+.exacom-tab .combat-stats-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.pilot-sheet .limiar-dano-container {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.pilot-sheet .limiar-box,
+.pilot-sheet .marcacoes-box {
+  flex: 1 1 0;
+  min-width: 180px;
+}
+
+.pilot-sheet .limiar-dano-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.pilot-sheet .limiar-dano-table td {
+  padding: 0.2rem;
+}
+
+.pilot-weight-meter {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.pilot-weight-meter__header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #3b2c55;
+}
+
+.pilot-weight-meter__bar {
+  position: relative;
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(59, 44, 85, 0.15);
+  overflow: hidden;
+}
+
+.pilot-weight-meter__fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.pilot-weight-meter__fill.is-over {
+  animation: pulse-overload 1.2s infinite;
+}
+
+.pilot-weight-meter__status {
+  font-size: 0.8rem;
+  text-align: right;
+  color: #504063;
+  font-weight: 600;
+}
+
+.pilot-weight-meter__status.alert {
+  color: #c62828;
+}
+
+.exacom-capacity-meter {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.exacom-capacity-meter__header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #3b2c55;
+}
+
+.exacom-capacity-meter__bar {
+  position: relative;
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(59, 44, 85, 0.15);
+  overflow: hidden;
+}
+
+.exacom-capacity-meter__fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.exacom-capacity-meter__fill.is-over {
+  animation: pulse-overload 1.2s infinite;
+}
+
+.exacom-capacity-meter__status {
+  font-size: 0.8rem;
+  text-align: right;
+  color: #504063;
+  font-weight: 600;
+}
+
+.exacom-capacity-meter__status.alert {
+  color: #c62828;
+}
+
+.sistema-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.sistema-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #3b2c55;
+  text-align: center;
+}
+
+.sistema-value {
+  display: flex;
+  justify-content: center;
+}
+
+.sistema-value input {
+  width: 100%;
+  max-width: 80px;
+  text-align: center;
+  padding: 0.4rem;
+  border: 1px solid rgba(59, 44, 85, 0.3);
+  border-radius: 4px;
+  background: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.sistema-roll {
+  display: flex;
+  justify-content: center;
+}
+
+.sistema-roll button {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid rgba(59, 44, 85, 0.3);
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.sistema-roll button:hover {
+  background: rgba(59, 44, 85, 0.1);
+}
+
+.sistema-penalidade {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.sistema-penalidade label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #504063;
+}
+
+.sistema-penalidade input {
+  width: 100%;
+  max-width: 80px;
+  text-align: center;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid rgba(59, 44, 85, 0.3);
+  border-radius: 4px;
+  background: #fff;
+  font-size: 0.9rem;
+}
+
+@keyframes pulse-overload {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+}
+
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap");
+/* Global styles */
+.window-app {
+  font-family: "Roboto", sans-serif;
+}
+
+.rollable:hover, .rollable:focus {
+  color: #000;
+  text-shadow: 0 0 10px red;
+  cursor: pointer;
+}
+
+.grid,
+.grid-2col {
+  display: grid;
+  grid-column: span 2/span 2;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 10px 0;
+  padding: 0;
+}
+
+.grid-3col {
+  grid-column: span 3/span 3;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.grid-4col {
+  grid-column: span 4/span 4;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.grid-5col {
+  grid-column: span 5/span 5;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.grid-6col {
+  grid-column: span 6/span 6;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.grid-7col {
+  grid-column: span 7/span 7;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.grid-8col {
+  grid-column: span 8/span 8;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+
+.grid-9col {
+  grid-column: span 9/span 9;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+}
+
+.grid-10col {
+  grid-column: span 10/span 10;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+}
+
+.grid-11col {
+  grid-column: span 11/span 11;
+  grid-template-columns: repeat(11, minmax(0, 1fr));
+}
+
+.grid-12col {
+  grid-column: span 12/span 12;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+.grid-start-2 {
+  grid-column-start: 2;
+}
+
+.grid-start-3 {
+  grid-column-start: 3;
+}
+
+.grid-start-4 {
+  grid-column-start: 4;
+}
+
+.grid-start-5 {
+  grid-column-start: 5;
+}
+
+.grid-start-6 {
+  grid-column-start: 6;
+}
+
+.grid-start-7 {
+  grid-column-start: 7;
+}
+
+.grid-start-8 {
+  grid-column-start: 8;
+}
+
+.grid-start-9 {
+  grid-column-start: 9;
+}
+
+.grid-start-10 {
+  grid-column-start: 10;
+}
+
+.grid-start-11 {
+  grid-column-start: 11;
+}
+
+.grid-start-12 {
+  grid-column-start: 12;
+}
+
+.grid-span-2 {
+  grid-column-end: span 2;
+}
+
+.grid-span-3 {
+  grid-column-end: span 3;
+}
+
+.grid-span-4 {
+  grid-column-end: span 4;
+}
+
+.grid-span-5 {
+  grid-column-end: span 5;
+}
+
+.grid-span-6 {
+  grid-column-end: span 6;
+}
+
+.grid-span-7 {
+  grid-column-end: span 7;
+}
+
+.grid-span-8 {
+  grid-column-end: span 8;
+}
+
+.grid-span-9 {
+  grid-column-end: span 9;
+}
+
+.grid-span-10 {
+  grid-column-end: span 10;
+}
+
+.grid-span-11 {
+  grid-column-end: span 11;
+}
+
+.grid-span-12 {
+  grid-column-end: span 12;
+}
+
+/* EXAcom sheet */
+.pilot-sheet .exacom-link-card {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(122, 60, 194, 0.2);
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+.pilot-sheet .exacom-link-card .form-group {
+  flex: 1;
+  margin: 0;
+}
+
+.pilot-sheet .exacom-link-card button {
+  height: 38px;
+  border: 1px solid rgba(122, 60, 194, 0.4);
+  border-radius: 4px;
+  background: rgba(122, 60, 194, 0.08);
+  padding: 0 1rem;
+}
+
+.pilot-sheet .exacom-inline-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.pilot-sheet .exacom-inline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.pilot-sheet .exacom-inline-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: #4b3c63;
+}
+
+.pilot-sheet .exacom-exa-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.pilot-sheet .exacom-list {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin: 0.25rem 0 0;
+}
+
+.exacom-sheet {
+  font-family: "Roboto", sans-serif;
+}
+
+.exacom-header {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  align-items: flex-start;
+}
+
+.exacom-header .profile-img {
+  border-radius: 6px;
+  border: 2px solid rgba(122, 60, 194, 0.4);
+}
+
+.exacom-header .header-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.exacom-header label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #4b3c63;
+  letter-spacing: 0.06em;
+}
+
+.exacom-header input {
+  width: 100%;
+  border: 1px solid #c4bdd6;
+  border-radius: 4px;
+  padding: 0.35rem 0.5rem;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.exacom-name-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 180px;
+  gap: 1rem;
+  align-items: end;
+}
+
+.exacom-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.exacom-tabs {
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(122, 60, 194, 0.2);
+}
+
+.exacom-tabs .item {
+  padding: 0.5rem 0.75rem;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+
+.exacom-body .tab {
+  display: none;
+}
+
+.exacom-body .tab.active {
+  display: block;
+}
+
+.exacom-body .card {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(122, 60, 194, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.exacom-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.triple-grid,
+.dual-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.triple-grid {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.dual-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.exacom-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+
+.exacom-table th,
+.exacom-table td {
+  border: 1px solid rgba(122, 60, 194, 0.15);
+  padding: 0.4rem;
+  vertical-align: top;
+}
+
+.exacom-table thead {
+  background: rgba(122, 60, 194, 0.08);
+}
+
+.exacom-table textarea,
+.exacom-table input {
+  width: 100%;
+  border: 1px solid #c4bdd6;
+  border-radius: 4px;
+  padding: 0.35rem;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.equipamentos-card .equipamento-bloco + .equipamento-bloco,
+.exa-mods-card .equipamento-bloco + .equipamento-bloco {
+  margin-top: 1rem;
+}
+
+.equipamento-bloco header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.equipamento-bloco header button,
+.exacom-row-remove {
+  border: 1px solid rgba(122, 60, 194, 0.4);
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  background: rgba(122, 60, 194, 0.08);
+  cursor: pointer;
+}
+
+.equipamento-bloco header button:hover,
+.exacom-row-remove:hover {
+  background: rgba(122, 60, 194, 0.18);
+}
+
+.exacom-table .acoes {
+  width: 48px;
+  text-align: center;
+}
+
+.empty-row {
+  text-align: center;
+  font-style: italic;
+  color: #6f6287;
+  padding: 0.75rem 0;
+}
+
+.exacom-header .linked-input {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.exacom-header .linked-input button,
+.pilot-sheet .exacom-link-card button {
+  border: 1px solid rgba(122, 60, 194, 0.4);
+  border-radius: 4px;
+  padding: 0.25rem 0.75rem;
+  background: rgba(122, 60, 194, 0.08);
+  cursor: pointer;
+}
+
+.exacom-header .linked-input input[readonly] {
+  background: #dcd7e8;
+  color: #4a3f66;
+}
+
+.exacom-header .linked-input button:disabled,
+.pilot-sheet .exacom-link-card button:disabled,
+.pilot-sheet .open-exacom-sheet:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.flex-group-center,
+.flex-group-left,
+.flex-group-right {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.flex-group-left {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.flex-group-right {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.flexshrink {
+  flex: 0;
+}
+
+.flex-between {
+  justify-content: space-between;
+}
+
+.flexlarge {
+  flex: 2;
+}
+
+.align-left {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.align-right {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.align-center {
+  justify-content: center;
+  text-align: center;
+}
+
+/* Styles limited to rising-steel sheets */
+.rising-steel .item-form {
+  font-family: "Roboto", sans-serif;
+}
+.rising-steel .sheet-header {
+  flex: 0 auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  margin-bottom: 10px;
+}
+.rising-steel .sheet-header .profile-img {
+  flex: 0 0 100px;
+  height: 100px;
+  margin-right: 10px;
+}
+.rising-steel .sheet-header .header-fields {
+  flex: 1;
+}
+.rising-steel .sheet-header h1.charname {
+  height: 50px;
+  padding: 0px;
+  margin: 5px 0;
+  border-bottom: 0;
+}
+.rising-steel .sheet-header h1.charname input {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+.rising-steel .sheet-tabs {
+  flex: 0;
+}
+.rising-steel .sheet-body,
+.rising-steel .sheet-body .tab,
+.rising-steel .sheet-body .tab .editor {
+  height: 100%;
+}
+.rising-steel .tox .tox-editor-container {
+  background: #fff;
+}
+.rising-steel .tox .tox-edit-area {
+  padding: 0 8px;
+}
+.rising-steel .resource-label {
+  font-weight: bold;
+}
+.rising-steel .items-header {
+  height: 28px;
+  margin: 2px 0;
+  padding: 0;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.05);
+  border: 2px groove #eeede0;
+  font-weight: bold;
+}
+.rising-steel .items-header > * {
+  font-size: 14px;
+  text-align: center;
+}
+.rising-steel .items-header .item-name {
+  font-weight: bold;
+  padding-left: 5px;
+  text-align: left;
+  display: flex;
+}
+.rising-steel .items-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  color: #444;
+}
+.rising-steel .items-list .item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.rising-steel .items-list .item-name {
+  flex: 2;
+  margin: 0;
+  overflow: hidden;
+  font-size: 13px;
+  text-align: left;
+  align-items: center;
+  display: flex;
+}
+.rising-steel .items-list .item-name h3, .rising-steel .items-list .item-name h4 {
+  margin: 0;
+  white-space: nowrap;
+  overflow-x: hidden;
+}
+.rising-steel .items-list .item-controls {
+  display: flex;
+  flex: 0 0 100px;
+  justify-content: flex-end;
+}
+.rising-steel .items-list .item-controls a {
+  font-size: 12px;
+  text-align: center;
+  margin: 0 6px;
+}
+.rising-steel .items-list .item {
+  align-items: center;
+  padding: 0 2px;
+  border-bottom: 1px solid #c9c7b8;
+}
+.rising-steel .items-list .item:last-child {
+  border-bottom: none;
+}
+.rising-steel .items-list .item .item-name {
+  color: #191813;
+}
+.rising-steel .items-list .item .item-name .item-image {
+  flex: 0 0 30px;
+  height: 30px;
+  background-size: 30px;
+  border: none;
+  margin-right: 5px;
+}
+.rising-steel .items-list .item-prop {
+  text-align: center;
+  border-left: 1px solid #c9c7b8;
+  border-right: 1px solid #c9c7b8;
+  font-size: 12px;
+}
+.rising-steel .items-list .items-header {
+  height: 28px;
+  margin: 2px 0;
+  padding: 0;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.05);
+  border: 2px groove #eeede0;
+  font-weight: bold;
+}
+.rising-steel .items-list .items-header > * {
+  font-size: 12px;
+  text-align: center;
+}
+.rising-steel .items-list .items-header .item-name {
+  padding-left: 5px;
+  text-align: left;
+}
+.rising-steel .item-formula {
+  flex: 0 0 200px;
+  padding: 0 8px;
+}
+.rising-steel .effects .item .effect-source,
+.rising-steel .effects .item .effect-duration,
+.rising-steel .effects .item .effect-controls {
+  text-align: center;
+  border-left: 1px solid #c9c7b8;
+  border-right: 1px solid #c9c7b8;
+  font-size: 12px;
+}
+.rising-steel .effects .item .effect-controls {
+  border: none;
+}
+
+/* --- Ficha de Criatura --- */
+.creature-sheet,
+.companion-sheet {
+  padding: 0.5rem;
+}
+
+.creature-sheet .creature-header,
+.companion-sheet .creature-header {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.creature-sheet .creature-header .profile-img,
+.companion-sheet .creature-header .profile-img {
+  flex: 0 0 120px;
+  width: 120px;
+  height: 120px;
+  border-radius: 6px;
+  border: 2px solid #5a2b91;
+  object-fit: cover;
+}
+
+.creature-sheet .creature-header .info-gerais,
+.companion-sheet .creature-header .info-gerais {
+  flex: 1;
+  margin: 0;
+}
+
+.creature-sheet .creature-header .header-fields,
+.companion-sheet .creature-header .header-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.creature-sheet .creature-header .header-fields h1,
+.companion-sheet .creature-header .header-fields h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.creature-sheet .creature-header .header-fields h1 input,
+.companion-sheet .creature-header .header-fields h1 input {
+  width: 100%;
+  font-size: 1.2rem;
+}
+
+.creature-sheet .info-gerais,
+.companion-sheet .info-gerais {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.creature-sheet .info-gerais th,
+.creature-sheet .info-gerais td,
+.companion-sheet .info-gerais th,
+.companion-sheet .info-gerais td {
+  border: 1px solid #c4bdd6;
+  padding: 0.4rem;
+}
+
+.creature-sheet .info-gerais thead th,
+.companion-sheet .info-gerais thead th {
+  background: #5a2b91;
+  color: #fff;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+.creature-sheet .info-gerais th,
+.companion-sheet .info-gerais th {
+  background: #efe6ff;
+  text-align: left;
+  width: 140px;
+}
+
+.creature-sheet .creature-body,
+.companion-sheet .creature-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.creature-sheet .card,
+.companion-sheet .card {
+  background: #fff;
+  border: 1px solid #d9d0ec;
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.creature-sheet .card h3,
+.creature-sheet .card h4,
+.companion-sheet .card h3,
+.companion-sheet .card h4 {
+  margin: 0 0 0.5rem 0;
+  color: #5a2b91;
+}
+
+.creature-sheet .creature-columns,
+.companion-sheet .creature-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.creature-sheet .primary-attributes,
+.companion-sheet .primary-attributes {
+  flex: 2;
+}
+
+.creature-sheet .primary-attributes table,
+.companion-sheet .primary-attributes table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.creature-sheet .primary-attributes th,
+.creature-sheet .primary-attributes td,
+.companion-sheet .primary-attributes th,
+.companion-sheet .primary-attributes td {
+  border: 1px solid #e2d9f8;
+  padding: 0.35rem;
+}
+
+.creature-sheet .primary-attributes th,
+.companion-sheet .primary-attributes th {
+  background: #f4eefe;
+  text-align: center;
+}
+
+.creature-sheet .primary-attributes button.roll-atributo,
+.companion-sheet .primary-attributes button.roll-atributo {
+  width: 100%;
+  border: none;
+  background: #f4eefe;
+  color: #5a2b91;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.2rem 0;
+}
+
+.creature-sheet .primary-attributes button.roll-atributo:hover,
+.companion-sheet .primary-attributes button.roll-atributo:hover {
+  background: #e3d5f9;
+}
+
+.creature-sheet .secondary-attributes,
+.companion-sheet .secondary-attributes {
+  flex: 1;
+}
+
+.creature-sheet .secondary-attributes table,
+.companion-sheet .secondary-attributes table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.creature-sheet .secondary-attributes th,
+.creature-sheet .secondary-attributes td,
+.companion-sheet .secondary-attributes th,
+.companion-sheet .secondary-attributes td {
+  border: 1px solid #e2d9f8;
+  padding: 0.35rem;
+}
+
+.creature-sheet .secondary-attributes th,
+.companion-sheet .secondary-attributes th {
+  background: #f4eefe;
+  text-align: center;
+}
+
+.creature-sheet .secondary-attributes .action-row,
+.companion-sheet .secondary-attributes .action-row {
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.creature-sheet .secondary-attributes .roll-iniciativa,
+.companion-sheet .secondary-attributes .roll-iniciativa {
+  background: #5a2b91;
+  color: #fff;
+  border: none;
+  padding: 0.35rem 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.creature-sheet .secondary-attributes .roll-iniciativa:hover,
+.companion-sheet .secondary-attributes .roll-iniciativa:hover {
+  background: #7a45bf;
+}
+
+.creature-sheet .secondary-info,
+.companion-sheet .secondary-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.creature-sheet .armadura-limiar-row,
+.companion-sheet .armadura-limiar-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.creature-sheet .armadura-limiar-row .card,
+.companion-sheet .armadura-limiar-row .card {
+  flex: 1 1 0;
+}
+
+.creature-sheet table input,
+.creature-sheet select,
+.creature-sheet textarea,
+.companion-sheet table input,
+.companion-sheet select,
+.companion-sheet textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.creature-sheet .limiar-table,
+.pilot-sheet .limiar-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.creature-sheet .limiar-table th,
+.creature-sheet .limiar-table td,
+.pilot-sheet .limiar-table th,
+.pilot-sheet .limiar-table td {
+  border: 1px solid #e2d9f8;
+  padding: 0.4rem;
+  text-align: center;
+}
+
+.pilot-sheet .penalidades {
+  margin-top: 0.5rem;
+}
+
+.pilot-sheet .penalidades input {
+  width: 100%;
+}
+
+.pilot-sheet .armadura-table + button {
+  margin-top: 0.5rem;
+  width: 100%;
+  border: 1px solid #7a3cc2;
+  background: #f7f0ff;
+  padding: 0.35rem 0.5rem;
+  cursor: pointer;
+  border-radius: 4px;
+  color: #5a2b91;
+}
+
+.pilot-sheet .companion-section {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pilot-sheet .companion-section .companion-select select {
+  width: 100%;
+}
+
+.pilot-sheet .companion-card {
+  border: 1px solid #c4bdd6;
+  border-radius: 6px;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pilot-sheet .companion-card-header {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.pilot-sheet .companion-card-header img {
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 2px solid #7a3cc2;
+}
+
+.pilot-sheet .companion-card-header .details h4 {
+  margin: 0;
+  color: #5a2b91;
+}
+
+.pilot-sheet .companion-card-header .details .meta {
+  font-size: 0.9rem;
+  display: flex;
+  gap: 1rem;
+  color: #5a2b91;
+}
+
+.pilot-sheet .companion-card-header button {
+  margin-top: 0.5rem;
+  border: 1px solid #7a3cc2;
+  background: #faf3ff;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #5a2b91;
+}
+
+.pilot-sheet .companion-stats,
+.pilot-sheet .companion-limiar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.5rem;
+}
+
+.pilot-sheet .companion-stats div,
+.pilot-sheet .companion-limiar div {
+  background: rgba(90, 43, 145, 0.05);
+  border: 1px solid rgba(90, 43, 145, 0.2);
+  border-radius: 4px;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.pilot-sheet .companion-stats span,
+.pilot-sheet .companion-limiar span {
+  display: block;
+  font-size: 0.85rem;
+  color: #5a2b91;
+}
+
+.pilot-sheet .companion-stats strong,
+.pilot-sheet .companion-limiar strong {
+  font-size: 1rem;
+  color: #2d1b44;
+}
+
+.pilot-sheet .companion-empty {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #5a2b91;
+}
+
+.companion-sheet .companion-link {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.companion-sheet .companion-link .pilot-card {
+  border: 1px solid #c4bdd6;
+  border-radius: 6px;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.companion-sheet .pilot-card-header {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.companion-sheet .pilot-card-header img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 2px solid #5a2b91;
+}
+
+.companion-sheet .pilot-card-header h4 {
+  margin: 0;
+  color: #5a2b91;
+}
+
+.companion-sheet .pilot-card-header button {
+  margin-top: 0.25rem;
+  border: 1px solid #5a2b91;
+  border-radius: 4px;
+  padding: 0.25rem 0.75rem;
+  background: #f7f0ff;
+  cursor: pointer;
+  color: #5a2b91;
+}
+
+.companion-sheet .pilot-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.5rem;
+}
+
+.companion-sheet .pilot-stats div {
+  background: rgba(90, 43, 145, 0.05);
+  border: 1px solid rgba(90, 43, 145, 0.2);
+  border-radius: 4px;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.companion-sheet .pilot-empty {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #5a2b91;
+}
+
+.creature-sheet .pontos-section,
+.companion-sheet .pontos-section {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-around;
+  font-size: 1.1rem;
+}
+
+.creature-sheet .pontos-section span,
+.companion-sheet .pontos-section span {
+  font-weight: bold;
+  color: #5a2b91;
+}
+
+.creature-sheet .descricao-section textarea,
+.companion-sheet .descricao-section textarea {
+  min-height: 100px;
+}
+
+.creature-sheet .descricao-preview,
+.companion-sheet .descricao-preview {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  border: 1px dashed #c5b3e8;
+  background: #fbf8ff;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.creature-sheet .referencia-categorias table,
+.companion-sheet .referencia-categorias table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.creature-sheet .referencia-categorias th,
+.creature-sheet .referencia-categorias td,
+.companion-sheet .referencia-categorias th,
+.companion-sheet .referencia-categorias td {
+  border: 1px solid #e2d9f8;
+  padding: 0.3rem;
+  text-align: left;
+}
+
+.creature-tabs,
+.companion-tabs {
+  margin-bottom: 0.75rem;
+}
+
+.creature-tabs .item,
+.companion-tabs .item {
+  padding: 0.4rem 0.8rem;
+  text-transform: uppercase;
+}
+
+.creature-tabs .item.active,
+.companion-tabs .item.active {
+  background: #5a2b91;
+  color: #fff;
+}
+
+.attack-table,
+.abilities-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.attack-table th,
+.attack-table td,
+.abilities-table th,
+.abilities-table td {
+  border: 1px solid #d9d0ec;
+  padding: 0.35rem;
+  text-align: left;
+}
+
+.abilities-table textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+
+.attack-roll-cell {
+  text-align: center;
+  width: 60px;
+}
+
+.attack-roll {
+  background: #5a2b91;
+  border: none;
+  color: #fff;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.attack-roll:hover {
+  background: #7a3cc2;
+}
+
+.attack-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.attack-create {
+  background: #5a2b91;
+  color: #fff;
+  border: none;
+  padding: 0.35rem 0.9rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.attack-create:hover {
+  background: #7a3cc2;
+}
+
+.attack-actions {
+  display: flex;
+  gap: 0.25rem;
+  justify-content: center;
+}
+
+.attack-actions button {
+  border: none;
+  background: #ece2ff;
+  padding: 0.25rem 0.35rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.attack-actions button:hover {
+  background: #d6c3ff;
+}
+
+.empty-row {
+  text-align: center;
+  color: #777;
+  font-style: italic;
+}
+
+.abilities-table .ability-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.abilities-table .ability-actions button {
+  border: 1px solid #c4bdd6;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.5);
+  padding: 0.25rem 0.35rem;
+  cursor: pointer;
+}
+
+.abilities-table .ability-actions button:hover {
+  background: #f0e6ff;
+  border-color: #7a3cc2;
+}
+
+.pilot-sheet .vinculo-tab .linked-companion-view,
+.companion-sheet .vinculo-tab .linked-pilot-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.pilot-sheet .vinculo-tab .linked-companion-view .card,
+.companion-sheet .vinculo-tab .linked-pilot-view .card {
+  margin: 0;
+}
+
+.pilot-sheet .vinculo-tab input[readonly],
+.companion-sheet .vinculo-tab input[readonly],
+.vinculo-tab textarea[readonly] {
+  background: rgba(255, 255, 255, 0.6);
+  color: inherit;
+}
+
+.pilot-sheet .vinculo-tab textarea[readonly],
+.companion-sheet .vinculo-tab textarea[readonly] {
+  width: 100%;
+  resize: vertical;
+}
+
+.linked-companion-view .attack-section.readonly button,
+.linked-companion-view .habilidades-section.readonly button {
+  display: none;
+}
+
+.linked-companion-view .attack-table td,
+.linked-companion-view .attack-table th {
+  text-align: left;
+}
+
+.companion-sheet .vinculo-tab .exapoints-card .exapoints-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
+}
+
+.companion-sheet .vinculo-tab .exapoints-grid span {
+  font-size: 0.85rem;
+  color: #333;
+}
+
+.companion-sheet .vinculo-tab .exapoints-grid strong {
+  font-size: 1.1rem;
+}
+
+/* Estilos para tabela de compendium */
+.rising-steel-compendium-table {
+  margin-top: 0.5rem;
+  overflow-x: auto;
+}
+
+.rising-steel-compendium-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.rising-steel-compendium-items-table thead {
+  background: rgba(122, 60, 194, 0.2);
+}
+
+.rising-steel-compendium-items-table th {
+  padding: 0.5rem;
+  text-align: left;
+  font-weight: bold;
+  color: #4a2c6b;
+  border-bottom: 2px solid #7a3cc2;
+}
+
+.rising-steel-compendium-items-table td {
+  padding: 0.5rem;
+  border-bottom: 1px solid rgba(196, 189, 214, 0.5);
+}
+
+.rising-steel-compendium-items-table tbody tr:hover {
+  background: rgba(122, 60, 194, 0.1);
+}
+
+.rising-steel-compendium-items-table tbody tr.compendium-item-row {
+  transition: background-color 0.2s;
+}
+
+.rising-steel-compendium-items-table tbody tr.compendium-item-row:hover {
+  background: rgba(122, 60, 194, 0.15);
+}
+
+.rising-steel-compendium-items-table td strong {
+  color: #4a2c6b;
+}
+
+.rising-steel-compendium-items-table td small {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+/* Estilos para dados coloridos no chat */
+/* Classes genéricas para diferenciar dados por tipo */
+.rising-steel-dice-bonus {
+  color: #c49000;
+  font-weight: bold;
+}
+
+.rising-steel-dice-exapoint {
+  color: #9b59b6;
+  font-weight: bold;
+}
+
+/* Estilos para dados no chat message */
+.chat-message .dice-roll .dice.rising-steel-dice-bonus {
+  color: #c49000 !important;
+  border-color: #c49000 !important;
+  box-shadow: 0 0 4px rgba(196, 144, 0, 0.65);
+}
+
+.chat-message .dice-roll .dice.rising-steel-dice-exapoint {
+  color: #9b59b6 !important;
+  border-color: #9b59b6 !important;
+  box-shadow: 0 0 4px rgba(155, 89, 182, 0.6);
+}
+
+/* Estilos para módulos EXAcom */
+.exacom-sheet .item-warning {
+  background-color: rgba(255, 200, 200, 0.3) !important;
+  border-left: 3px solid #ff4444 !important;
+}
+
+.exacom-sheet .warning-icon {
+  color: #ff4444;
+  margin-left: 5px;
+  font-size: 1.1em;
+}
+
+/* Estilos para texto de sucessos na parte inferior do chat */
+.chat-message h4.dice-total {
+  font-size: 16px !important;
+}
+
+

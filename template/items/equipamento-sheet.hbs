@@ -1,0 +1,35 @@
+<form class="flexcol" autocomplete="off">
+  <header class="sheet-header">
+    <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}" height="64" width="64"/>
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Nome do Equipamento"/></h1>
+    </div>
+  </header>
+
+  <section class="sheet-body">
+    <div class="form-group">
+      <label>Tipo:</label>
+      <select name="system.tipo">
+        <option value="Utilitário" {{#if (eq system.tipo "Utilitário")}}selected{{/if}}>Utilitário</option>
+        <option value="Equipamento de Visão" {{#if (eq system.tipo "Equipamento de Visão")}}selected{{/if}}>Equipamento de Visão</option>
+        <option value="Comunicação" {{#if (eq system.tipo "Comunicação")}}selected{{/if}}>Comunicação</option>
+        <option value="Médico" {{#if (eq system.tipo "Médico")}}selected{{/if}}>Médico</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Peso (kg):</label>
+      <input type="number" name="system.peso" value="{{system.peso}}" min="0" step="0.1" />
+    </div>
+
+    <div class="form-group">
+      <label>Efeito:</label>
+      <textarea name="system.efeito" rows="4">{{system.efeito}}</textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Descrição:</label>
+      <textarea name="system.descricao" rows="4">{{system.descricao}}</textarea>
+    </div>
+  </section>
+</form>

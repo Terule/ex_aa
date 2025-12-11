@@ -1,0 +1,24 @@
+# FoundryVTT temporary files
+**/LOCK
+**/LOG
+**/LOG.old
+**/CURRENT
+**/MANIFEST-*
+
+# Backup files
+backup_local/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node modules
+node_modules/
+

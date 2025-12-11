@@ -1,0 +1,63 @@
+<div class="rising-steel-roll-dialog">
+  <div class="form-group">
+    <label>Dados Base:</label>
+    <input type="number" id="base-dice" value="{{baseDice}}" readonly style="background: #f0f0f0;" />
+  </div>
+  
+  {{#if allowAttributeSelection}}
+  <div class="form-group">
+    <label>Atributo para adicionar (opcional):</label>
+    <select id="atributo-select">
+      <option value="">-- Nenhum --</option>
+      <optgroup label="Atributos Físicos">
+        <option value="atributos.fisicos.forca">Força ({{atributos.fisicos.forca}})</option>
+        <option value="atributos.fisicos.destreza">Destreza ({{atributos.fisicos.destreza}})</option>
+        <option value="atributos.fisicos.vigor">Vigor ({{atributos.fisicos.vigor}})</option>
+      </optgroup>
+      <optgroup label="Atributos Mentais">
+        <option value="atributos.mentais.conhecimento">Conhecimento ({{atributos.mentais.conhecimento}})</option>
+        <option value="atributos.mentais.perspicacia">Perspicácia ({{atributos.mentais.perspicacia}})</option>
+        <option value="atributos.mentais.resiliencia">Resiliência ({{atributos.mentais.resiliencia}})</option>
+      </optgroup>
+      <optgroup label="Atributos Sociais">
+        <option value="atributos.sociais.eloquencia">Eloquência ({{atributos.sociais.eloquencia}})</option>
+        <option value="atributos.sociais.dissimulacao">Dissimulação ({{atributos.sociais.dissimulacao}})</option>
+        <option value="atributos.sociais.presenca">Presença ({{atributos.sociais.presenca}})</option>
+      </optgroup>
+    </select>
+  </div>
+  {{/if}}
+  
+  <div class="form-group">
+    <label>Dados Bônus (opcional):</label>
+    <input type="number" id="bonus-dice" value="{{bonusDice}}" />
+    <small style="display: block; margin-top: 3px; color: #666;">Pode ser positivo (adiciona dados) ou negativo (reduz dados)</small>
+  </div>
+  
+  {{#if actorExapoints}}
+  <div class="form-group">
+    <label style="font-weight: bold; color: #5a2b91;">EXApoints - Opcional:</label>
+    <input type="number" id="actor-exapoints-gastar" value="0" min="0" max="{{actorExapoints.atual}}" step="1" />
+    <div class="exapoints-info">
+      <small style="display: block; margin-top: 3px; color: #5a2b91; font-weight: bold;">EXApoints disponíveis: <span id="actor-exapoints-disponiveis">{{actorExapoints.atual}}</span> / {{actorExapoints.maximo}}</small>
+      <small style="display: block; margin-top: 3px; color: #666;">Cada EXApoint usado adiciona 1 dado extra. Se esse dado cair 1, você perde 1 EXApoint.</small>
+    </div>
+  </div>
+  {{/if}}
+  
+  {{#if linkedPilot}}
+  <div class="form-group">
+    <label style="font-weight: bold; color: #5a2b91;">EXApoints do Piloto ({{linkedPilot.name}}) - Opcional:</label>
+    <input type="number" id="linked-pilot-exapoints-gastar" value="0" min="0" max="{{linkedPilot.exapoints.atual}}" step="1" />
+    <div class="exapoints-info">
+      <small style="display: block; margin-top: 3px; color: #5a2b91; font-weight: bold;">EXApoints disponíveis: <span id="linked-pilot-exapoints-disponiveis">{{linkedPilot.exapoints.atual}}</span> / {{linkedPilot.exapoints.maximo}}</small>
+      <small style="display: block; margin-top: 3px; color: #666;">Cada EXApoint usado adiciona 1 dado extra. Se esse dado cair 1, você perde 1 EXApoint.</small>
+    </div>
+  </div>
+  {{/if}}
+  
+  <div class="form-group">
+    <strong>Total de dados: <span id="total-dice">{{baseDice}}</span></strong>
+  </div>
+</div>
+

@@ -1,0 +1,23 @@
+<div class="rising-steel-habilidade-dialog">
+  <div class="form-group">
+    <label>Nome da Habilidade:</label>
+    <input type="text" id="habilidade-nome" value="{{habilidade.nome}}" placeholder="Ex: Sopro ácido, Rugido ensurdecedor..." />
+  </div>
+
+  <div class="form-group">
+    <label>Descrição:</label>
+    <textarea id="habilidade-descricao" rows="4" placeholder="Explique o efeito da habilidade">{{habilidade.descricao}}</textarea>
+  </div>
+
+  <div class="form-group">
+    <label>Usos:</label>
+    <div class="habilidade-usos">
+      <input type="number" id="habilidade-usos-atual" value="{{habilidade.usos.atual}}" min="0" step="1" />
+      <span>/</span>
+      <input type="number" id="habilidade-usos-total" value="{{habilidade.usos.total}}" min="0" step="1" />
+    </div>
+    <small>Defina o número de usos atuais e o total disponível.</small>
+  </div>
+</div>
+
+

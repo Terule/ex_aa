@@ -1,0 +1,40 @@
+<div class="rising-steel-ataque-dialog">
+  <div class="form-group">
+    <label>Nome do Ataque:</label>
+    <input type="text" id="ataque-nome" value="{{ataque.nome}}" placeholder="Ex: Garra, Sopro Ácido..." />
+  </div>
+
+  <div class="form-group">
+    <label>Atributo Relacionado:</label>
+    <select id="ataque-atributo">
+      <option value="">-- Selecione --</option>
+      {{#each atributosPiloto}}
+      <option value="{{this.path}}" {{#if (eq ../ataque.atributo this.path)}}selected{{/if}}>{{this.label}} ({{this.valor}})</option>
+      {{/each}}
+    </select>
+    <small>Atributo do piloto vinculado</small>
+  </div>
+
+  <div class="form-group">
+    <label>Dado Base:</label>
+    <input type="number" id="ataque-dado-base" value="{{dadoBaseCalculado}}" min="0" step="1" readonly />
+    <small>Neuromotor ({{neuromotor}}) + Sincronia ({{sincronia}}) = {{dadoBaseCalculado}}</small>
+  </div>
+
+  <div class="form-group">
+    <label>Alcance:</label>
+    <input type="text" id="ataque-alcance" value="{{ataque.alcance}}" placeholder="Ex: Curto, Médio, Contato..." />
+  </div>
+
+  <div class="form-group">
+    <label>Dano:</label>
+    <input type="text" id="ataque-dano" value="{{ataque.dano}}" placeholder="Descrição do dano" />
+  </div>
+
+  <div class="form-group">
+    <label>Efeito:</label>
+    <textarea id="ataque-efeito" rows="3" placeholder="Efeitos adicionais">{{ataque.efeito}}</textarea>
+  </div>
+</div>
+
+
