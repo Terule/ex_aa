@@ -1703,9 +1703,13 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
             
             // Atualizar EXApoints do piloto (se houver)
             if (linkedPilot && uns > 0) {
-                const novoExapoints = Math.max(0, exapointsAtual - uns);
+                const maximo = Number(linkedPilot.system?.exapoints?.maximo || 0);
+                const gastos = Number(linkedPilot.system?.exapoints?.gastos || 0);
+                const novoGastos = Math.min(maximo, Math.max(0, gastos + uns));
+                const novoAtual = Math.max(0, maximo - novoGastos);
                 await linkedPilot.update({
-                    "system.exapoints.atual": novoExapoints
+                    "system.exapoints.gastos": novoGastos,
+                    "system.exapoints.atual": novoAtual
                 });
                 ui.notifications.info(
                     `Módulo ${nomeModulo} ativado! ${uns} EXApoint${uns !== 1 ? 's' : ''} gasto${uns !== 1 ? 's' : ''}.`
