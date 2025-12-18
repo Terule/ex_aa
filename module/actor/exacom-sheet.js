@@ -43,6 +43,9 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
             if (!context.system.equipamentosExa) {
                 context.system.equipamentosExa = { armas: [], blindagem: 0 };
             }
+            context.system.equipamentosExa.blindagemTotal = Number(context.system.equipamentosExa.blindagem || 0) * 10;
+            context.system.equipamentosExa.blindagemDano = Math.max(0, Number(context.system.equipamentosExa.blindagemDano || 0));
+            context.system.equipamentosExa.blindagemAtual = Math.max(0, context.system.equipamentosExa.blindagemTotal - context.system.equipamentosExa.blindagemDano);
             if (!context.system.exa) {
                 context.system.exa = { sincronia: 0, overdrive: 0 };
             }
@@ -99,6 +102,10 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
                         context.system.equipamentosExa.blindagem = Number(context.selectedBlindagem.system?.blindagem || 0);
                         context.system.equipamentosExa.blindagemDescricao = context.selectedBlindagem.system?.descricao || "";
                         context.system.equipamentosExa.blindagemEspecial = context.selectedBlindagem.system?.especial || "";
+                        context.system.equipamentosExa.blindagemTotal = Number(context.selectedBlindagem.system?.blindagem || 0) * 10;
+                        const blindagemDano = Number(context.system.equipamentosExa?.blindagemDano || 0);
+                        context.system.equipamentosExa.blindagemDano = Math.max(0, blindagemDano);
+                        context.system.equipamentosExa.blindagemAtual = Math.max(0, context.system.equipamentosExa.blindagemTotal - context.system.equipamentosExa.blindagemDano);
                     }
                 }
             } catch (error) {
@@ -107,11 +114,12 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
 
             // Calcular valores efetivos dos atributos (aplicando penalidades)
             const penalidades = context.system.sistema?.penalidades || {};
+            const sincroniaBonus = Number(context.system.exa?.sincronia || 0);
             context.sistemaEfetivo = {
-                neuromotor: Math.max(0, Number(context.system.sistema?.neuromotor || 0) - Number(penalidades.neuromotor || 0)),
-                sensorial: Math.max(0, Number(context.system.sistema?.sensorial || 0) - Number(penalidades.sensorial || 0)),
-                estrutural: Math.max(0, Number(context.system.sistema?.estrutural || 0) - Number(penalidades.estrutural || 0)),
-                energetico: Math.max(0, Number(context.system.sistema?.energetico || 0) - Number(penalidades.energetico || 0))
+                neuromotor: Math.max(0, Number(context.system.sistema?.neuromotor || 0) - Number(penalidades.neuromotor || 0) + sincroniaBonus),
+                sensorial: Math.max(0, Number(context.system.sistema?.sensorial || 0) - Number(penalidades.sensorial || 0) + sincroniaBonus),
+                estrutural: Math.max(0, Number(context.system.sistema?.estrutural || 0) - Number(penalidades.estrutural || 0) + sincroniaBonus),
+                energetico: Math.max(0, Number(context.system.sistema?.energetico || 0) - Number(penalidades.energetico || 0) + sincroniaBonus)
             };
             
             // Calcular limiares de dano baseados em (Vigor do piloto + Estrutural com penalidade aplicada)
@@ -330,6 +338,7 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
         html.find("input[name='system.sistema.sensorial']").on("change", this.render.bind(this));
         html.find("input[name='system.sistema.energetico']").on("change", this.render.bind(this));
         html.find("select[name='system.equipamentosExa.blindagemId']").on("change", this._onBlindagemChange.bind(this));
+        html.find("input[name='system.equipamentosExa.blindagemDano']").on("change", this._onBlindagemDanoChange.bind(this));
         html.find("input[name='system.exa.sincronia']").on("change", this._onCombatStatsChange.bind(this));
         // Listeners para penalidades dos atributos de sistema (recalcular tudo)
         html.find("input[name='system.sistema.penalidades.neuromotor']").on("change", this._onCombatStatsChange.bind(this));
@@ -349,6 +358,8 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
         
         // Botão de rolagem de iniciativa
         html.find(".roll-iniciativa").click(this._onRollIniciativa.bind(this));
+        // Botão de rolagem de esquiva
+        html.find(".roll-esquiva").click(this._onRollEsquiva.bind(this));
         
         // Listeners para módulos EXA
         html.find(".modulo-create").click(this._onCreateModulo.bind(this));
@@ -407,12 +418,13 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
         const value = foundry.utils.getProperty(this.actor.system, path);
         let valorBase = Number(value || 0) || 0;
         
-        // Aplicar penalidades se for um atributo de sistema
+        // Aplicar penalidades e bônus de Sincronia se for um atributo de sistema
         if (path.startsWith("sistema.")) {
             const atributoNome = path.replace("sistema.", "");
             const penalidades = this.actor.system.sistema?.penalidades || {};
             const penalidade = Number(penalidades[atributoNome] || 0);
-            valorBase = Math.max(0, valorBase - penalidade);
+            const sincroniaBonus = Number(this.actor.system.exa?.sincronia || 0);
+            valorBase = Math.max(0, valorBase - penalidade + sincroniaBonus);
         }
         
         return valorBase;
@@ -765,12 +777,31 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
         await this.actor.update({
             "system.equipamentosExa.blindagemId": blindagemId,
             "system.equipamentosExa.blindagem": blindagemValue,
+            "system.equipamentosExa.blindagemTotal": blindagemValue * 10,
+            "system.equipamentosExa.blindagemDano": 0,
+            "system.equipamentosExa.blindagemAtual": Math.max(0, (blindagemValue * 10)),
             "system.equipamentosExa.blindagemDescricao": blindagemId ? blindagemDescricao : "",
             "system.equipamentosExa.blindagemEspecial": blindagemId ? blindagemEspecial : ""
         });
         
         // Recalcular atributos de combate (não depende mais de blindagem, mas pode haver outras mudanças)
         await this._onCombatStatsChange();
+    }
+
+    async _onBlindagemDanoChange(event) {
+        event.preventDefault();
+        const input = event.currentTarget;
+        const dano = Number(input.value || 0);
+        const total = Number(this.actor.system.equipamentosExa?.blindagemTotal || 0);
+        const atual = Math.max(0, total - Math.max(0, dano));
+
+        await this.actor.update({
+            "system.equipamentosExa.blindagemDano": Math.max(0, dano),
+            "system.equipamentosExa.blindagemAtual": atual
+        });
+
+        const html = $(this.element);
+        html.find("input[name='system.equipamentosExa.blindagemAtual']").val(atual);
     }
 
     _calculateCapacity(context) {
@@ -1372,6 +1403,23 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
         }
     }
 
+    async _onRollEsquiva(event) {
+        event.preventDefault();
+        const esquiva = Number(this.actor.system?.combate?.esquiva || 0);
+        if (esquiva <= 0) {
+            ui.notifications.warn("Esquiva atual é 0 ou inválida!");
+            return;
+        }
+
+        const { RisingSteelRollDialog } = await import("../app/roll-dialog.js");
+        await RisingSteelRollDialog.prepareRollDialog({
+            rollName: "Teste de Esquiva",
+            baseDice: esquiva,
+            actor: this.actor,
+            label: "Esquiva"
+        });
+    }
+
     async _onCreateModulo(event) {
         event.preventDefault();
         // Se não tiver data-consumo, mostrar diálogo para escolher o consumo
@@ -1655,9 +1703,13 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
             
             // Atualizar EXApoints do piloto (se houver)
             if (linkedPilot && uns > 0) {
-                const novoExapoints = Math.max(0, exapointsAtual - uns);
+                const maximo = Number(linkedPilot.system?.exapoints?.maximo || 0);
+                const gastos = Number(linkedPilot.system?.exapoints?.gastos || 0);
+                const novoGastos = Math.min(maximo, Math.max(0, gastos + uns));
+                const novoAtual = Math.max(0, maximo - novoGastos);
                 await linkedPilot.update({
-                    "system.exapoints.atual": novoExapoints
+                    "system.exapoints.gastos": novoGastos,
+                    "system.exapoints.atual": novoAtual
                 });
                 ui.notifications.info(
                     `Módulo ${nomeModulo} ativado! ${uns} EXApoint${uns !== 1 ? 's' : ''} gasto${uns !== 1 ? 's' : ''}.`

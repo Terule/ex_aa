@@ -2,7 +2,7 @@
     "id":  "rising-steel",
     "title":  "Rising Steel",
     "description":  "The Rising Steel system for FoundryVTT!",
-    "version":  "0.2.1",
+    "version":  "0.2.2",
     "compatibility":  {
                           "minimum":  "12",
                           "verified":  "12.331"
@@ -81,7 +81,7 @@
                   },
                   {
                       "name":  "modulosExacom",
-                      "label":  "MÃƒÂ³dulos EXAcom",
+                      "label":  "MÃƒÆ’Ã‚Â³dulos EXAcom",
                       "path":  "packs/modulosExacom.db",
                       "type":  "Item",
                       "system":  "rising-steel"
