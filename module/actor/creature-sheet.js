@@ -94,7 +94,7 @@ export class RisingSteelCreatureSheet extends FoundryCompatibility.getActorSheet
         html.find(".habilidade-delete").click(this._onDeleteHabilidade.bind(this));
         html.find(".habilidade-roll").click(this._onRollHabilidade.bind(this));
         html.find(".roll-iniciativa").click(this._onRollIniciativa.bind(this));
-        html.find(".roll-esquiva").click(this._onRollEsquiva.bind(this));
+        html.find(".roll-armadura").click(this._onRollArmadura.bind(this));
     }
 
     _normalizeNumericValues(systemData) {
@@ -697,20 +697,24 @@ export class RisingSteelCreatureSheet extends FoundryCompatibility.getActorSheet
         });
     }
 
-    async _onRollEsquiva(event) {
+    async _onRollArmadura(event) {
         event.preventDefault();
-        const esquiva = Number(this.actor.system?.combate?.esquiva || 0);
-        if (esquiva <= 0) {
-            ui.notifications.warn("Esquiva atual é 0 ou inválida!");
+        const armaduraAtual = Number(this.actor.system.armadura?.atual || 0);
+        
+        if (armaduraAtual <= 0) {
+            ui.notifications.warn("Armadura atual é 0 ou inválida!");
             return;
         }
 
+        // Importar o RollDialog
         const { RisingSteelRollDialog } = await import("../app/roll-dialog.js");
+        
+        // Abrir modal de rolagem usando a Armadura atual como base
         await RisingSteelRollDialog.prepareRollDialog({
-            rollName: "Teste de Esquiva",
-            baseDice: esquiva,
+            rollName: "Teste de Armadura",
+            baseDice: armaduraAtual,
             actor: this.actor,
-            label: "Esquiva"
+            label: "Armadura"
         });
     }
 }

@@ -985,8 +985,8 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         // Atualizar Armadura atual quando total ou dano mudarem
         html.find("input[name='system.armadura.total'], input[name='system.armadura.dano']").on("change", this._onArmaduraChange.bind(this));
         
-        // Botão de rolagem de Esquiva (substitui rolagem de armadura)
-        html.find(".roll-esquiva").click(this._onRollEsquiva.bind(this));
+        // Botão de rolagem de Armadura
+        html.find(".roll-armadura").click(this._onRollArmadura.bind(this));
         
         // Atualizar nome quando equipamento for selecionado
         html.find(".item-select-equipamento").on("change", this._onEquipamentoSelect.bind(this));
@@ -1506,20 +1506,24 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         }
     }
 
-    async _onRollEsquiva(event) {
+    async _onRollArmadura(event) {
         event.preventDefault();
-        const esquiva = Number(this.actor.system?.combate?.esquiva || 0);
-        if (esquiva <= 0) {
-            ui.notifications.warn("Esquiva atual é 0 ou inválida!");
+        const armaduraAtual = Number(this.actor.system.armadura?.atual || 0);
+        
+        if (armaduraAtual <= 0) {
+            ui.notifications.warn("Armadura atual é 0 ou inválida!");
             return;
         }
 
+        // Importar o RollDialog
         const { RisingSteelRollDialog } = await import("../app/roll-dialog.js");
+        
+        // Abrir modal de rolagem usando a Armadura atual como base
         await RisingSteelRollDialog.prepareRollDialog({
-            rollName: "Teste de Esquiva",
-            baseDice: esquiva,
+            rollName: "Teste de Armadura",
+            baseDice: armaduraAtual,
             actor: this.actor,
-            label: "Esquiva"
+            label: "Armadura"
         });
     }
 
@@ -2017,10 +2021,9 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
             }
         }
         
-        // Atualizar armadura equipada e proteção total (HP = proteção * 10)
+        // Atualizar armadura equipada e proteção total
         const danoAtual = Number(this.actor.system.armadura?.dano || 0);
-        const totalHP = protecao * 10;
-        const atual = Math.max(0, totalHP - danoAtual);
+        const atual = Math.max(0, protecao - danoAtual);
         
         // Garantir que armaduraId é uma string válida, não null ou undefined
         const idParaSalvar = String(armaduraId || "").trim();
@@ -2036,7 +2039,7 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
 
         await this.actor.update({
             "system.armadura.equipada": idParaSalvar,
-            "system.armadura.total": totalHP,
+            "system.armadura.total": protecao,
             "system.armadura.atual": atual,
             "system.armadura.nome": armaduraNome || armaduraAtual.nome || "",
             "system.armadura.descricao": armaduraDescricao || armaduraAtual.descricao || "",

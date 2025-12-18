@@ -50,12 +50,11 @@ export class RisingSteelArmaduraSelectDialog {
                         const armaduraEspecial = armaduraData?.system?.especial || "";
                         
                         // Equipar a armadura
-                        const armaduraTotalHP = armaduraProtecao * 10;
                         await actor.update({
                             "system.armadura.equipada": armaduraId,
-                            "system.armadura.total": armaduraTotalHP,
+                            "system.armadura.total": armaduraProtecao,
                             "system.armadura.dano": 0,
-                            "system.armadura.atual": armaduraTotalHP,
+                            "system.armadura.atual": armaduraProtecao,
                             "system.armadura.nome": armaduraNome,
                             "system.armadura.descricao": armaduraDescricao,
                             "system.armadura.especial": armaduraEspecial

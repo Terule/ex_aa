@@ -306,8 +306,7 @@ export class RisingSteelActor extends Actor {
         // Calcular Esquiva = máximo entre (destreza/2) - total de armadura, com mínimo de 1
         const destreza = attr.fisicos.destreza;
         const armaduraTotal = safeNumber(this.system.armadura?.total || 0, 0);
-        const armaduraDefesa = armaduraTotal / 10;
-        const esquivaCalculada = Math.floor(destreza / 2) - armaduraDefesa;
+        const esquivaCalculada = Math.floor(destreza / 2) - armaduraTotal;
         this.system.combate.esquiva = Math.max(1, esquivaCalculada);
         
         // IMPORTANTE: Ler dados salvos do _source ANTES de qualquer processamento
@@ -523,8 +522,7 @@ export class RisingSteelActor extends Actor {
         this.system.armadura.dano = armaduraDano;
         this.system.armadura.atual = Math.max(0, armaduraTotal - armaduraDano);
 
-        const armaduraDefesa = armaduraTotal / 10;
-        const esquivaCalculada = Math.floor(destreza / 2) - armaduraDefesa;
+        const esquivaCalculada = Math.floor(destreza / 2) - armaduraTotal;
         this.system.combate.esquiva = Math.max(1, esquivaCalculada);
 
         if (!this.system.limiarDano) {
@@ -748,9 +746,6 @@ export class RisingSteelActor extends Actor {
         }
         this.system.equipamentosExa.blindagemDescricao = this.system.equipamentosExa.blindagemDescricao ?? "";
         this.system.equipamentosExa.blindagemEspecial = this.system.equipamentosExa.blindagemEspecial ?? "";
-        this.system.equipamentosExa.blindagemDano = safeNumber(this.system.equipamentosExa.blindagemDano);
-        this.system.equipamentosExa.blindagemTotal = safeNumber(this.system.equipamentosExa.blindagem) * 10;
-        this.system.equipamentosExa.blindagemAtual = Math.max(0, this.system.equipamentosExa.blindagemTotal - this.system.equipamentosExa.blindagemDano);
 
         const ensureEntries = (entries, template, min = 1) => {
             let list = Array.isArray(entries) ? entries.map(entry => ({
