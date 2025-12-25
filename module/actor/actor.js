@@ -320,11 +320,18 @@ export class RisingSteelActor extends Actor {
             }
         }
         
+        // Atualizar armadura.total automaticamente a partir das armaduras do inventário
+        // O total é sempre a soma das proteções das armaduras do inventário
+        armadura.total = protecaoTotalInventario;
+        
+        // Recalcular armadura atual com o novo total
+        armadura.atual = Math.max(0, armadura.total - dano);
+        
         // Calcular Esquiva = máximo entre (destreza/2) - total de armadura, com mínimo de 1
         // Incluir armadura temporária no cálculo
         const destreza = attr.fisicos.destreza;
         const armaduraTemporaria = safeNumber(this.system.armadura?.temporaria || 0, 0);
-        const armaduraTotal = safeNumber(this.system.armadura?.total || 0, 0) + protecaoTotalInventario + armaduraTemporaria;
+        const armaduraTotal = armadura.total + armaduraTemporaria;
         const esquivaCalculada = Math.floor(destreza / 2) - armaduraTotal;
         this.system.combate.esquiva = Math.max(1, esquivaCalculada);
         
