@@ -580,7 +580,7 @@
           <tr>
             <th>Ação</th>
             <th>Armadura</th>
-            <th>Proteção</th>
+            <th>Pontos de Proteção</th>
           </tr>
         </thead>
         <tbody>
@@ -601,7 +601,7 @@
               <input type="hidden" name="system.inventario.armaduras.{{@index}}.nome" value="{{nome}}" />
             </td>
             <td>
-              <input type="number" name="system.inventario.armaduras.{{@index}}.protecao" value="{{protecao}}" min="0" data-dtype="Number" readonly />
+              <input type="number" name="system.inventario.armaduras.{{@index}}.protecao" value="{{number protecao}}" min="0" data-dtype="Number" readonly />
             </td>
           </tr>
           {{/each}}
