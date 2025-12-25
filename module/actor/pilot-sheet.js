@@ -1491,6 +1491,7 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
 
     async _onArmaduraChange(event) {
         // Calcular Armadura atual (total - dano)
+        // O total já inclui todas as armaduras do inventário (atualizado nas funções de seleção)
         const total = Number(this.actor.system.armadura?.total || 0);
         const dano = Number(this.actor.system.armadura?.dano || 0);
         const atual = Math.max(0, total - dano);
@@ -2926,8 +2927,23 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         const index = parseInt(button.dataset.index || 0);
         const armadurasAtuais = JSON.parse(JSON.stringify(this.actor.system.inventario?.armaduras || []));
         armadurasAtuais.splice(index, 1);
+        
+        // Calcular proteção total somando todas as armaduras restantes do inventário
+        let protecaoTotal = 0;
+        for (const armadura of armadurasAtuais) {
+            if (armadura && armadura.id && armadura.protecao) {
+                protecaoTotal += Number(armadura.protecao || 0);
+            }
+        }
+        
+        // Atualizar armaduras do inventário e o total de armadura
+        const danoAtual = Number(this.actor.system.armadura?.dano || 0);
+        const atual = Math.max(0, protecaoTotal - danoAtual);
+        
         await this.actor.update({
-            "system.inventario.armaduras": armadurasAtuais
+            "system.inventario.armaduras": armadurasAtuais,
+            "system.armadura.total": protecaoTotal,
+            "system.armadura.atual": atual
         });
     }
 
@@ -2967,8 +2983,23 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                     };
                 }
             });
+            
+            // Calcular proteção total somando todas as armaduras do inventário
+            let protecaoTotal = 0;
+            for (const armadura of armadurasNovas) {
+                if (armadura && armadura.id && armadura.protecao) {
+                    protecaoTotal += Number(armadura.protecao || 0);
+                }
+            }
+            
+            // Atualizar armaduras do inventário e o total de armadura
+            const danoAtual = Number(this.actor.system.armadura?.dano || 0);
+            const atual = Math.max(0, protecaoTotal - danoAtual);
+            
             await this.actor.update({
-                "system.inventario.armaduras": armadurasNovas
+                "system.inventario.armaduras": armadurasNovas,
+                "system.armadura.total": protecaoTotal,
+                "system.armadura.atual": atual
             });
             return;
         }
@@ -3017,8 +3048,22 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
             }
         });
         
+        // Calcular proteção total somando todas as armaduras do inventário
+        let protecaoTotal = 0;
+        for (const armadura of armadurasNovas) {
+            if (armadura && armadura.id && armadura.protecao) {
+                protecaoTotal += Number(armadura.protecao || 0);
+            }
+        }
+        
+        // Atualizar armaduras do inventário e o total de armadura
+        const danoAtual = Number(this.actor.system.armadura?.dano || 0);
+        const atual = Math.max(0, protecaoTotal - danoAtual);
+        
         await this.actor.update({
-            "system.inventario.armaduras": armadurasNovas
+            "system.inventario.armaduras": armadurasNovas,
+            "system.armadura.total": protecaoTotal,
+            "system.armadura.atual": atual
         });
     }
 }
