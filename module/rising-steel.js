@@ -136,10 +136,9 @@ Hooks.once("init", async function () {
             label: p.metadata.label
         })));
         
-        // Verificar e importar armaduras se o pack estiver vazio
+        // Verificar e importar outros packs se estiverem vazios (armaduras removido - importação manual apenas)
         if (game.user.isGM) {
             try {
-                await ensurePackFilled("rising-steel.armaduras", window.RisingSteel.importArmaduras, "armaduras");
                 await ensurePackFilled("rising-steel.armas", window.RisingSteel.importArmas, "armas");
                 await ensurePackFilled("rising-steel.equipamentos", window.RisingSteel.importEquipamentos, "equipamentos");
                 await ensurePackFilled("rising-steel.exacom", window.RisingSteel.importExacomModels, "exacom");
@@ -825,15 +824,112 @@ function addIdsToItems(itemsData) {
     }));
 }
 
+/**
+ * Importa armaduras do CSV para o compendium
+ * Esta função limpa completamente o compendium e importa apenas as 7 armaduras corretas
+ * IMPORTANTE: Esta função NÃO é executada automaticamente - deve ser chamada manualmente
+ */
 window.RisingSteel.importArmaduras = async function() {
+    // Dados das armaduras do CSV
     const armadurasData = [
-        {"name":"Colete Balístico","type":"armadura","img":"icons/svg/item-bag.svg","system":{"tipo":"Armadura Leve","protecao":10,"peso":3,"descricao":"Colete com camadas de proteção contra balas e fragmentos. Ideal para operações táticas e combate urbano.","especial":""},"flags":{},"effects":[]},
-        {"name":"Armadura de Combate Tático","type":"armadura","img":"icons/svg/item-bag.svg","system":{"tipo":"Armadura Leve","protecao":15,"peso":5,"descricao":"Armadura com placas de proteção em kevlar e mobilidade melhorada, adequada para combate em ambientes variados.","especial":""},"flags":{},"effects":[]},
-        {"name":"Armadura de Placas Cerâmicas","type":"armadura","img":"icons/svg/item-bag.svg","system":{"tipo":"Armadura Média","protecao":20,"peso":10,"descricao":"Armadura com placas de cerâmica, oferece excelente proteção em combate.","especial":"Penalidade: 1\nRequisito: FOR 3"},"flags":{},"effects":[]},
-        {"name":"Armadura de Proteção Modular","type":"armadura","img":"icons/svg/item-bag.svg","system":{"tipo":"Armadura Média","protecao":20,"peso":7,"descricao":"Armadura com módulos intercambiáveis para diferentes tipos de proteção, versátil e adaptável.","especial":"Penalidade: 1\n+2 em testes de consertar armadura\nRequisito: FOR 3"},"flags":{},"effects":[]},
-        {"name":"Armadura de Combate Pesada","type":"armadura","img":"icons/svg/item-bag.svg","system":{"tipo":"Armadura Pesada","protecao":30,"peso":10,"descricao":"Armadura completa com placas reforçadas e acolchoamento, ideal para situações de combate extremo.","especial":"Penalidade: 3\nReforçada\n-1 Esquiva\n-3 Iniciativa\nRequisito: FOR 4"},"flags":{},"effects":[]},
-        {"name":"Escudo Balístico de Nível I","type":"armadura","img":"icons/svg/item-bag.svg","system":{"tipo":"Armadura Leve","protecao":10,"peso":10,"descricao":"Escudo de liga leve de polímeros. Absorve impactos moderados sem comprometer a mobilidade.","especial":"Penalidade: 1\nReforçada\nIncapaz de equipar armas de 2 mãos\nRequisito: FOR 3"},"flags":{},"effects":[]},
-        {"name":"Escudo Balístico de Nível II","type":"armadura","img":"icons/svg/item-bag.svg","system":{"tipo":"Armadura Pesada","protecao":20,"peso":20,"descricao":"Escudo com estrutura de compósito avançado com núcleo metálico. Oferece resistência superior contra projéteis e golpes contundentes às custas da Mobilidade.","especial":"Penalidade: 2\nReforçada\nIncapaz de equipar armas de 2 mãos\n-1 Esquiva\nRequisito: FOR 4"},"flags":{},"effects":[]}
+        {
+            "name": "Colete Balístico",
+            "type": "armadura",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Armadura Leve",
+                "protecao": 10,
+                "peso": 3,
+                "descricao": "Colete com camadas de proteção contra balas e fragmentos. Ideal para operações táticas e combate urbano.",
+                "especial": ""
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "Armadura de Combate Tático",
+            "type": "armadura",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Armadura Leve",
+                "protecao": 15,
+                "peso": 5,
+                "descricao": "Armadura com placas de proteção em kevlar e mobilidade melhorada, adequada para combate em ambientes variados.",
+                "especial": ""
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "Armadura de Placas Cerâmicas",
+            "type": "armadura",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Armadura Média",
+                "protecao": 20,
+                "peso": 10,
+                "descricao": "Armadura com placas de cerâmica, oferece excelente proteção em combate.",
+                "especial": "Penalidade: 1\nRequisito: FOR 3"
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "Armadura de Proteção Modular",
+            "type": "armadura",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Armadura Média",
+                "protecao": 20,
+                "peso": 7,
+                "descricao": "Armadura com módulos intercambiáveis para diferentes tipos de proteção, versátil e adaptável.",
+                "especial": "Penalidade: 1\n+2 em testes de consertar armadura\nRequisito: FOR 3"
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "Armadura de Combate Pesada",
+            "type": "armadura",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Armadura Pesada",
+                "protecao": 30,
+                "peso": 10,
+                "descricao": "Armadura completa com placas reforçadas e acolchoamento, ideal para situações de combate extremo.",
+                "especial": "Penalidade: 3\nReforçada\n-1 Esquiva\n-3 Iniciativa\nRequisito: FOR 4"
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "Escudo Balístico de Nível I",
+            "type": "armadura",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Armadura Leve",
+                "protecao": 10,
+                "peso": 10,
+                "descricao": "Escudo de liga leve de polímeros. Absorve impactos moderados sem comprometer a mobilidade.",
+                "especial": "Penalidade: 1\nReforçada\nIncapaz de equipar armas de 2 mãos\nRequisito: FOR 3"
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "Escudo Balístico de Nível II",
+            "type": "armadura",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Armadura Pesada",
+                "protecao": 20,
+                "peso": 20,
+                "descricao": "Escudo com estrutura de compósito avançado com núcleo metálico. Oferece resistência superior contra projéteis e golpes contundentes às custas da Mobilidade.",
+                "especial": "Penalidade: 2\nReforçada\nIncapaz de equipar armas de 2 mãos\n-1 Esquiva\nRequisito: FOR 4"
+            },
+            "flags": {},
+            "effects": []
+        }
     ];
     
     const pack = game.packs.get("rising-steel.armaduras");
@@ -842,45 +938,54 @@ window.RisingSteel.importArmaduras = async function() {
         return;
     }
     
+    if (!game.user.isGM) {
+        ui.notifications.error("Apenas o GM pode importar armaduras!");
+        return;
+    }
+    
     try {
+        console.log(`[Rising Steel] Iniciando importação de armaduras...`);
+        
         // Desbloquear o pack se estiver bloqueado
         if (pack.locked) {
             await pack.configure({locked: false});
         }
         
-        // Deletar todos os itens existentes primeiro
-        try {
-            const existingItems = await pack.getDocuments();
-            if (existingItems && existingItems.length > 0) {
-                const validItemIds = existingItems
-                    .filter(item => item && (item.id || item._id))
-                    .map(item => item.id || item._id);
-                
-                if (validItemIds.length > 0) {
-                    await Item.deleteDocuments(validItemIds, {pack: pack.collection});
-                    console.log(`[Rising Steel] Removidos ${validItemIds.length} armaduras antigas`);
-                }
+        // Limpar compendium: obter todos os itens existentes e deletar
+        console.log(`[Rising Steel] Limpando compendium existente...`);
+        await pack.getIndex({force: true});
+        
+        const existingItems = await pack.getDocuments();
+        if (existingItems && existingItems.length > 0) {
+            const itemIds = existingItems
+                .filter(item => item && (item.id || item._id))
+                .map(item => item.id || item._id);
+            
+            if (itemIds.length > 0) {
+                await Item.deleteDocuments(itemIds, {pack: pack.collection});
+                console.log(`[Rising Steel] ${itemIds.length} armaduras antigas removidas`);
+                // Aguardar processamento
+                await new Promise(resolve => setTimeout(resolve, 1000));
             }
-        } catch (error) {
-            console.warn(`[Rising Steel] Erro ao remover armaduras antigas (continuando mesmo assim):`, error);
         }
         
         // Adicionar IDs explícitos aos itens
         const armadurasDataWithIds = addIdsToItems(armadurasData);
         
-        // Criar os itens usando a API correta do Foundry VTT v13
+        // Criar os itens
         const created = await Item.createDocuments(armadurasDataWithIds, {
             pack: pack.collection
         });
         
-        // Bloquear o pack novamente após a importação
+        // Bloquear o pack novamente
         await pack.configure({locked: true});
         
-        ui.notifications.info(`Importadas ${created.length} armaduras com sucesso!`);
-        console.log(`[Rising Steel] Importadas ${created.length} armaduras`);
-        
-        // Recarregar o índice do pack para atualizar a lista
+        // Recarregar o índice
         await pack.getIndex({force: true});
+        
+        ui.notifications.info(`Importadas ${created.length} armaduras com sucesso!`);
+        console.log(`[Rising Steel] ✅ Importadas ${created.length} armaduras com sucesso`);
+        
     } catch (error) {
         console.error("[Rising Steel] Erro ao importar armaduras:", error);
         ui.notifications.error("Erro ao importar armaduras. Verifique o console.");

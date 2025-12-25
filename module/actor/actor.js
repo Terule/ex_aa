@@ -308,7 +308,11 @@ export class RisingSteelActor extends Actor {
         }
         
         // Calcular proteção total: somar todas as armaduras do inventário
-        const armadurasInventario = this.system.inventario?.armaduras || [];
+        let armadurasInventario = this.system.inventario?.armaduras || [];
+        // Garantir que seja um array
+        if (!Array.isArray(armadurasInventario)) {
+            armadurasInventario = [];
+        }
         let protecaoTotalInventario = 0;
         for (const armaduraInv of armadurasInventario) {
             if (armaduraInv && armaduraInv.id && armaduraInv.protecao) {
@@ -415,8 +419,8 @@ export class RisingSteelActor extends Actor {
             if (eq.efeito === undefined || eq.efeito === null) eq.efeito = "";
         }
         
-        // Garantir que armas existe e tem estrutura correta
-        if (!this.system.inventario.armas || !Array.isArray(this.system.inventario.armaduras)) {
+        // Garantir que armaduras existe e tem estrutura correta
+        if (!this.system.inventario.armaduras || !Array.isArray(this.system.inventario.armaduras)) {
             this.system.inventario.armaduras = [];
         }
         // Garantir que todas as armaduras tenham os campos necessários

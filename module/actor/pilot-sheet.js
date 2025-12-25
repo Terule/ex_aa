@@ -2914,7 +2914,12 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
 
     async _onAddArmadura(event) {
         event.preventDefault();
-        const armadurasAtuais = JSON.parse(JSON.stringify(this.actor.system.inventario?.armaduras || []));
+        // Garantir que seja um array
+        let armadurasAtuais = this.actor.system.inventario?.armaduras || [];
+        if (!Array.isArray(armadurasAtuais)) {
+            armadurasAtuais = [];
+        }
+        armadurasAtuais = JSON.parse(JSON.stringify(armadurasAtuais));
         armadurasAtuais.push({nome: "", id: "", protecao: 0});
         await this.actor.update({
             "system.inventario.armaduras": armadurasAtuais
@@ -2925,7 +2930,12 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         event.preventDefault();
         const button = event.currentTarget;
         const index = parseInt(button.dataset.index || 0);
-        const armadurasAtuais = JSON.parse(JSON.stringify(this.actor.system.inventario?.armaduras || []));
+        // Garantir que seja um array
+        let armadurasAtuais = this.actor.system.inventario?.armaduras || [];
+        if (!Array.isArray(armadurasAtuais)) {
+            armadurasAtuais = [];
+        }
+        armadurasAtuais = JSON.parse(JSON.stringify(armadurasAtuais));
         armadurasAtuais.splice(index, 1);
         
         // Calcular proteção total somando todas as armaduras restantes do inventário
@@ -2968,7 +2978,12 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         let protecao = 0;
         
         if (!itemId) {
-            const armadurasAtuais = JSON.parse(JSON.stringify(this.actor.system.inventario?.armaduras || []));
+            // Garantir que seja um array
+            let armadurasAtuais = this.actor.system.inventario?.armaduras || [];
+            if (!Array.isArray(armadurasAtuais)) {
+                armadurasAtuais = [];
+            }
+            armadurasAtuais = JSON.parse(JSON.stringify(armadurasAtuais));
             while (armadurasAtuais.length <= index) {
                 armadurasAtuais.push({nome: "", id: "", protecao: 0});
             }
@@ -3020,6 +3035,19 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
                     if (item) {
                         itemName = item.name || "";
                         protecao = Number(item.system?.protecao || 0);
+                        console.log(`[Rising Steel] Armadura encontrada - Nome: "${itemName}", Proteção: ${protecao}, ID: "${itemId}"`);
+                        console.log(`[Rising Steel] Dados completos da armadura:`, {
+                            name: item.name,
+                            system: item.system,
+                            protecao: item.system?.protecao
+                        });
+                        
+                        // Verificar se a proteção está incorreta (valores antigos 1-5)
+                        if (protecao > 0 && protecao < 10) {
+                            console.warn(`[Rising Steel] ATENÇÃO: Armadura "${itemName}" tem proteção ${protecao}, mas deveria ter 10-30. Execute RisingSteel.importArmaduras() para atualizar!`);
+                        }
+                    } else {
+                        console.warn(`[Rising Steel] Armadura com ID "${itemId}" não encontrada no pack!`);
                     }
                 }
             } catch (error) {
@@ -3027,7 +3055,12 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
             }
         }
         
-        const armadurasAtuais = JSON.parse(JSON.stringify(this.actor.system.inventario?.armaduras || []));
+        // Garantir que seja um array
+        let armadurasAtuais = this.actor.system.inventario?.armaduras || [];
+        if (!Array.isArray(armadurasAtuais)) {
+            armadurasAtuais = [];
+        }
+        armadurasAtuais = JSON.parse(JSON.stringify(armadurasAtuais));
         while (armadurasAtuais.length <= index) {
             armadurasAtuais.push({nome: "", id: "", protecao: 0});
         }
