@@ -77,7 +77,7 @@
     </div>
 
     <div class="armadura-section card">
-      <h3>Armadura <button type="button" class="roll-esquiva" title="Rolar Esquiva">🎲</button></h3>
+      <h3>Armadura</h3>
       <table class="armadura-table">
         <tbody>
           <tr>
@@ -106,6 +106,14 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="esquiva-section card">
+      <div class="form-group">
+        <label>Esquiva:</label>
+        <input type="number" name="system.combate.esquiva" value="{{number system.combate.esquiva}}" readonly />
+        <button type="button" class="roll-esquiva" title="Rolar Esquiva">🎲</button>
+      </div>
     </div>
   </div>
 
@@ -209,10 +217,6 @@
       <div class="form-group">
         <label>Mobilidade:</label>
         <input type="number" name="system.combate.mobilidade" value="{{number system.combate.mobilidade}}" readonly />
-      </div>
-      <div class="form-group">
-        <label>Esquiva:</label>
-        <input type="number" name="system.combate.esquiva" value="{{number system.combate.esquiva}}" readonly />
       </div>
 
       <h3>EXApoints</h3>
