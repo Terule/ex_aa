@@ -136,10 +136,9 @@ Hooks.once("init", async function () {
             label: p.metadata.label
         })));
         
-        // Verificar e importar outros packs se estiverem vazios (armaduras removido - importação manual apenas)
+        // Verificar e importar outros packs se estiverem vazios (armaduras e armas removidos - importação manual apenas)
         if (game.user.isGM) {
             try {
-                await ensurePackFilled("rising-steel.armas", window.RisingSteel.importArmas, "armas");
                 await ensurePackFilled("rising-steel.equipamentos", window.RisingSteel.importEquipamentos, "equipamentos");
                 await ensurePackFilled("rising-steel.exacom", window.RisingSteel.importExacomModels, "exacom");
                 await ensurePackFilled("rising-steel.blindagemExacom", window.RisingSteel.importBlindagensExacom, "blindagemExacom");
@@ -1061,23 +1060,318 @@ window.RisingSteel.importEquipamentos = async function() {
     }
 };
 
+/**
+ * Importa armas do CSV para o compendium
+ * Esta função limpa completamente o compendium e importa apenas as armas corretas do CSV
+ * IMPORTANTE: Esta função NÃO é executada automaticamente - deve ser chamada manualmente
+ */
 window.RisingSteel.importArmas = async function() {
+    // Dados das armas do CSV
     const armasData = [
-        {"name":"M4 Carbine","type":"arma","img":"icons/svg/item-bag.svg","system":{"tipo":"Fuzil de Assalto","dano":10,"alcance":"Longe","peso":3,"descricao":"Fuzil compacto e versátil, com precisão e capacidade de disparo automático.","especial":"","bonus":1},"flags":{},"effects":[]},
-        {"name":"AK-47","type":"arma","img":"icons/svg/item-bag.svg","system":{"tipo":"Fuzil de Assalto","dano":10,"alcance":"Longe","peso":4.3,"descricao":"Fuzil robusto e confiável, com alta cadência de tiro e impacto potente.","especial":"","bonus":1},"flags":{},"effects":[]},
-        {"name":"Glock 17","type":"arma","img":"icons/svg/item-bag.svg","system":{"tipo":"Pistola","dano":6,"alcance":"Perto","peso":0.8,"descricao":"Pistola semi-automática conhecida por sua durabilidade e precisão.","especial":"Ignora Penalidade","bonus":2},"flags":{},"effects":[]},
-        {"name":"Remington 870","type":"arma","img":"icons/svg/item-bag.svg","system":{"tipo":"Espingarda","dano":7,"alcance":"Perto","peso":3.4,"descricao":"Espingarda de repetição com grande poder de impacto, eficaz a curta distância.","especial":"Spread +2","bonus":1},"flags":{},"effects":[]},
-        {"name":"MP5","type":"arma","img":"icons/svg/item-bag.svg","system":{"tipo":"Submetralhadora","dano":5,"alcance":"Longe","peso":2.5,"descricao":"Submetralhadora com alta cadência de tiro e controle excelente.","especial":"Rajada +2","bonus":1},"flags":{},"effects":[]},
-        {"name":"Uzi Pro","type":"arma","img":"icons/svg/item-bag.svg","system":{"tipo":"Submetralhadora","dano":5,"alcance":"Longe","peso":2.5,"descricao":"Submetralhadora compacta, ideal para combate em ambientes fechados.","especial":"Rajada +1","bonus":1},"flags":{},"effects":[]},
-        {"name":"Beretta 92FS","type":"arma","img":"icons/svg/item-bag.svg","system":{"tipo":"Pistola","dano":8,"alcance":"Perto","peso":1,"descricao":"Pistola de 9mm com boa capacidade de munição e precisão confiável.","especial":"Ignora Penalidade","bonus":2},"flags":{},"effects":[]},
-        {"name":"K-Bar Combat Knife","type":"arma","img":"icons/svg/item-bag.svg","system":{"tipo":"Faca","dano":3,"alcance":"Corpo a corpo","peso":0.7,"descricao":"Faca de combate robusta e durável, ideal para situações de combate próximo.","especial":"","bonus":2},"flags":{},"effects":[]},
-        {"name":"Machete","type":"arma","img":"icons/svg/item-bag.svg","system":{"tipo":"Faca","dano":4,"alcance":"Corpo a corpo","peso":0.9,"descricao":"Faca de lâmina larga, útil para cortar vegetação e em combate corpo a corpo.","especial":"","bonus":2},"flags":{},"effects":[]},
-        {"name":"Tanto","type":"arma","img":"icons/svg/item-bag.svg","system":{"tipo":"Faca","dano":2,"alcance":"Corpo a corpo","peso":0.6,"descricao":"Faca de lâmina afiada, ideal para ataques rápidos e precisos.","especial":"","bonus":3},"flags":{},"effects":[]},
-        {"name":"Tomahawk","type":"arma","img":"icons/svg/item-bag.svg","system":{"tipo":"Machadinha","dano":4,"alcance":"Corpo a corpo","peso":0.8,"descricao":"Machadinha leve, pode ser usada tanto em combate corpo a corpo quanto como arma de arremesso.","especial":"","bonus":2},"flags":{},"effects":[]},
-        {"name":"Crossbow (Arbalete)","type":"arma","img":"icons/svg/item-bag.svg","system":{"tipo":"Arbalete","dano":6,"alcance":"Perto","peso":2.5,"descricao":"Arma de longo alcance com alta precisão, eficaz para ataques furtivos.","especial":"Silenciosa","bonus":2},"flags":{},"effects":[]},
-        {"name":"Barrett M82","type":"arma","img":"icons/svg/item-bag.svg","system":{"tipo":"Fuzil de Precisão","dano":20,"alcance":"Muito Longe","peso":14,"descricao":"Fuzil de precisão de longo alcance, ideal para tiros a grandes distâncias.","especial":"Ignora Armadura. Necessita de 1 turno de preparação para atirar. Durante esse turno, o piloto não pode realizar outra atividade, nem se mover, esquivar de ataques ou receber dano. Caso contrário, precisará iniciar a preparação outra vez.","bonus":1},"flags":{},"effects":[]},
-        {"name":"Mossberg 500","type":"arma","img":"icons/svg/item-bag.svg","system":{"tipo":"Espingarda","dano":8,"alcance":"Perto","peso":3.5,"descricao":"Espingarda de repetição com eficácia em combate a curta distância e alta versatilidade.","especial":"Spread +2","bonus":1},"flags":{},"effects":[]},
-        {"name":"RPG-7","type":"arma","img":"icons/svg/item-bag.svg","system":{"tipo":"Lançador de Foguetes","dano":20,"alcance":"Muito Longe","peso":7,"descricao":"Lançador de foguetes antitanque com alto poder destrutivo, ideal para alvos blindados.","especial":"Penalidade -3 para acertar alvos que não sejam veículos ou grandes. Dano em dobro contra veículos e inimigos grandes. Necessita de 1 turno de preparação para atirar. Durante esse turno, o piloto não pode realizar outra atividade, nem se mover, esquivar de ataques ou receber dano. Caso contrário, precisará iniciar a preparação outra vez.","bonus":1},"flags":{},"effects":[]}
+        {
+            "name": "K-Bar Combat Knife",
+            "type": "arma",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Faca",
+                "dano": 2,
+                "alcance": "Engajado (1)",
+                "peso": 0.7,
+                "descricao": "Faca de combate robusta e durável, ideal para situações de combate próximo.",
+                "especial": "",
+                "bonus": 3
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "Tanto",
+            "type": "arma",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Faca",
+                "dano": 2,
+                "alcance": "Engajado (1)",
+                "peso": 0.6,
+                "descricao": "Faca de lâmina afiada, ideal para ataques rápidos e precisos.",
+                "especial": "",
+                "bonus": 3
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "Machete",
+            "type": "arma",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Faca",
+                "dano": 3,
+                "alcance": "Engajado (1)",
+                "peso": 0.9,
+                "descricao": "Faca de lâmina larga, útil para cortar vegetação e em combate corpo a corpo.",
+                "especial": "",
+                "bonus": 2
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "Tomahawk",
+            "type": "arma",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Machadinha",
+                "dano": 3,
+                "alcance": "Engajado (1)",
+                "peso": 0.8,
+                "descricao": "Machadinha leve, pode ser usada tanto em combate corpo a corpo quanto como arma de arremesso.",
+                "especial": "",
+                "bonus": 2
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "Glock 17",
+            "type": "arma",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Pistola",
+                "dano": 4,
+                "alcance": "Distância (12)",
+                "peso": 0.8,
+                "descricao": "Pistola semi-automática conhecida por sua durabilidade e precisão.",
+                "especial": "Ignora Penalidade",
+                "bonus": 2
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "Uzi Pro",
+            "type": "arma",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Submetralhadora",
+                "dano": 4,
+                "alcance": "Distância (14)",
+                "peso": 2.5,
+                "descricao": "Submetralhadora compacta, ideal para combate em ambientes fechados.",
+                "especial": "Rajada 2",
+                "bonus": 1
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "MP5",
+            "type": "arma",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Submetralhadora",
+                "dano": 5,
+                "alcance": "Distância (16)",
+                "peso": 2.5,
+                "descricao": "Submetralhadora com alta cadência de tiro e controle excelente.",
+                "especial": "Rajada 1",
+                "bonus": 1
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "Crossbow (Arbalete)",
+            "type": "arma",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Arbalete",
+                "dano": 5,
+                "alcance": "Distância (10)",
+                "peso": 2.5,
+                "descricao": "Arma de longo alcance com alta precisão, eficaz para ataques furtivos.",
+                "especial": "Silenciosa",
+                "bonus": 2
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "Remington 870",
+            "type": "arma",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Espingarda",
+                "dano": 6,
+                "alcance": "Distância (14)",
+                "peso": 3.4,
+                "descricao": "Espingarda de repetição com grande poder de impacto, eficaz a curta distância.",
+                "especial": "Spread 2",
+                "bonus": 1
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "Beretta 92FS",
+            "type": "arma",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Pistola",
+                "dano": 6,
+                "alcance": "Distância (12)",
+                "peso": 1,
+                "descricao": "Pistola de 9mm com boa capacidade de munição e precisão confiável.",
+                "especial": "Ignora Penalidade",
+                "bonus": 2
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "Mossberg 500",
+            "type": "arma",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Escopeta",
+                "dano": 6,
+                "alcance": "Distância (10)",
+                "peso": 3.5,
+                "descricao": "Escopeta de repetição com eficácia em combate a curta distância e alta versatilidade.",
+                "especial": "Ignora Penalidade\nSpread 2",
+                "bonus": 2
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "AK-47",
+            "type": "arma",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Fuzil de Assalto",
+                "dano": 6,
+                "alcance": "Distância (20)",
+                "peso": 4.5,
+                "descricao": "Fuzil robusto e confiável, com alta cadência de tiro e impacto potente.",
+                "especial": "Rajada 2",
+                "bonus": 1
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "M4 Carbine",
+            "type": "arma",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Fuzil de Assalto",
+                "dano": 8,
+                "alcance": "Distância (20)",
+                "peso": 3,
+                "descricao": "Fuzil compacto e versátil, com precisão e capacidade de disparo automático.",
+                "especial": "Rajada 1",
+                "bonus": 2
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "RPG-7",
+            "type": "arma",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Lançador de Foguetes",
+                "dano": 16,
+                "alcance": "Distância (40)",
+                "peso": 10,
+                "descricao": "Lançador de foguetes antitanque com alto poder destrutivo, ideal para alvos blindados.",
+                "especial": "Titan Killer\nMirar 1",
+                "bonus": 1
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "Barrett M82",
+            "type": "arma",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Rifle de Precisão",
+                "dano": 18,
+                "alcance": "Distância (80)",
+                "peso": 14,
+                "descricao": "Fuzil de precisão de longo alcance, ideal para tiros a grandes distâncias.",
+                "especial": "Ignora Armadura.\nMirar 1",
+                "bonus": 1
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "FR-15 Shredder",
+            "type": "arma",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Granada de Mão",
+                "dano": 10,
+                "alcance": "Distância (8)",
+                "peso": 0.5,
+                "descricao": "Uma granada de corpo serrilhado em aço temperado. Ao detonar, lança centenas de pequenos cubos metálicos em 360 graus. É o padrão-ouro para limpeza de infantaria.",
+                "especial": "Área - Quadrado (3)",
+                "bonus": 2
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "FL-9 Supernova",
+            "type": "arma",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Granada de Mão",
+                "dano": 0,
+                "alcance": "Distância (8)",
+                "peso": 0.5,
+                "descricao": "Ao detonar, emite um clarão intenso e um som alto, causando cegueira e surdez temporárias em todos dentro de um raio de efeito, tornando-os alvos fáceis por um curto período.",
+                "especial": "Área - Quadrado (3)\nContínuo 3",
+                "bonus": 2
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "SM-12 Shroud",
+            "type": "arma",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Granada de Mão",
+                "dano": 0,
+                "alcance": "Distância (8)",
+                "peso": 0.5,
+                "descricao": "Cria uma densa cortina de fumaça, bloqueando a linha de visão e proporcionando cobertura para movimentos táticos ou retiradas.",
+                "especial": "Área - Quadrado (3)",
+                "bonus": 2
+            },
+            "flags": {},
+            "effects": []
+        },
+        {
+            "name": "IN-75 Cinder",
+            "type": "arma",
+            "img": "icons/svg/item-bag.svg",
+            "system": {
+                "tipo": "Granada de Mão",
+                "dano": 6,
+                "alcance": "Distância (8)",
+                "peso": 1,
+                "descricao": "Diferente das outras, ela não explode; ela \"derrete\". Ao ser ativada, a mistura interna de alumínio e óxido de ferro (termite) ou fósforo branco consome-se em uma chama branca intensa que atinge até 2.200°C.",
+                "especial": "Área - Quadrado (3)\nContínuo 3",
+                "bonus": 2
+            },
+            "flags": {},
+            "effects": []
+        }
     ];
     
     const pack = game.packs.get("rising-steel.armas");
@@ -1086,45 +1380,54 @@ window.RisingSteel.importArmas = async function() {
         return;
     }
     
+    if (!game.user.isGM) {
+        ui.notifications.error("Apenas o GM pode importar armas!");
+        return;
+    }
+    
     try {
+        console.log(`[Rising Steel] Iniciando importação de armas...`);
+        
         // Desbloquear o pack se estiver bloqueado
         if (pack.locked) {
             await pack.configure({locked: false});
         }
         
-        // Deletar todos os itens existentes primeiro
-        try {
-            const existingItems = await pack.getDocuments();
-            if (existingItems && existingItems.length > 0) {
-                const validItemIds = existingItems
-                    .filter(item => item && (item.id || item._id))
-                    .map(item => item.id || item._id);
-                
-                if (validItemIds.length > 0) {
-                    await Item.deleteDocuments(validItemIds, {pack: pack.collection});
-                    console.log(`[Rising Steel] Removidas ${validItemIds.length} armas antigas`);
-                }
+        // Limpar compendium: obter todos os itens existentes e deletar
+        console.log(`[Rising Steel] Limpando compendium existente...`);
+        await pack.getIndex({force: true});
+        
+        const existingItems = await pack.getDocuments();
+        if (existingItems && existingItems.length > 0) {
+            const itemIds = existingItems
+                .filter(item => item && (item.id || item._id))
+                .map(item => item.id || item._id);
+            
+            if (itemIds.length > 0) {
+                await Item.deleteDocuments(itemIds, {pack: pack.collection});
+                console.log(`[Rising Steel] ${itemIds.length} armas antigas removidas`);
+                // Aguardar processamento
+                await new Promise(resolve => setTimeout(resolve, 1000));
             }
-        } catch (error) {
-            console.warn(`[Rising Steel] Erro ao remover armas antigas (continuando mesmo assim):`, error);
         }
         
         // Adicionar IDs explícitos aos itens
         const armasDataWithIds = addIdsToItems(armasData);
         
-        // Criar os itens usando a API correta do Foundry VTT v13
+        // Criar os itens
         const created = await Item.createDocuments(armasDataWithIds, {
             pack: pack.collection
         });
         
-        // Bloquear o pack novamente após a importação
+        // Bloquear o pack novamente
         await pack.configure({locked: true});
         
-        ui.notifications.info(`Importadas ${created.length} armas com sucesso!`);
-        console.log(`[Rising Steel] Importadas ${created.length} armas`);
-        
-        // Recarregar o índice do pack para atualizar a lista
+        // Recarregar o índice
         await pack.getIndex({force: true});
+        
+        ui.notifications.info(`Importadas ${created.length} armas com sucesso!`);
+        console.log(`[Rising Steel] ✅ Importadas ${created.length} armas com sucesso`);
+        
     } catch (error) {
         console.error("[Rising Steel] Erro ao importar armas:", error);
         ui.notifications.error("Erro ao importar armas. Verifique o console.");
