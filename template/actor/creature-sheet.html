@@ -102,9 +102,12 @@
                 <th>Atual</th>
                 <td><input type="number" name="system.armadura.atual" value="{{number system.armadura.atual}}" readonly /></td>
               </tr>
+              <tr>
+                <th>Temporária</th>
+                <td><input type="number" name="system.armadura.temporaria" value="{{number system.armadura.temporaria}}" min="0" step="1" data-dtype="Number" /></td>
+              </tr>
             </tbody>
           </table>
-          <button type="button" class="roll-armadura" data-label="Armadura">🎲 Rolar Armadura</button>
           <small>Informe manualmente o valor total da armadura. O valor atual é calculado automaticamente.</small>
         </div>
       </div>

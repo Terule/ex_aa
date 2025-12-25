@@ -30,6 +30,7 @@
           "total": 0,
           "dano": 0,
           "atual": 0,
+          "temporaria": 0,
           "equipada": "",
           "nome": "",
           "descricao": "",
@@ -91,7 +92,8 @@
           { "nome": "", "id": "", "dano": 0, "alcance": "", "bonus": 0, "descricao": "", "efeito": "" },
           { "nome": "", "id": "", "dano": 0, "alcance": "", "bonus": 0, "descricao": "", "efeito": "" },
           { "nome": "", "id": "", "dano": 0, "alcance": "", "bonus": 0, "descricao": "", "efeito": "" }
-        ]
+        ],
+        "armaduras": []
       },
     "companionId": ""
     },

@@ -81,19 +81,6 @@
       <table class="armadura-table">
         <tbody>
           <tr>
-            <td>Armadura Equipada:</td>
-            <td>
-              <select name="system.armadura.equipada" data-dtype="String" class="item-select-armadura">
-                <option value="">-- Nenhuma --</option>
-                {{#each armaduras}}
-                <option value="{{this.id}}" {{#if (eq ../system.armadura.equipada this.id)}}selected{{/if}}>
-                  {{this.name}} (Proteção: {{this.system.protecao}})
-                </option>
-                {{/each}}
-              </select>
-            </td>
-          </tr>
-          <tr>
             <td>Total</td>
             <td>
               <input type="number" name="system.armadura.total" value="{{number system.armadura.total}}" min="0" step="1" data-dtype="Number" />
@@ -111,9 +98,14 @@
               <input type="number" name="system.armadura.atual" value="{{number system.armadura.atual}}" readonly />
             </td>
           </tr>
+          <tr>
+            <td>Temporária</td>
+            <td>
+              <input type="number" name="system.armadura.temporaria" value="{{number system.armadura.temporaria}}" min="0" step="1" data-dtype="Number" />
+            </td>
+          </tr>
         </tbody>
       </table>
-      <button type="button" class="roll-armadura" data-label="Armadura">🎲 Rolar Armadura</button>
     </div>
   </div>
 
@@ -573,6 +565,43 @@
             </td>
             <td>
               <input type="number" name="system.inventario.armas.{{@index}}.bonus" value="{{bonus}}" data-dtype="Number" />
+            </td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+
+      <h3>Armaduras</h3>
+      <div style="margin-bottom: 10px;">
+        <button type="button" class="add-armadura" title="Adicionar Armadura">+ Adicionar Armadura</button>
+      </div>
+      <table class="inventario-table">
+        <thead>
+          <tr>
+            <th>Ação</th>
+            <th>Armadura</th>
+            <th>Proteção</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each system.inventario.armaduras}}
+          <tr data-index="{{@index}}">
+            <td>
+              <button type="button" class="remove-armadura" data-index="{{@index}}" title="Remover Armadura">🗑️</button>
+            </td>
+            <td>
+              <select name="system.inventario.armaduras.{{@index}}.id" data-dtype="String" class="item-select-armadura-inventario">
+                <option value="">-- Nenhuma --</option>
+                {{#each ../armaduras}}
+                <option value="{{this.id}}" {{#if (eq ../id this.id)}}selected{{/if}}>
+                  {{this.name}}
+                </option>
+                {{/each}}
+              </select>
+              <input type="hidden" name="system.inventario.armaduras.{{@index}}.nome" value="{{nome}}" />
+            </td>
+            <td>
+              <input type="number" name="system.inventario.armaduras.{{@index}}.protecao" value="{{protecao}}" min="0" data-dtype="Number" readonly />
             </td>
           </tr>
           {{/each}}

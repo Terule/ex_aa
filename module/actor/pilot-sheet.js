@@ -985,17 +985,19 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         // Atualizar Armadura atual quando total ou dano mudarem
         html.find("input[name='system.armadura.total'], input[name='system.armadura.dano']").on("change", this._onArmaduraChange.bind(this));
         
-        // Botão de rolagem de Armadura
-        html.find(".roll-armadura").click(this._onRollArmadura.bind(this));
-        
         // Atualizar nome quando equipamento for selecionado
         html.find(".item-select-equipamento").on("change", this._onEquipamentoSelect.bind(this));
         
         // Atualizar nome quando arma for selecionada
         html.find(".item-select-arma").on("change", this._onArmaSelect.bind(this));
         
-        // Atualizar armadura quando selecionada
+        // Atualizar armadura quando selecionada (seleção antiga)
         html.find(".item-select-armadura").on("change", this._onArmaduraSelect.bind(this));
+        
+        // Armaduras do inventário
+        html.find(".item-select-armadura-inventario").on("change", this._onArmaduraInventarioSelect.bind(this));
+        html.find(".add-armadura").click(this._onAddArmadura.bind(this));
+        html.find(".remove-armadura").click(this._onRemoveArmadura.bind(this));
 
         // Botões de rolagem para equipamentos e armas
         html.find(".roll-equipamento").click(this._onRollEquipamento.bind(this));
@@ -1504,27 +1506,6 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         if (atualInput.length) {
             atualInput.val(atual);
         }
-    }
-
-    async _onRollArmadura(event) {
-        event.preventDefault();
-        const armaduraAtual = Number(this.actor.system.armadura?.atual || 0);
-        
-        if (armaduraAtual <= 0) {
-            ui.notifications.warn("Armadura atual é 0 ou inválida!");
-            return;
-        }
-
-        // Importar o RollDialog
-        const { RisingSteelRollDialog } = await import("../app/roll-dialog.js");
-        
-        // Abrir modal de rolagem usando a Armadura atual como base
-        await RisingSteelRollDialog.prepareRollDialog({
-            rollName: "Teste de Armadura",
-            baseDice: armaduraAtual,
-            actor: this.actor,
-            label: "Armadura"
-        });
     }
 
     async _onRollAttribute(event) {
@@ -2928,6 +2909,117 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         const value = foundry.utils.getProperty(system, path);
         const num = Number(value ?? 0);
         return Number.isFinite(num) ? num : 0;
+    }
+
+    async _onAddArmadura(event) {
+        event.preventDefault();
+        const armadurasAtuais = JSON.parse(JSON.stringify(this.actor.system.inventario?.armaduras || []));
+        armadurasAtuais.push({nome: "", id: "", protecao: 0});
+        await this.actor.update({
+            "system.inventario.armaduras": armadurasAtuais
+        });
+    }
+
+    async _onRemoveArmadura(event) {
+        event.preventDefault();
+        const button = event.currentTarget;
+        const index = parseInt(button.dataset.index || 0);
+        const armadurasAtuais = JSON.parse(JSON.stringify(this.actor.system.inventario?.armaduras || []));
+        armadurasAtuais.splice(index, 1);
+        await this.actor.update({
+            "system.inventario.armaduras": armadurasAtuais
+        });
+    }
+
+    async _onArmaduraInventarioSelect(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        const select = event.currentTarget;
+        const match = select.name.match(/armaduras\.(\d+)\.id/);
+        const index = match ? parseInt(match[1]) : 0;
+        
+        let itemId = "";
+        const selectedOption = select.selectedIndex >= 0 ? select.options[select.selectedIndex] : null;
+        if (selectedOption) {
+            itemId = selectedOption.value || "";
+        }
+        
+        if (!itemId) {
+            itemId = select.value || $(select).val() || "";
+        }
+        
+        let itemName = "";
+        let protecao = 0;
+        
+        if (!itemId) {
+            const armadurasAtuais = JSON.parse(JSON.stringify(this.actor.system.inventario?.armaduras || []));
+            while (armadurasAtuais.length <= index) {
+                armadurasAtuais.push({nome: "", id: "", protecao: 0});
+            }
+            const armadurasNovas = armadurasAtuais.map((arm, idx) => {
+                if (idx === index) {
+                    return {nome: "", id: "", protecao: 0};
+                } else {
+                    return {
+                        nome: String(arm?.nome || ""),
+                        id: String(arm?.id || ""),
+                        protecao: Number(arm?.protecao || 0)
+                    };
+                }
+            });
+            await this.actor.update({
+                "system.inventario.armaduras": armadurasNovas
+            });
+            return;
+        }
+        
+        if (itemId && game.packs && game.packs.size > 0) {
+            try {
+                let pack = game.packs.get("rising-steel.armaduras");
+                if (!pack) {
+                    const allPacks = Array.from(game.packs);
+                    pack = allPacks.find(p => {
+                        const label = (p.metadata?.label || "").toLowerCase();
+                        const name = (p.metadata?.name || "").toLowerCase();
+                        return label.includes("armadura") || name.includes("armadura");
+                    });
+                }
+                if (pack) {
+                    const item = await pack.getDocument(itemId);
+                    if (item) {
+                        itemName = item.name || "";
+                        protecao = Number(item.system?.protecao || 0);
+                    }
+                }
+            } catch (error) {
+                console.warn("[Rising Steel] Erro ao buscar armadura do pack:", error);
+            }
+        }
+        
+        const armadurasAtuais = JSON.parse(JSON.stringify(this.actor.system.inventario?.armaduras || []));
+        while (armadurasAtuais.length <= index) {
+            armadurasAtuais.push({nome: "", id: "", protecao: 0});
+        }
+        
+        const armadurasNovas = armadurasAtuais.map((arm, idx) => {
+            if (idx === index) {
+                return {
+                    nome: itemName,
+                    id: itemId,
+                    protecao: protecao
+                };
+            } else {
+                return {
+                    nome: String(arm?.nome || ""),
+                    id: String(arm?.id || ""),
+                    protecao: Number(arm?.protecao || 0)
+                };
+            }
+        });
+        
+        await this.actor.update({
+            "system.inventario.armaduras": armadurasNovas
+        });
     }
 }
 

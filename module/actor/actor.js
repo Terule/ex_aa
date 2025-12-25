@@ -290,7 +290,7 @@ export class RisingSteelActor extends Actor {
         
         // Calcular Armadura atual (total - dano)
         if (!this.system.armadura) {
-            this.system.armadura = { total: 0, dano: 0, atual: 0, equipada: "" };
+            this.system.armadura = { total: 0, dano: 0, atual: 0, temporaria: 0, equipada: "" };
         }
         const armadura = this.system.armadura;
         armadura.nome = armadura.nome ?? "";
@@ -298,14 +298,29 @@ export class RisingSteelActor extends Actor {
         armadura.especial = armadura.especial ?? "";
         const total = safeNumber(armadura.total);
         const dano = safeNumber(armadura.dano);
+        const temporaria = safeNumber(armadura.temporaria || 0);
         armadura.atual = Math.max(0, total - dano);
         if (armadura.equipada === undefined) {
             armadura.equipada = "";
         }
+        if (armadura.temporaria === undefined) {
+            armadura.temporaria = 0;
+        }
+        
+        // Calcular proteção total: somar todas as armaduras do inventário
+        const armadurasInventario = this.system.inventario?.armaduras || [];
+        let protecaoTotalInventario = 0;
+        for (const armaduraInv of armadurasInventario) {
+            if (armaduraInv && armaduraInv.id && armaduraInv.protecao) {
+                protecaoTotalInventario += safeNumber(armaduraInv.protecao || 0, 0);
+            }
+        }
         
         // Calcular Esquiva = máximo entre (destreza/2) - total de armadura, com mínimo de 1
+        // Incluir armadura temporária no cálculo
         const destreza = attr.fisicos.destreza;
-        const armaduraTotal = safeNumber(this.system.armadura?.total || 0, 0);
+        const armaduraTemporaria = safeNumber(this.system.armadura?.temporaria || 0, 0);
+        const armaduraTotal = safeNumber(this.system.armadura?.total || 0, 0) + protecaoTotalInventario + armaduraTemporaria;
         const esquivaCalculada = Math.floor(destreza / 2) - armaduraTotal;
         this.system.combate.esquiva = Math.max(1, esquivaCalculada);
         
@@ -338,6 +353,7 @@ export class RisingSteelActor extends Actor {
             // Converter objetos em arrays se necessário
             const equipamentosSource = objectToArray(sourceInventario.equipamentos);
             const armasSource = objectToArray(sourceInventario.armas);
+            const armadurasSource = objectToArray(sourceInventario.armaduras);
             
             this.system.inventario = {};
             if (equipamentosSource) {
@@ -345,6 +361,9 @@ export class RisingSteelActor extends Actor {
             }
             if (armasSource) {
                 this.system.inventario.armas = armasSource;
+            }
+            if (armadurasSource) {
+                this.system.inventario.armaduras = armadurasSource;
             }
         }
         
@@ -397,6 +416,22 @@ export class RisingSteelActor extends Actor {
         }
         
         // Garantir que armas existe e tem estrutura correta
+        if (!this.system.inventario.armas || !Array.isArray(this.system.inventario.armaduras)) {
+            this.system.inventario.armaduras = [];
+        }
+        // Garantir que todas as armaduras tenham os campos necessários
+        for (let i = 0; i < this.system.inventario.armaduras.length; i++) {
+            const armadura = this.system.inventario.armaduras[i];
+            if (!armadura || typeof armadura !== 'object') {
+                this.system.inventario.armaduras[i] = {nome: "", id: "", protecao: 0};
+                continue;
+            }
+            // Apenas adicionar campos que não existem, preservar valores existentes
+            if (armadura.nome === undefined || armadura.nome === null) armadura.nome = "";
+            if (armadura.id === undefined || armadura.id === null) armadura.id = "";
+            if (armadura.protecao === undefined || armadura.protecao === null) armadura.protecao = 0;
+        }
+        
         if (!this.system.inventario.armas || !Array.isArray(this.system.inventario.armas)) {
             this.system.inventario.armas = [
                 {nome: "", id: "", dano: 0, alcance: "", bonus: 0, descricao: "", efeito: ""},
@@ -512,17 +547,22 @@ export class RisingSteelActor extends Actor {
             this.system.armadura = {
                 total: 0,
                 dano: 0,
-                atual: 0
+                atual: 0,
+                temporaria: 0
             };
         }
 
         const armaduraTotal = safeNumber(this.system.armadura.total);
         const armaduraDano = safeNumber(this.system.armadura.dano);
+        const armaduraTemporaria = safeNumber(this.system.armadura?.temporaria || 0);
         this.system.armadura.total = armaduraTotal;
         this.system.armadura.dano = armaduraDano;
         this.system.armadura.atual = Math.max(0, armaduraTotal - armaduraDano);
+        if (this.system.armadura.temporaria === undefined) {
+            this.system.armadura.temporaria = 0;
+        }
 
-        const esquivaCalculada = Math.floor(destreza / 2) - armaduraTotal;
+        const esquivaCalculada = Math.floor(destreza / 2) - (armaduraTotal + armaduraTemporaria);
         this.system.combate.esquiva = Math.max(1, esquivaCalculada);
 
         if (!this.system.limiarDano) {
