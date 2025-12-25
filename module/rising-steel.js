@@ -1411,8 +1411,34 @@ window.RisingSteel.importArmas = async function() {
             }
         }
         
-        // Adicionar IDs explícitos aos itens
-        const armasDataWithIds = addIdsToItems(armasData);
+        // Mapear IDs corretos do arquivo packs/armas.db
+        const armasIdsMap = {
+            "K-Bar Combat Knife": "789af809-e321-47b7-8d36-dd153f612011",
+            "Tanto": "ef3fdf4e-8bb9-4034-8ddb-a20e1b74b441",
+            "Machete": "ada20e2d-cf32-40a8-84a3-5d22a5067a93",
+            "Tomahawk": "6d7dd792-27a6-4a74-b85c-415728439057",
+            "Glock 17": "1d2d35d6-f526-4d91-9de9-f5bcaa7c1467",
+            "Uzi Pro": "5a42ee30-30d8-41de-bfdf-9640b4f763b5",
+            "MP5": "65f5e97c-607e-4861-8288-62038f6b35ad",
+            "Crossbow (Arbalete)": "dc400d24-5c93-4fe3-bfb0-d332ad35a5c8",
+            "Remington 870": "24a6ab6f-cfc6-4cb3-b0c0-aedcacca4ddc",
+            "Beretta 92FS": "2d809057-b2ef-4498-a84e-5b0343ba170c",
+            "Mossberg 500": "ca4e0683-5095-4482-9239-9f9fd9b156cd",
+            "AK-47": "5c29dbe0-0198-4436-a8c7-4690cd2e8661",
+            "M4 Carbine": "e9e843c0-b8b3-4db3-b044-cff66cdfacc4",
+            "RPG-7": "f2f9eec6-4ee4-4b8c-b9bf-981e0181803e",
+            "Barrett M82": "91f3f19f-7915-44a0-8408-9822c98822a3",
+            "FR-15 Shredder": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            "FL-9 Supernova": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
+            "SM-12 Shroud": "c3d4e5f6-a7b8-9012-cdef-345678901234",
+            "IN-75 Cinder": "d4e5f6a7-b8c9-0123-def4-456789012345"
+        };
+        
+        // Adicionar IDs explícitos aos itens usando o mapeamento
+        const armasDataWithIds = armasData.map(item => ({
+            ...item,
+            _id: armasIdsMap[item.name] || generateItemId(item.name)
+        }));
         
         // Criar os itens
         const created = await Item.createDocuments(armasDataWithIds, {
