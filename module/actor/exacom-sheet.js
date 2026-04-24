@@ -358,9 +358,7 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
         
         // Botão de rolagem de iniciativa
         html.find(".roll-iniciativa").click(this._onRollIniciativa.bind(this));
-        // Botão de rolagem de esquiva
-        html.find(".roll-esquiva").click(this._onRollEsquiva.bind(this));
-        
+
         // Listeners para módulos EXA
         html.find(".modulo-create").click(this._onCreateModulo.bind(this));
         html.find(".modulo-use").click(this._onUseModulo.bind(this));
@@ -1401,23 +1399,6 @@ export class RisingSteelExacomSheet extends FoundryCompatibility.getActorSheetBa
             console.error("[Rising Steel] Erro ao rolar iniciativa do EXAcom:", error);
             ui.notifications.error("Erro ao rolar iniciativa. Verifique o console.");
         }
-    }
-
-    async _onRollEsquiva(event) {
-        event.preventDefault();
-        const esquiva = Number(this.actor.system?.combate?.esquiva || 0);
-        if (esquiva <= 0) {
-            ui.notifications.warn("Esquiva atual é 0 ou inválida!");
-            return;
-        }
-
-        const { RisingSteelRollDialog } = await import("../app/roll-dialog.js");
-        await RisingSteelRollDialog.prepareRollDialog({
-            rollName: "Teste de Esquiva",
-            baseDice: esquiva,
-            actor: this.actor,
-            label: "Esquiva"
-        });
     }
 
     async _onCreateModulo(event) {

@@ -94,6 +94,24 @@ export class RisingSteelCreatureSheet extends FoundryCompatibility.getActorSheet
         html.find(".habilidade-delete").click(this._onDeleteHabilidade.bind(this));
         html.find(".habilidade-roll").click(this._onRollHabilidade.bind(this));
         html.find(".roll-iniciativa").click(this._onRollIniciativa.bind(this));
+
+        html.find("input[name='system.armadura.total'], input[name='system.armadura.dano']").on("change", this._onArmaduraChange.bind(this));
+    }
+
+    async _onArmaduraChange(event) {
+        const html = $(this.element);
+        const total = Number(html.find("input[name='system.armadura.total']").val() || 0);
+        const dano = Number(html.find("input[name='system.armadura.dano']").val() || 0);
+        const atual = Math.max(0, total - dano);
+
+        await this.actor.update({
+            "system.armadura.total": total,
+            "system.armadura.dano": dano,
+            "system.armadura.atual": atual
+        });
+
+        const atualInput = html.find("input[name='system.armadura.atual']");
+        if (atualInput.length) atualInput.val(atual);
     }
 
     _normalizeNumericValues(systemData) {

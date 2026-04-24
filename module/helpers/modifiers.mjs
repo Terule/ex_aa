@@ -8,6 +8,8 @@ const ATTRIBUTE_ALIASES = {
   "atributos.sociais.eloquencia": ["eloquencia"],
   "atributos.sociais.dissimulacao": ["dissimulacao"],
   "atributos.sociais.presenca": ["presenca"],
+  "armadura.total": ["armadura", "protecao", "protecao armadura"],
+  "armadura.temporaria": ["armadura temporaria", "protecao temporaria"],
   "combate.mobilidade": ["mobilidade"],
   "combate.esquiva": ["esquiva"],
   "combate.iniciativa": ["iniciativa"],
