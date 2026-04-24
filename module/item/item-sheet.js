@@ -44,7 +44,7 @@ export class RisingSteelItemSheet extends FoundryCompatibility.getItemSheetBase(
 
         // Preparar descriptionHTML baseado no tipo de item
         let descriptionField = "description";
-        if (["arma", "equipamento", "exacomModulo"].includes(item.type)) {
+        if (["arma", "armadura", "equipamento", "blindagemExacom", "exacomModulo"].includes(item.type)) {
             descriptionField = "descricao";
         }
         

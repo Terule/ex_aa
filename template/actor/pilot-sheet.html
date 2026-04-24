@@ -83,7 +83,7 @@
           <tr>
             <td>Total</td>
             <td>
-              <input type="number" name="system.armadura.total" value="{{number system.armadura.total}}" min="0" step="1" data-dtype="Number" readonly />
+              <input type="number" name="system.armadura.total" value="{{number system.armadura.total}}" min="0" step="1" data-dtype="Number" />
             </td>
           </tr>
           <tr>
@@ -106,14 +106,6 @@
           </tr>
         </tbody>
       </table>
-    </div>
-
-    <div class="esquiva-section card">
-      <div class="form-group">
-        <label>Esquiva:</label>
-        <input type="number" name="system.combate.esquiva" value="{{number system.combate.esquiva}}" readonly />
-        <button type="button" class="roll-esquiva" title="Rolar Esquiva">🎲</button>
-      </div>
     </div>
   </div>
 
@@ -217,6 +209,10 @@
       <div class="form-group">
         <label>Mobilidade:</label>
         <input type="number" name="system.combate.mobilidade" value="{{number system.combate.mobilidade}}" readonly />
+      </div>
+      <div class="form-group">
+        <label>Esquiva:</label>
+        <input type="number" name="system.combate.esquiva" value="{{number system.combate.esquiva}}" readonly />
       </div>
 
       <h3>EXApoints</h3>

@@ -983,8 +983,7 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
         html.find(".reset-exapoints").click(this._onResetExapoints.bind(this));
         
         // Atualizar Armadura atual quando total ou dano mudarem
-        // Campo total não é editável - é calculado automaticamente
-        html.find("input[name='system.armadura.dano']").on("change", this._onArmaduraChange.bind(this));
+        html.find("input[name='system.armadura.total'], input[name='system.armadura.dano']").on("change", this._onArmaduraChange.bind(this));
         
         // Atualizar nome quando equipamento for selecionado
         html.find(".item-select-equipamento").on("change", this._onEquipamentoSelect.bind(this));
@@ -1006,9 +1005,6 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
 
         // Botão de rolagem de iniciativa
         html.find(".roll-iniciativa").click(this._onRollIniciativa.bind(this));
-        
-        // Botão de rolagem de esquiva
-        html.find(".roll-esquiva").click(this._onRollEsquiva.bind(this));
 
         // Companion e EXAcom
         html.find(".open-companion-sheet").click(this._onOpenCompanionSheet.bind(this));
@@ -1494,23 +1490,19 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
     }
 
     async _onArmaduraChange(event) {
-        // Calcular Armadura atual (total - dano)
-        // O total já inclui todas as armaduras do inventário (atualizado nas funções de seleção)
-        const total = Number(this.actor.system.armadura?.total || 0);
-        const dano = Number(this.actor.system.armadura?.dano || 0);
+        const html = $(this.element);
+        const total = Number(html.find("input[name='system.armadura.total']").val() || 0);
+        const dano = Number(html.find("input[name='system.armadura.dano']").val() || 0);
         const atual = Math.max(0, total - dano);
-        
-        // Atualizar Armadura atual
+
         await this.actor.update({
+            "system.armadura.total": total,
+            "system.armadura.dano": dano,
             "system.armadura.atual": atual
         });
-        
-        // Atualizar o campo na interface
-        const html = $(this.element);
+
         const atualInput = html.find("input[name='system.armadura.atual']");
-        if (atualInput.length) {
-            atualInput.val(atual);
-        }
+        if (atualInput.length) atualInput.val(atual);
     }
 
     async _onRollAttribute(event) {
@@ -2790,40 +2782,6 @@ export class RisingSteelPilotSheet extends FoundryCompatibility.getActorSheetBas
             allowAttributeSelection: false,
             exapointsMaximo: especializacao.exapoints || 0
         });
-    }
-
-    /**
-     * Handle roll esquiva
-     * @param {Event} event
-     * @private
-     */
-    async _onRollEsquiva(event) {
-        event.preventDefault();
-        
-        try {
-            // Obter valor de esquiva do sistema
-            const esquiva = Number(this.actor.system?.combate?.esquiva || 0);
-            
-            if (esquiva <= 0) {
-                ui.notifications.warn("O valor de Esquiva é 0 ou inválido!");
-                return;
-            }
-            
-            // Usar o RollDialog para rolar com EXApoints
-            const { RisingSteelRollDialog } = await import("../app/roll-dialog.js");
-            
-            await RisingSteelRollDialog.prepareRollDialog({
-                rollName: "Esquiva",
-                baseDice: esquiva,
-                actor: this.actor,
-                label: "Esquiva",
-                allowAttributeSelection: false,
-                exapointsMaximo: this.actor.system?.exapoints?.maximo || 0
-            });
-        } catch (error) {
-            console.error("[Rising Steel] Erro ao rolar esquiva:", error);
-            ui.notifications.error("Erro ao rolar esquiva. Verifique o console.");
-        }
     }
 
     _buildLinkedCompanionLists(system) {
